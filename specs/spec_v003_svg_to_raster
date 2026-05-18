@@ -1,0 +1,15 @@
+Goal:
+Convert CubiCasa SVG annotations into raster masks.
+
+Classes:
+- background
+- wall
+- window
+- door
+- room
+- optional room type
+
+Acceptance Criteria:
+- Given one SVG, output aligned masks.
+- Masks match target image size.
+- Class IDs are consistent.

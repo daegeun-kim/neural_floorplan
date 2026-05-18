@@ -1,0 +1,14 @@
+Goal:
+Load CubiCasa5K-style floor plan data.
+
+Requirements:
+- Read image paths.
+- Read SVG paths.
+- Create train/val/test split.
+- Return sample metadata.
+- Do not train model yet.
+
+Acceptance Criteria:
+- Dataset index loads.
+- Sample paths are valid.
+- Unit tests pass.
