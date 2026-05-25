@@ -57,7 +57,7 @@ Environment:
 - Hugging Face Transformers
 - OpenCV
 - Shapely
-- pytest
+- pytest                                                                                                    
 
 Commands:
 - Create env: conda create -n floorplan-cad python=3.11

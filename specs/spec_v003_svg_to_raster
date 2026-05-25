@@ -1,15 +1,9 @@
 Goal:
 Convert CubiCasa SVG annotations into raster masks.
 
-Classes:
-- background
-- wall
-- window
-- door
-- room
-- optional room type
-
-Acceptance Criteria:
-- Given one SVG, output aligned masks.
-- Masks match target image size.
-- Class IDs are consistent.
+Vector data: Located in "C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\original_vector\cubicasa5k\cubicasa5k\high_quality_architectural" as svg format.
+Job:
+- for all svg files in the folder, convert to a png file with white background
+- name of the converted png files are model_clean.png
+- Ignore other png files in the folders
+- place the png file in the same location as each of the svg file
