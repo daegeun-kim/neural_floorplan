@@ -5,13 +5,11 @@ Scope:
 - Do NOT read, modify, or access parent directories or external folders.
 
 File Operations:
-- Only edit files inside this repository.
+- Only edit files inside this repository (neural_floorplan)
 
 Environment:
-- You may install Python libraries.
+- You anaconda virtual environment 'floorplan-cad' for all workflow.
 - Only install libraries necessary for the current spec.
-- Always list packages before installing and wait for approval.
-- Use pyenv and poetry for libraries management
 
 Execution:
 - Before running any shell command:
@@ -50,6 +48,8 @@ Rules:
 - Use feature branches.
 - Commit only after successful test/lint.
 - Keep experiment outputs out of Git unless explicitly approved.
+- /specs are blueprint of the project, /tasks are smaller updates, fix, and minor changes.
+- after each task is performed inside /tasks, merge the content of task md into appropriate spec md file, and convert the name of task md file by adding "done". eg: (task01.md to task01_done.md)
 
 Environment:
 - Python

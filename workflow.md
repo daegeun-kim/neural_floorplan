@@ -1,254 +1,485 @@
-# Neural Floor Plan → Classified CAD (Training Pipeline)
+# Neural Floorplan → Classified CAD Workflow
 
-## 0. Scope
+## 0. Purpose of This Document
 
-Goal:
-Controlled raster floor plan (or color-coded sketch)
+This document explains the overall goal and project workflow for Neural Floorplan.
+
+It is not a detailed implementation specification. Detailed training rules, model configuration, checkpointing, loss functions, and metric formulas belong in the relevant spec files.
+
+The purpose of this file is to explain:
+
+```text
+what the project is trying to achieve
+why each stage exists
+how each stage connects to the next one
+what is currently in scope
+what is intentionally left for later
+```
+
+---
+
+## 1. Project Goal
+
+The project goal is to convert a raster floorplan into a clean, classified, CAD-like representation.
+
+The intended long-term pipeline is:
+
+```text
+raster floorplan image
 → semantic understanding
-→ clean, classified CAD-like vector output
+→ classified masks
+→ vector geometry
+→ clean CAD-like JSON / SVG
+→ later Grasshopper or downstream spatial analysis
+```
 
+The current active development stage is the CNN segmentation stage:
 
-Stop before Grasshopper analysis.
+```text
+raster floorplan image
+→ 5-class semantic segmentation map
+```
 
----
-
-## 1. Datasets
-
-### 1.1 Primary Dataset (Core)
-
-- :contentReference[oaicite:0]{index=0}  
-- https://github.com/cubicasa/cubicasa5k
-
-Use for:
-- walls  
-- rooms  
-- doors  
-- windows  
-- room types  
-- SVG vector ground truth  
+The vectorization stage comes later, after the CNN output is visually and numerically reliable.
 
 ---
 
-### 1.2 Secondary Dataset (Topology / Scale)
+## 2. Core Design Principle
 
-- :contentReference[oaicite:1]{index=1}  
-- https://github.com/ennauata/houseganpp  
-- https://github.com/zzilch/RPLAN-Toolbox  
+The project should not simply maximize pixel-perfect segmentation.
 
-Use for:
-- room adjacency  
-- layout distribution  
-- synthetic raster generation  
+A good result should satisfy both:
 
----
+```text
+1. The predicted pixels are accurate enough to support vectorization.
+2. The predicted masks preserve the architectural intention of the plan.
+```
 
-### 1.3 Optional Dataset (Advanced CAD Detail)
+This means pixel accuracy still matters, especially for clean or well-drawn plans. A clean input should produce a clean, reliable mask because later CAD conversion depends on it.
 
-- :contentReference[oaicite:2]{index=2}  
-- https://floorplancad.github.io/
+At the same time, mean IoU alone is not enough. A model can have lower mIoU on messy raster inputs while still producing a more useful architectural interpretation. Openings are especially important because they control circulation and room connectivity.
 
-Use for:
-- detailed symbol detection  
-- CAD-like precision  
+The model should therefore be evaluated as a segmentation model and as a future vectorization input.
 
 ---
 
-## 2. Data Preparation
+## 3. Current Scope
 
-### 2.1 Convert SVG → Raster + Masks
+The current project scope is:
 
-From CubiCasa5K:
+```text
+CubiCasa5K raster / SVG data
+→ prepared semantic masks
+→ SegFormer-based 5-class CNN segmentation
+→ visual and metric-based evaluation
+```
 
-Input:
-- SVG vector plan  
+The current CNN model predicts only these five classes:
 
-Generate:
-- raster image (clean plan)  
-- semantic masks:
-  - wall  
-  - window  
-  - door  
-  - room boundary  
-  - room type  
+| Class ID | Class Name |
+|---:|---|
+| 0 | background |
+| 1 | wall |
+| 2 | opening |
+| 3 | room |
+| 4 | icon |
 
----
+No additional semantic labels should be introduced at this stage.
 
-### 2.2 Generate Controlled Hand-Drawn Style Input
+Do not add:
 
-Transform clean raster into sketch-like input:
+```text
+door swing labels
+hinge labels
+corner labels
+wall centerline labels
+room instance labels
+new semantic classes
+new external datasets
+```
 
-- line jitter (small noise)  
-- stroke width variation  
-- slight rotation/skew  
-- broken edges  
-- grayscale or color-coded lines  
-- optional paper texture  
-
-Optional color coding:
-- wall = red  
-- window = blue  
-- door = green  
-- room = white/black fill  
-
-Output pair:
-- Input: sketch-like raster  
-- Label: clean semantic masks  
+The project size should stay fixed until the current 5-class model is satisfactory.
 
 ---
 
-## 3. Model Setup
+## 4. Dataset Strategy
 
-### 3.1 Pretrained Model Options
+### 4.1 Primary Dataset
 
-#### Option A (Recommended)
-- :contentReference[oaicite:3]{index=3}  
-- https://huggingface.co/docs/transformers/model_doc/segformer  
+CubiCasa5K is the active dataset.
 
-#### Option B
-- U-Net with pretrained encoder (ResNet / EfficientNet)  
+It is used because it provides both raster floorplan images and SVG-based semantic information. The SVG data allows the project to generate semantic masks that become the training target.
 
-#### Option C (AEC-specific)
-- :contentReference[oaicite:4]{index=4}  
-- https://github.com/zlzeng/DeepFloorplan  
+The active data sources are:
 
----
+```text
+F1_scaled.png        original CubiCasa raster image
+model_clean.png      SVG-rendered clean raster image
+masks/semantic_class_map.png
+```
 
-### 3.2 Model Structure
+Both `F1_scaled.png` and `model_clean.png` can be used as separate input samples while sharing the same target mask.
 
-Input:
-- raster floor plan (H × W × 3)
+This lets the model learn from both:
 
-Backbone:
-- pretrained encoder (SegFormer / ResNet)
+```text
+clean SVG-rendered floorplans
+original real raster floorplans
+```
 
-Head:
-- semantic segmentation
-
-Output:
-- multi-channel mask:
-  - wall  
-  - window  
-  - door  
-  - room  
-  - background  
-  - (optional room types)  
+The clean image helps the model learn precise semantic structure. The original raster helps the model generalize to messier real inputs.
 
 ---
 
-### 3.3 Loss Function
+### 4.2 Inactive / Future Datasets
 
-Loss:
-- CrossEntropy + DiceLoss  
+Other datasets such as HouseGAN++, RPLAN, or FloorPlanCAD may be useful later for topology, layout distribution, or CAD-level details.
 
----
+They are not active in the current workflow.
 
-## 4. Training
-
-### 4.1 Input–Output Pair
-
-- X: sketch-like raster image  
-- Y: semantic segmentation masks  
+The current priority is to make the CubiCasa5K-based 5-class CNN pipeline reliable before expanding the dataset scope.
 
 ---
 
-### 4.2 Training Strategy
+## 5. Data Preparation Intent
 
-- initialize backbone with pretrained weights  
-- freeze backbone (optional, early stage)  
-- train segmentation head  
-- unfreeze and fine-tune full model  
+The purpose of data preparation is to create reliable image-mask pairs.
 
----
+Each sample should have:
 
-### 4.3 Data Augmentation
+```text
+input image:
+    F1_scaled.png or model_clean.png
 
-- rotation (90° only)  
-- horizontal/vertical flip  
-- brightness/contrast variation  
-- line thickness variation  
-- noise injection  
+target:
+    masks/semantic_class_map.png
+```
 
----
+The target mask is a single class-ID image where each pixel belongs to one of the five classes.
 
-### 4.4 Output of Training
+The separate binary masks are useful for inspection and debugging:
 
-Model predicts:
-- wall mask  
-- window mask  
-- door mask  
-- room mask  
-- (optional room type mask)  
+```text
+wall_mask.png
+opening_mask.png
+room_mask.png
+icon_mask.png
+```
 
----
+The combined training target is:
 
-## 5. Post-Processing → Classified CAD
+```text
+semantic_class_map.png
+```
 
-### 5.1 Mask → Geometry
-
-- extract contours from masks  
-- simplify polylines  
-- snap to orthogonal grid  
-- close polygons  
+Background does not need a separate mask file. Background is simply every pixel that is not assigned to wall, opening, room, or icon.
 
 ---
 
-### 5.2 Wall Reconstruction
+## 6. CNN Segmentation Stage
 
-- convert wall mask → centerlines  
-- estimate thickness  
-- generate parallel offsets  
+The CNN stage is responsible for perception.
+
+Its job is to answer:
+
+```text
+what semantic class does each pixel belong to?
+```
+
+It should learn to recognize:
+
+```text
+walls
+openings
+rooms
+icons
+background
+```
+
+from both clean and original raster floorplans.
+
+The CNN should not directly produce CAD geometry, room graphs, or final SVG output.
+
+The current model direction is:
+
+```text
+SegFormer-B0 pretrained backbone
++ custom trainable segmentation head
++ 5-class semantic output
+```
+
+The model output is:
+
+```text
+[B, 5, H, W]
+```
+
+After prediction, the model produces a hard semantic class map for inspection and later use.
 
 ---
 
-### 5.3 Door / Window Assignment
+## 7. Training Intention
 
-- detect line segments from masks  
-- attach to nearest wall  
-- compute width  
+The training goal is not only to reduce loss. The model should produce masks that are visually clean, class-consistent, and useful for later vectorization.
+
+The model should perform well on:
+
+```text
+clean SVG-rendered floorplans
+original CubiCasa raster floorplans
+lightly augmented floorplans
+```
+
+Clean input accuracy remains important. If a user provides a clear, well-drawn plan, the model should not over-generalize or distort it.
+
+Messy input generalization is also important. If the input is noisy or less clean, the model should still recover the main spatial structure.
 
 ---
 
-### 5.4 Room Reconstruction
+## 8. Evaluation Intention
 
-- extract room polygons  
-- ensure closure  
-- assign room type  
+The project should keep standard segmentation metrics, but they should not be the only way to judge the model.
+
+Useful metrics include:
+
+```text
+train_loss
+val_loss
+pixel_accuracy
+foreground_mIoU
+per-class IoU
+wall_IoU
+opening_IoU
+room_IoU
+icon_IoU
+wall_boundary_F1
+opening_boundary_F1
+```
+
+Pixel accuracy matters because a well-drawn plan should produce a precise mask.
+
+Opening quality matters because openings affect circulation. A small wall dimension shift may be acceptable, but a misplaced opening can change the architectural interpretation.
+
+For this reason, the best model should be selected with a vector-readiness score that gives more weight to openings than walls.
+
+The evaluation should also separate results by input type when possible:
+
+```text
+clean SVG-rendered input
+original raster input
+overall validation set
+```
+
+This helps answer two different questions:
+
+```text
+Can the model accurately segment clean plans?
+Can the model generalize to original raster plans?
+```
+
+If separating metrics by input type becomes computationally expensive, it can be skipped temporarily, but it should remain part of the intended evaluation design.
 
 ---
 
-## 6. Final Output Format (Before GH)
+## 9. Visual Inspection
 
-Example JSON:
+Metrics alone are not enough.
+
+The training workflow should save a small number of preview samples so the result can be inspected directly.
+
+The preview should show:
+
+```text
+input image
+ground-truth target
+model prediction
+overlay or comparison image
+```
+
+Only a few samples are needed, usually 3–4 per preview cycle.
+
+The purpose is to check whether the model is learning the actual floorplan structure, not just improving a number.
+
+---
+
+## 10. Checkpointing and Model Safety
+
+The model should be saved safely, but not waste disk space by saving every epoch archive.
+
+The expected saved models are:
+
+```text
+latest.pt
+best.pt
+```
+
+`latest.pt` is used to resume interrupted training.
+
+`best.pt` is used for evaluation and future inference.
+
+Historical epoch archives should not be saved by default unless explicitly enabled.
+
+Model and checkpoint names should include a clear version name, such as:
+
+```text
+segformer_b0_v005
+```
+
+This prevents overwriting older trained models when the spec or training intention changes.
+
+---
+
+## 11. Hardware Assumption
+
+The active development machine has an NVIDIA RTX 5080 Laptop GPU.
+
+Training should use CUDA/GPU rather than CPU.
+
+CPU training is not the intended workflow. If CUDA is unavailable, the script should warn clearly instead of silently continuing as if the environment is correct.
+
+---
+
+## 12. Boundary Between CNN and Vectorization
+
+The CNN stage and the vectorization stage have different responsibilities.
+
+The CNN stage should produce good semantic evidence:
+
+```text
+raster image
+→ 5-class semantic mask
+```
+
+The vectorization stage, which comes later, will convert masks into geometry:
+
+```text
+semantic mask
+→ wall lines
+→ room polygons
+→ openings
+→ classified JSON / SVG
+```
+
+Architectural logic such as straightening walls, snapping corners, attaching openings to walls, and checking room adjacency belongs mainly to the vectorization stage.
+
+However, the CNN output must still be clean enough for that later process to work. That is why pixel accuracy, opening quality, and boundary quality are important during CNN evaluation.
+
+---
+
+## 13. Future Raster-to-Vector Stage
+
+This stage is not active yet, but it remains the long-term target of the project.
+
+The future vectorization stage should take the predicted semantic masks and produce classified geometry.
+
+Expected objects include:
+
+```text
+walls
+openings
+rooms
+icons
+adjacency relationships
+```
+
+The future vector process may include:
+
+```text
+mask cleanup
+contour extraction
+wall centerline extraction
+line simplification
+orthogonal snapping
+room polygon reconstruction
+opening-to-wall assignment
+classified JSON / SVG export
+```
+
+This should not be mixed into the current CNN training spec.
+
+---
+
+## 14. Final Output Intention
+
+The final output should be a structured CAD-like representation.
+
+A future JSON output may look like:
 
 ```json
 {
   "walls": [
     {
-      "centerline": [[x1,y1],[x2,y2]],
+      "centerline": [[x1, y1], [x2, y2]],
       "thickness": 150
     }
   ],
-  "windows": [
+  "openings": [
     {
-      "line": [[x1,y1],[x2,y2]],
-      "host_wall_id": 3
-    }
-  ],
-  "doors": [
-    {
-      "line": [[x1,y1],[x2,y2]],
-      "host_wall_id": 5,
-      "width": 900
+      "line": [[x1, y1], [x2, y2]],
+      "host_wall_id": 3,
+      "type": "door_or_window"
     }
   ],
   "rooms": [
     {
       "polygon": [[...]],
-      "type": "bedroom",
+      "class": "room",
       "area": 12.5
     }
   ],
+  "icons": [
+    {
+      "bbox": [[x1, y1], [x2, y2]],
+      "class": "icon"
+    }
+  ],
   "adjacency": [
-    ["bedroom","living_room"]
+    ["room_1", "room_2"]
   ]
 }
+```
+
+The exact JSON schema should be defined later, after the vectorization stage begins.
+
+---
+
+## 15. Current Project Priority
+
+The current priority is:
+
+```text
+make the 5-class CNN segmentation model reliable
+```
+
+A successful current-stage result means:
+
+```text
+1. Clean plans produce accurate masks.
+2. Original raster plans produce plausible masks.
+3. Openings are recognized reliably.
+4. Room regions remain spatially coherent.
+5. Predictions look suitable for later vectorization.
+6. Model checkpoints are versioned and safe.
+7. Training uses GPU and does not silently fall back to CPU.
+```
+
+Only after this stage is satisfactory should the project move into raster-to-vector conversion and topology correction.
+
+---
+
+## 16. Summary
+
+Neural Floorplan is currently a semantic segmentation project with a CAD-generation goal.
+
+The immediate objective is not to produce final CAD geometry. The immediate objective is to train a reliable 5-class floorplan segmentation model that preserves both pixel-level accuracy and architectural intention.
+
+The long-term objective is:
+
+```text
+raster floorplan
+→ semantic segmentation
+→ clean vector geometry
+→ classified CAD-like output
+```
+
+The current milestone is complete when the CNN output is accurate, visually plausible, and ready to become the input for a future raster-to-vector pipeline.

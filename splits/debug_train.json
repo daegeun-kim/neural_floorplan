@@ -1,0 +1,142 @@
+[
+  {
+    "sample_id": "8805_model_clean_png",
+    "image": "8805\\model_clean.png",
+    "target": "8805\\masks\\semantic_class_map.png",
+    "source_svg": "8805\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1191_F1_scaled_png",
+    "image": "1191\\F1_scaled.png",
+    "target": "1191\\masks\\semantic_class_map.png",
+    "source_svg": "1191\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12208_F1_scaled_png",
+    "image": "12208\\F1_scaled.png",
+    "target": "12208\\masks\\semantic_class_map.png",
+    "source_svg": "12208\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "968_model_clean_png",
+    "image": "968\\model_clean.png",
+    "target": "968\\masks\\semantic_class_map.png",
+    "source_svg": "968\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2590_model_clean_png",
+    "image": "2590\\model_clean.png",
+    "target": "2590\\masks\\semantic_class_map.png",
+    "source_svg": "2590\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12051_F1_scaled_png",
+    "image": "12051\\F1_scaled.png",
+    "target": "12051\\masks\\semantic_class_map.png",
+    "source_svg": "12051\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1266_F1_scaled_png",
+    "image": "1266\\F1_scaled.png",
+    "target": "1266\\masks\\semantic_class_map.png",
+    "source_svg": "1266\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3718_F1_scaled_png",
+    "image": "3718\\F1_scaled.png",
+    "target": "3718\\masks\\semantic_class_map.png",
+    "source_svg": "3718\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11699_F1_scaled_png",
+    "image": "11699\\F1_scaled.png",
+    "target": "11699\\masks\\semantic_class_map.png",
+    "source_svg": "11699\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12734_model_clean_png",
+    "image": "12734\\model_clean.png",
+    "target": "12734\\masks\\semantic_class_map.png",
+    "source_svg": "12734\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1630_F1_scaled_png",
+    "image": "1630\\F1_scaled.png",
+    "target": "1630\\masks\\semantic_class_map.png",
+    "source_svg": "1630\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "377_model_clean_png",
+    "image": "377\\model_clean.png",
+    "target": "377\\masks\\semantic_class_map.png",
+    "source_svg": "377\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14139_model_clean_png",
+    "image": "14139\\model_clean.png",
+    "target": "14139\\masks\\semantic_class_map.png",
+    "source_svg": "14139\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4571_F1_scaled_png",
+    "image": "4571\\F1_scaled.png",
+    "target": "4571\\masks\\semantic_class_map.png",
+    "source_svg": "4571\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12440_F1_scaled_png",
+    "image": "12440\\F1_scaled.png",
+    "target": "12440\\masks\\semantic_class_map.png",
+    "source_svg": "12440\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14368_model_clean_png",
+    "image": "14368\\model_clean.png",
+    "target": "14368\\masks\\semantic_class_map.png",
+    "source_svg": "14368\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6580_F1_scaled_png",
+    "image": "6580\\F1_scaled.png",
+    "target": "6580\\masks\\semantic_class_map.png",
+    "source_svg": "6580\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6033_model_clean_png",
+    "image": "6033\\model_clean.png",
+    "target": "6033\\masks\\semantic_class_map.png",
+    "source_svg": "6033\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6059_model_clean_png",
+    "image": "6059\\model_clean.png",
+    "target": "6059\\masks\\semantic_class_map.png",
+    "source_svg": "6059\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7809_F1_scaled_png",
+    "image": "7809\\F1_scaled.png",
+    "target": "7809\\masks\\semantic_class_map.png",
+    "source_svg": "7809\\model.svg",
+    "input_type": "original_raster"
+  }
+]

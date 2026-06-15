@@ -1,0 +1,9 @@
+{
+  "last_epoch": 49,
+  "global_step": 37250,
+  "best_metric_name": "val_mIoU",
+  "best_metric_value": 0.8336741559050918,
+  "val_loss": 0.22083602437088568,
+  "val_mIoU": 0.8335432062785033,
+  "arch_version": "v2_custom_decoder"
+}

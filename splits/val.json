@@ -1,0 +1,5217 @@
+[
+  {
+    "sample_id": "13836_model_clean_png",
+    "image": "13836\\model_clean.png",
+    "target": "13836\\masks\\semantic_class_map.png",
+    "source_svg": "13836\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5018_model_clean_png",
+    "image": "5018\\model_clean.png",
+    "target": "5018\\masks\\semantic_class_map.png",
+    "source_svg": "5018\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9461_F1_scaled_png",
+    "image": "9461\\F1_scaled.png",
+    "target": "9461\\masks\\semantic_class_map.png",
+    "source_svg": "9461\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1308_model_clean_png",
+    "image": "1308\\model_clean.png",
+    "target": "1308\\masks\\semantic_class_map.png",
+    "source_svg": "1308\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2163_F1_scaled_png",
+    "image": "2163\\F1_scaled.png",
+    "target": "2163\\masks\\semantic_class_map.png",
+    "source_svg": "2163\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5002_model_clean_png",
+    "image": "5002\\model_clean.png",
+    "target": "5002\\masks\\semantic_class_map.png",
+    "source_svg": "5002\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10428_F1_scaled_png",
+    "image": "10428\\F1_scaled.png",
+    "target": "10428\\masks\\semantic_class_map.png",
+    "source_svg": "10428\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6306_F1_scaled_png",
+    "image": "6306\\F1_scaled.png",
+    "target": "6306\\masks\\semantic_class_map.png",
+    "source_svg": "6306\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9365_F1_scaled_png",
+    "image": "9365\\F1_scaled.png",
+    "target": "9365\\masks\\semantic_class_map.png",
+    "source_svg": "9365\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10063_F1_scaled_png",
+    "image": "10063\\F1_scaled.png",
+    "target": "10063\\masks\\semantic_class_map.png",
+    "source_svg": "10063\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12941_model_clean_png",
+    "image": "12941\\model_clean.png",
+    "target": "12941\\masks\\semantic_class_map.png",
+    "source_svg": "12941\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9223_model_clean_png",
+    "image": "9223\\model_clean.png",
+    "target": "9223\\masks\\semantic_class_map.png",
+    "source_svg": "9223\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5991_F1_scaled_png",
+    "image": "5991\\F1_scaled.png",
+    "target": "5991\\masks\\semantic_class_map.png",
+    "source_svg": "5991\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10179_F1_scaled_png",
+    "image": "10179\\F1_scaled.png",
+    "target": "10179\\masks\\semantic_class_map.png",
+    "source_svg": "10179\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13193_model_clean_png",
+    "image": "13193\\model_clean.png",
+    "target": "13193\\masks\\semantic_class_map.png",
+    "source_svg": "13193\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6456_F1_scaled_png",
+    "image": "6456\\F1_scaled.png",
+    "target": "6456\\masks\\semantic_class_map.png",
+    "source_svg": "6456\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13202_F1_scaled_png",
+    "image": "13202\\F1_scaled.png",
+    "target": "13202\\masks\\semantic_class_map.png",
+    "source_svg": "13202\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4592_F1_scaled_png",
+    "image": "4592\\F1_scaled.png",
+    "target": "4592\\masks\\semantic_class_map.png",
+    "source_svg": "4592\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9880_model_clean_png",
+    "image": "9880\\model_clean.png",
+    "target": "9880\\masks\\semantic_class_map.png",
+    "source_svg": "9880\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4549_model_clean_png",
+    "image": "4549\\model_clean.png",
+    "target": "4549\\masks\\semantic_class_map.png",
+    "source_svg": "4549\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14326_model_clean_png",
+    "image": "14326\\model_clean.png",
+    "target": "14326\\masks\\semantic_class_map.png",
+    "source_svg": "14326\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12531_F1_scaled_png",
+    "image": "12531\\F1_scaled.png",
+    "target": "12531\\masks\\semantic_class_map.png",
+    "source_svg": "12531\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8619_F1_scaled_png",
+    "image": "8619\\F1_scaled.png",
+    "target": "8619\\masks\\semantic_class_map.png",
+    "source_svg": "8619\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20094_model_clean_png",
+    "image": "20094\\model_clean.png",
+    "target": "20094\\masks\\semantic_class_map.png",
+    "source_svg": "20094\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14354_F1_scaled_png",
+    "image": "14354\\F1_scaled.png",
+    "target": "14354\\masks\\semantic_class_map.png",
+    "source_svg": "14354\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8663_F1_scaled_png",
+    "image": "8663\\F1_scaled.png",
+    "target": "8663\\masks\\semantic_class_map.png",
+    "source_svg": "8663\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13279_model_clean_png",
+    "image": "13279\\model_clean.png",
+    "target": "13279\\masks\\semantic_class_map.png",
+    "source_svg": "13279\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1837_F1_scaled_png",
+    "image": "1837\\F1_scaled.png",
+    "target": "1837\\masks\\semantic_class_map.png",
+    "source_svg": "1837\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12643_model_clean_png",
+    "image": "12643\\model_clean.png",
+    "target": "12643\\masks\\semantic_class_map.png",
+    "source_svg": "12643\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6351_model_clean_png",
+    "image": "6351\\model_clean.png",
+    "target": "6351\\masks\\semantic_class_map.png",
+    "source_svg": "6351\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14864_model_clean_png",
+    "image": "14864\\model_clean.png",
+    "target": "14864\\masks\\semantic_class_map.png",
+    "source_svg": "14864\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9572_F1_scaled_png",
+    "image": "9572\\F1_scaled.png",
+    "target": "9572\\masks\\semantic_class_map.png",
+    "source_svg": "9572\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13235_model_clean_png",
+    "image": "13235\\model_clean.png",
+    "target": "13235\\masks\\semantic_class_map.png",
+    "source_svg": "13235\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4795_model_clean_png",
+    "image": "4795\\model_clean.png",
+    "target": "4795\\masks\\semantic_class_map.png",
+    "source_svg": "4795\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13769_model_clean_png",
+    "image": "13769\\model_clean.png",
+    "target": "13769\\masks\\semantic_class_map.png",
+    "source_svg": "13769\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1652_F1_scaled_png",
+    "image": "1652\\F1_scaled.png",
+    "target": "1652\\masks\\semantic_class_map.png",
+    "source_svg": "1652\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10678_F1_scaled_png",
+    "image": "10678\\F1_scaled.png",
+    "target": "10678\\masks\\semantic_class_map.png",
+    "source_svg": "10678\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11616_model_clean_png",
+    "image": "11616\\model_clean.png",
+    "target": "11616\\masks\\semantic_class_map.png",
+    "source_svg": "11616\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3778_model_clean_png",
+    "image": "3778\\model_clean.png",
+    "target": "3778\\masks\\semantic_class_map.png",
+    "source_svg": "3778\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6234_F1_scaled_png",
+    "image": "6234\\F1_scaled.png",
+    "target": "6234\\masks\\semantic_class_map.png",
+    "source_svg": "6234\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13110_model_clean_png",
+    "image": "13110\\model_clean.png",
+    "target": "13110\\masks\\semantic_class_map.png",
+    "source_svg": "13110\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1902_model_clean_png",
+    "image": "1902\\model_clean.png",
+    "target": "1902\\masks\\semantic_class_map.png",
+    "source_svg": "1902\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9218_F1_scaled_png",
+    "image": "9218\\F1_scaled.png",
+    "target": "9218\\masks\\semantic_class_map.png",
+    "source_svg": "9218\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6068_model_clean_png",
+    "image": "6068\\model_clean.png",
+    "target": "6068\\masks\\semantic_class_map.png",
+    "source_svg": "6068\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12708_F1_scaled_png",
+    "image": "12708\\F1_scaled.png",
+    "target": "12708\\masks\\semantic_class_map.png",
+    "source_svg": "12708\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1848_F1_scaled_png",
+    "image": "1848\\F1_scaled.png",
+    "target": "1848\\masks\\semantic_class_map.png",
+    "source_svg": "1848\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12698_model_clean_png",
+    "image": "12698\\model_clean.png",
+    "target": "12698\\masks\\semantic_class_map.png",
+    "source_svg": "12698\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7982_F1_scaled_png",
+    "image": "7982\\F1_scaled.png",
+    "target": "7982\\masks\\semantic_class_map.png",
+    "source_svg": "7982\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1854_model_clean_png",
+    "image": "1854\\model_clean.png",
+    "target": "1854\\masks\\semantic_class_map.png",
+    "source_svg": "1854\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12457_model_clean_png",
+    "image": "12457\\model_clean.png",
+    "target": "12457\\masks\\semantic_class_map.png",
+    "source_svg": "12457\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11449_model_clean_png",
+    "image": "11449\\model_clean.png",
+    "target": "11449\\masks\\semantic_class_map.png",
+    "source_svg": "11449\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4736_model_clean_png",
+    "image": "4736\\model_clean.png",
+    "target": "4736\\masks\\semantic_class_map.png",
+    "source_svg": "4736\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2176_model_clean_png",
+    "image": "2176\\model_clean.png",
+    "target": "2176\\masks\\semantic_class_map.png",
+    "source_svg": "2176\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12558_model_clean_png",
+    "image": "12558\\model_clean.png",
+    "target": "12558\\masks\\semantic_class_map.png",
+    "source_svg": "12558\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6283_F1_scaled_png",
+    "image": "6283\\F1_scaled.png",
+    "target": "6283\\masks\\semantic_class_map.png",
+    "source_svg": "6283\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "524_F1_scaled_png",
+    "image": "524\\F1_scaled.png",
+    "target": "524\\masks\\semantic_class_map.png",
+    "source_svg": "524\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9042_F1_scaled_png",
+    "image": "9042\\F1_scaled.png",
+    "target": "9042\\masks\\semantic_class_map.png",
+    "source_svg": "9042\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5044_F1_scaled_png",
+    "image": "5044\\F1_scaled.png",
+    "target": "5044\\masks\\semantic_class_map.png",
+    "source_svg": "5044\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10726_model_clean_png",
+    "image": "10726\\model_clean.png",
+    "target": "10726\\masks\\semantic_class_map.png",
+    "source_svg": "10726\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11777_model_clean_png",
+    "image": "11777\\model_clean.png",
+    "target": "11777\\masks\\semantic_class_map.png",
+    "source_svg": "11777\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11718_model_clean_png",
+    "image": "11718\\model_clean.png",
+    "target": "11718\\masks\\semantic_class_map.png",
+    "source_svg": "11718\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11833_F1_scaled_png",
+    "image": "11833\\F1_scaled.png",
+    "target": "11833\\masks\\semantic_class_map.png",
+    "source_svg": "11833\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6274_model_clean_png",
+    "image": "6274\\model_clean.png",
+    "target": "6274\\masks\\semantic_class_map.png",
+    "source_svg": "6274\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8246_F1_scaled_png",
+    "image": "8246\\F1_scaled.png",
+    "target": "8246\\masks\\semantic_class_map.png",
+    "source_svg": "8246\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14710_model_clean_png",
+    "image": "14710\\model_clean.png",
+    "target": "14710\\masks\\semantic_class_map.png",
+    "source_svg": "14710\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8596_F1_scaled_png",
+    "image": "8596\\F1_scaled.png",
+    "target": "8596\\masks\\semantic_class_map.png",
+    "source_svg": "8596\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12581_model_clean_png",
+    "image": "12581\\model_clean.png",
+    "target": "12581\\masks\\semantic_class_map.png",
+    "source_svg": "12581\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11476_model_clean_png",
+    "image": "11476\\model_clean.png",
+    "target": "11476\\masks\\semantic_class_map.png",
+    "source_svg": "11476\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1512_F1_scaled_png",
+    "image": "1512\\F1_scaled.png",
+    "target": "1512\\masks\\semantic_class_map.png",
+    "source_svg": "1512\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14239_model_clean_png",
+    "image": "14239\\model_clean.png",
+    "target": "14239\\masks\\semantic_class_map.png",
+    "source_svg": "14239\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14043_model_clean_png",
+    "image": "14043\\model_clean.png",
+    "target": "14043\\masks\\semantic_class_map.png",
+    "source_svg": "14043\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13171_F1_scaled_png",
+    "image": "13171\\F1_scaled.png",
+    "target": "13171\\masks\\semantic_class_map.png",
+    "source_svg": "13171\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1051_F1_scaled_png",
+    "image": "1051\\F1_scaled.png",
+    "target": "1051\\masks\\semantic_class_map.png",
+    "source_svg": "1051\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13538_F1_scaled_png",
+    "image": "13538\\F1_scaled.png",
+    "target": "13538\\masks\\semantic_class_map.png",
+    "source_svg": "13538\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10397_model_clean_png",
+    "image": "10397\\model_clean.png",
+    "target": "10397\\masks\\semantic_class_map.png",
+    "source_svg": "10397\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8424_F1_scaled_png",
+    "image": "8424\\F1_scaled.png",
+    "target": "8424\\masks\\semantic_class_map.png",
+    "source_svg": "8424\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13239_F1_scaled_png",
+    "image": "13239\\F1_scaled.png",
+    "target": "13239\\masks\\semantic_class_map.png",
+    "source_svg": "13239\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6393_model_clean_png",
+    "image": "6393\\model_clean.png",
+    "target": "6393\\masks\\semantic_class_map.png",
+    "source_svg": "6393\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9330_model_clean_png",
+    "image": "9330\\model_clean.png",
+    "target": "9330\\masks\\semantic_class_map.png",
+    "source_svg": "9330\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1688_F1_scaled_png",
+    "image": "1688\\F1_scaled.png",
+    "target": "1688\\masks\\semantic_class_map.png",
+    "source_svg": "1688\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8032_F1_scaled_png",
+    "image": "8032\\F1_scaled.png",
+    "target": "8032\\masks\\semantic_class_map.png",
+    "source_svg": "8032\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6522_F1_scaled_png",
+    "image": "6522\\F1_scaled.png",
+    "target": "6522\\masks\\semantic_class_map.png",
+    "source_svg": "6522\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5661_model_clean_png",
+    "image": "5661\\model_clean.png",
+    "target": "5661\\masks\\semantic_class_map.png",
+    "source_svg": "5661\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9381_F1_scaled_png",
+    "image": "9381\\F1_scaled.png",
+    "target": "9381\\masks\\semantic_class_map.png",
+    "source_svg": "9381\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1563_model_clean_png",
+    "image": "1563\\model_clean.png",
+    "target": "1563\\masks\\semantic_class_map.png",
+    "source_svg": "1563\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11001_model_clean_png",
+    "image": "11001\\model_clean.png",
+    "target": "11001\\masks\\semantic_class_map.png",
+    "source_svg": "11001\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8028_model_clean_png",
+    "image": "8028\\model_clean.png",
+    "target": "8028\\masks\\semantic_class_map.png",
+    "source_svg": "8028\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13105_model_clean_png",
+    "image": "13105\\model_clean.png",
+    "target": "13105\\masks\\semantic_class_map.png",
+    "source_svg": "13105\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6299_F1_scaled_png",
+    "image": "6299\\F1_scaled.png",
+    "target": "6299\\masks\\semantic_class_map.png",
+    "source_svg": "6299\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5611_F1_scaled_png",
+    "image": "5611\\F1_scaled.png",
+    "target": "5611\\masks\\semantic_class_map.png",
+    "source_svg": "5611\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12505_F1_scaled_png",
+    "image": "12505\\F1_scaled.png",
+    "target": "12505\\masks\\semantic_class_map.png",
+    "source_svg": "12505\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10626_model_clean_png",
+    "image": "10626\\model_clean.png",
+    "target": "10626\\masks\\semantic_class_map.png",
+    "source_svg": "10626\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5138_F1_scaled_png",
+    "image": "5138\\F1_scaled.png",
+    "target": "5138\\masks\\semantic_class_map.png",
+    "source_svg": "5138\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10291_model_clean_png",
+    "image": "10291\\model_clean.png",
+    "target": "10291\\masks\\semantic_class_map.png",
+    "source_svg": "10291\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3665_F1_scaled_png",
+    "image": "3665\\F1_scaled.png",
+    "target": "3665\\masks\\semantic_class_map.png",
+    "source_svg": "3665\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "2036_F1_scaled_png",
+    "image": "2036\\F1_scaled.png",
+    "target": "2036\\masks\\semantic_class_map.png",
+    "source_svg": "2036\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6703_model_clean_png",
+    "image": "6703\\model_clean.png",
+    "target": "6703\\masks\\semantic_class_map.png",
+    "source_svg": "6703\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "857_F1_scaled_png",
+    "image": "857\\F1_scaled.png",
+    "target": "857\\masks\\semantic_class_map.png",
+    "source_svg": "857\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13429_model_clean_png",
+    "image": "13429\\model_clean.png",
+    "target": "13429\\masks\\semantic_class_map.png",
+    "source_svg": "13429\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "980_F1_scaled_png",
+    "image": "980\\F1_scaled.png",
+    "target": "980\\masks\\semantic_class_map.png",
+    "source_svg": "980\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3541_model_clean_png",
+    "image": "3541\\model_clean.png",
+    "target": "3541\\masks\\semantic_class_map.png",
+    "source_svg": "3541\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6183_F1_scaled_png",
+    "image": "6183\\F1_scaled.png",
+    "target": "6183\\masks\\semantic_class_map.png",
+    "source_svg": "6183\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13590_F1_scaled_png",
+    "image": "13590\\F1_scaled.png",
+    "target": "13590\\masks\\semantic_class_map.png",
+    "source_svg": "13590\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10733_F1_scaled_png",
+    "image": "10733\\F1_scaled.png",
+    "target": "10733\\masks\\semantic_class_map.png",
+    "source_svg": "10733\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9488_model_clean_png",
+    "image": "9488\\model_clean.png",
+    "target": "9488\\masks\\semantic_class_map.png",
+    "source_svg": "9488\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14494_model_clean_png",
+    "image": "14494\\model_clean.png",
+    "target": "14494\\masks\\semantic_class_map.png",
+    "source_svg": "14494\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6379_F1_scaled_png",
+    "image": "6379\\F1_scaled.png",
+    "target": "6379\\masks\\semantic_class_map.png",
+    "source_svg": "6379\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5508_model_clean_png",
+    "image": "5508\\model_clean.png",
+    "target": "5508\\masks\\semantic_class_map.png",
+    "source_svg": "5508\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13697_F1_scaled_png",
+    "image": "13697\\F1_scaled.png",
+    "target": "13697\\masks\\semantic_class_map.png",
+    "source_svg": "13697\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "954_F1_scaled_png",
+    "image": "954\\F1_scaled.png",
+    "target": "954\\masks\\semantic_class_map.png",
+    "source_svg": "954\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1960_F1_scaled_png",
+    "image": "1960\\F1_scaled.png",
+    "target": "1960\\masks\\semantic_class_map.png",
+    "source_svg": "1960\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10692_model_clean_png",
+    "image": "10692\\model_clean.png",
+    "target": "10692\\masks\\semantic_class_map.png",
+    "source_svg": "10692\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11575_model_clean_png",
+    "image": "11575\\model_clean.png",
+    "target": "11575\\masks\\semantic_class_map.png",
+    "source_svg": "11575\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8721_model_clean_png",
+    "image": "8721\\model_clean.png",
+    "target": "8721\\masks\\semantic_class_map.png",
+    "source_svg": "8721\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14670_F1_scaled_png",
+    "image": "14670\\F1_scaled.png",
+    "target": "14670\\masks\\semantic_class_map.png",
+    "source_svg": "14670\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11453_model_clean_png",
+    "image": "11453\\model_clean.png",
+    "target": "11453\\masks\\semantic_class_map.png",
+    "source_svg": "11453\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "674_F1_scaled_png",
+    "image": "674\\F1_scaled.png",
+    "target": "674\\masks\\semantic_class_map.png",
+    "source_svg": "674\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10131_F1_scaled_png",
+    "image": "10131\\F1_scaled.png",
+    "target": "10131\\masks\\semantic_class_map.png",
+    "source_svg": "10131\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1837_model_clean_png",
+    "image": "1837\\model_clean.png",
+    "target": "1837\\masks\\semantic_class_map.png",
+    "source_svg": "1837\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3210_F1_scaled_png",
+    "image": "3210\\F1_scaled.png",
+    "target": "3210\\masks\\semantic_class_map.png",
+    "source_svg": "3210\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11048_model_clean_png",
+    "image": "11048\\model_clean.png",
+    "target": "11048\\masks\\semantic_class_map.png",
+    "source_svg": "11048\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1641_F1_scaled_png",
+    "image": "1641\\F1_scaled.png",
+    "target": "1641\\masks\\semantic_class_map.png",
+    "source_svg": "1641\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11051_model_clean_png",
+    "image": "11051\\model_clean.png",
+    "target": "11051\\masks\\semantic_class_map.png",
+    "source_svg": "11051\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13629_F1_scaled_png",
+    "image": "13629\\F1_scaled.png",
+    "target": "13629\\masks\\semantic_class_map.png",
+    "source_svg": "13629\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4829_F1_scaled_png",
+    "image": "4829\\F1_scaled.png",
+    "target": "4829\\masks\\semantic_class_map.png",
+    "source_svg": "4829\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "242_model_clean_png",
+    "image": "242\\model_clean.png",
+    "target": "242\\masks\\semantic_class_map.png",
+    "source_svg": "242\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7982_model_clean_png",
+    "image": "7982\\model_clean.png",
+    "target": "7982\\masks\\semantic_class_map.png",
+    "source_svg": "7982\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10302_F1_scaled_png",
+    "image": "10302\\F1_scaled.png",
+    "target": "10302\\masks\\semantic_class_map.png",
+    "source_svg": "10302\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "2142_F1_scaled_png",
+    "image": "2142\\F1_scaled.png",
+    "target": "2142\\masks\\semantic_class_map.png",
+    "source_svg": "2142\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11551_model_clean_png",
+    "image": "11551\\model_clean.png",
+    "target": "11551\\masks\\semantic_class_map.png",
+    "source_svg": "11551\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "591_model_clean_png",
+    "image": "591\\model_clean.png",
+    "target": "591\\masks\\semantic_class_map.png",
+    "source_svg": "591\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6041_model_clean_png",
+    "image": "6041\\model_clean.png",
+    "target": "6041\\masks\\semantic_class_map.png",
+    "source_svg": "6041\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14369_model_clean_png",
+    "image": "14369\\model_clean.png",
+    "target": "14369\\masks\\semantic_class_map.png",
+    "source_svg": "14369\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14326_F1_scaled_png",
+    "image": "14326\\F1_scaled.png",
+    "target": "14326\\masks\\semantic_class_map.png",
+    "source_svg": "14326\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6541_model_clean_png",
+    "image": "6541\\model_clean.png",
+    "target": "6541\\masks\\semantic_class_map.png",
+    "source_svg": "6541\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9423_F1_scaled_png",
+    "image": "9423\\F1_scaled.png",
+    "target": "9423\\masks\\semantic_class_map.png",
+    "source_svg": "9423\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7572_F1_scaled_png",
+    "image": "7572\\F1_scaled.png",
+    "target": "7572\\masks\\semantic_class_map.png",
+    "source_svg": "7572\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13451_model_clean_png",
+    "image": "13451\\model_clean.png",
+    "target": "13451\\masks\\semantic_class_map.png",
+    "source_svg": "13451\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10370_F1_scaled_png",
+    "image": "10370\\F1_scaled.png",
+    "target": "10370\\masks\\semantic_class_map.png",
+    "source_svg": "10370\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14695_model_clean_png",
+    "image": "14695\\model_clean.png",
+    "target": "14695\\masks\\semantic_class_map.png",
+    "source_svg": "14695\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12487_F1_scaled_png",
+    "image": "12487\\F1_scaled.png",
+    "target": "12487\\masks\\semantic_class_map.png",
+    "source_svg": "12487\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8535_F1_scaled_png",
+    "image": "8535\\F1_scaled.png",
+    "target": "8535\\masks\\semantic_class_map.png",
+    "source_svg": "8535\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4549_F1_scaled_png",
+    "image": "4549\\F1_scaled.png",
+    "target": "4549\\masks\\semantic_class_map.png",
+    "source_svg": "4549\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12539_model_clean_png",
+    "image": "12539\\model_clean.png",
+    "target": "12539\\masks\\semantic_class_map.png",
+    "source_svg": "12539\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "799_F1_scaled_png",
+    "image": "799\\F1_scaled.png",
+    "target": "799\\masks\\semantic_class_map.png",
+    "source_svg": "799\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1192_F1_scaled_png",
+    "image": "1192\\F1_scaled.png",
+    "target": "1192\\masks\\semantic_class_map.png",
+    "source_svg": "1192\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13491_model_clean_png",
+    "image": "13491\\model_clean.png",
+    "target": "13491\\masks\\semantic_class_map.png",
+    "source_svg": "13491\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8645_model_clean_png",
+    "image": "8645\\model_clean.png",
+    "target": "8645\\masks\\semantic_class_map.png",
+    "source_svg": "8645\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14286_model_clean_png",
+    "image": "14286\\model_clean.png",
+    "target": "14286\\masks\\semantic_class_map.png",
+    "source_svg": "14286\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3702_model_clean_png",
+    "image": "3702\\model_clean.png",
+    "target": "3702\\masks\\semantic_class_map.png",
+    "source_svg": "3702\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7870_F1_scaled_png",
+    "image": "7870\\F1_scaled.png",
+    "target": "7870\\masks\\semantic_class_map.png",
+    "source_svg": "7870\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13638_F1_scaled_png",
+    "image": "13638\\F1_scaled.png",
+    "target": "13638\\masks\\semantic_class_map.png",
+    "source_svg": "13638\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13767_F1_scaled_png",
+    "image": "13767\\F1_scaled.png",
+    "target": "13767\\masks\\semantic_class_map.png",
+    "source_svg": "13767\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20102_F1_scaled_png",
+    "image": "20102\\F1_scaled.png",
+    "target": "20102\\masks\\semantic_class_map.png",
+    "source_svg": "20102\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3624_F1_scaled_png",
+    "image": "3624\\F1_scaled.png",
+    "target": "3624\\masks\\semantic_class_map.png",
+    "source_svg": "3624\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "172_F1_scaled_png",
+    "image": "172\\F1_scaled.png",
+    "target": "172\\masks\\semantic_class_map.png",
+    "source_svg": "172\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11511_F1_scaled_png",
+    "image": "11511\\F1_scaled.png",
+    "target": "11511\\masks\\semantic_class_map.png",
+    "source_svg": "11511\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "2058_F1_scaled_png",
+    "image": "2058\\F1_scaled.png",
+    "target": "2058\\masks\\semantic_class_map.png",
+    "source_svg": "2058\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9031_F1_scaled_png",
+    "image": "9031\\F1_scaled.png",
+    "target": "9031\\masks\\semantic_class_map.png",
+    "source_svg": "9031\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4699_F1_scaled_png",
+    "image": "4699\\F1_scaled.png",
+    "target": "4699\\masks\\semantic_class_map.png",
+    "source_svg": "4699\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4790_F1_scaled_png",
+    "image": "4790\\F1_scaled.png",
+    "target": "4790\\masks\\semantic_class_map.png",
+    "source_svg": "4790\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13230_F1_scaled_png",
+    "image": "13230\\F1_scaled.png",
+    "target": "13230\\masks\\semantic_class_map.png",
+    "source_svg": "13230\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "702_model_clean_png",
+    "image": "702\\model_clean.png",
+    "target": "702\\masks\\semantic_class_map.png",
+    "source_svg": "702\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13052_F1_scaled_png",
+    "image": "13052\\F1_scaled.png",
+    "target": "13052\\masks\\semantic_class_map.png",
+    "source_svg": "13052\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7864_model_clean_png",
+    "image": "7864\\model_clean.png",
+    "target": "7864\\masks\\semantic_class_map.png",
+    "source_svg": "7864\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12859_model_clean_png",
+    "image": "12859\\model_clean.png",
+    "target": "12859\\masks\\semantic_class_map.png",
+    "source_svg": "12859\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2564_F1_scaled_png",
+    "image": "2564\\F1_scaled.png",
+    "target": "2564\\masks\\semantic_class_map.png",
+    "source_svg": "2564\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13711_model_clean_png",
+    "image": "13711\\model_clean.png",
+    "target": "13711\\masks\\semantic_class_map.png",
+    "source_svg": "13711\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14754_model_clean_png",
+    "image": "14754\\model_clean.png",
+    "target": "14754\\masks\\semantic_class_map.png",
+    "source_svg": "14754\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9043_model_clean_png",
+    "image": "9043\\model_clean.png",
+    "target": "9043\\masks\\semantic_class_map.png",
+    "source_svg": "9043\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10638_F1_scaled_png",
+    "image": "10638\\F1_scaled.png",
+    "target": "10638\\masks\\semantic_class_map.png",
+    "source_svg": "10638\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11381_model_clean_png",
+    "image": "11381\\model_clean.png",
+    "target": "11381\\masks\\semantic_class_map.png",
+    "source_svg": "11381\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7594_model_clean_png",
+    "image": "7594\\model_clean.png",
+    "target": "7594\\masks\\semantic_class_map.png",
+    "source_svg": "7594\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2566_model_clean_png",
+    "image": "2566\\model_clean.png",
+    "target": "2566\\masks\\semantic_class_map.png",
+    "source_svg": "2566\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4915_F1_scaled_png",
+    "image": "4915\\F1_scaled.png",
+    "target": "4915\\masks\\semantic_class_map.png",
+    "source_svg": "4915\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11947_F1_scaled_png",
+    "image": "11947\\F1_scaled.png",
+    "target": "11947\\masks\\semantic_class_map.png",
+    "source_svg": "11947\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14346_model_clean_png",
+    "image": "14346\\model_clean.png",
+    "target": "14346\\masks\\semantic_class_map.png",
+    "source_svg": "14346\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11461_model_clean_png",
+    "image": "11461\\model_clean.png",
+    "target": "11461\\masks\\semantic_class_map.png",
+    "source_svg": "11461\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3864_model_clean_png",
+    "image": "3864\\model_clean.png",
+    "target": "3864\\masks\\semantic_class_map.png",
+    "source_svg": "3864\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1836_model_clean_png",
+    "image": "1836\\model_clean.png",
+    "target": "1836\\masks\\semantic_class_map.png",
+    "source_svg": "1836\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12579_model_clean_png",
+    "image": "12579\\model_clean.png",
+    "target": "12579\\masks\\semantic_class_map.png",
+    "source_svg": "12579\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "20000_F1_scaled_png",
+    "image": "20000\\F1_scaled.png",
+    "target": "20000\\masks\\semantic_class_map.png",
+    "source_svg": "20000\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20091_model_clean_png",
+    "image": "20091\\model_clean.png",
+    "target": "20091\\masks\\semantic_class_map.png",
+    "source_svg": "20091\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14757_model_clean_png",
+    "image": "14757\\model_clean.png",
+    "target": "14757\\masks\\semantic_class_map.png",
+    "source_svg": "14757\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1293_F1_scaled_png",
+    "image": "1293\\F1_scaled.png",
+    "target": "1293\\masks\\semantic_class_map.png",
+    "source_svg": "1293\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6542_F1_scaled_png",
+    "image": "6542\\F1_scaled.png",
+    "target": "6542\\masks\\semantic_class_map.png",
+    "source_svg": "6542\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "2572_F1_scaled_png",
+    "image": "2572\\F1_scaled.png",
+    "target": "2572\\masks\\semantic_class_map.png",
+    "source_svg": "2572\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13160_model_clean_png",
+    "image": "13160\\model_clean.png",
+    "target": "13160\\masks\\semantic_class_map.png",
+    "source_svg": "13160\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6668_F1_scaled_png",
+    "image": "6668\\F1_scaled.png",
+    "target": "6668\\masks\\semantic_class_map.png",
+    "source_svg": "6668\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "218_model_clean_png",
+    "image": "218\\model_clean.png",
+    "target": "218\\masks\\semantic_class_map.png",
+    "source_svg": "218\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11572_F1_scaled_png",
+    "image": "11572\\F1_scaled.png",
+    "target": "11572\\masks\\semantic_class_map.png",
+    "source_svg": "11572\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5856_F1_scaled_png",
+    "image": "5856\\F1_scaled.png",
+    "target": "5856\\masks\\semantic_class_map.png",
+    "source_svg": "5856\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11184_model_clean_png",
+    "image": "11184\\model_clean.png",
+    "target": "11184\\masks\\semantic_class_map.png",
+    "source_svg": "11184\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1856_F1_scaled_png",
+    "image": "1856\\F1_scaled.png",
+    "target": "1856\\masks\\semantic_class_map.png",
+    "source_svg": "1856\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11159_F1_scaled_png",
+    "image": "11159\\F1_scaled.png",
+    "target": "11159\\masks\\semantic_class_map.png",
+    "source_svg": "11159\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8675_F1_scaled_png",
+    "image": "8675\\F1_scaled.png",
+    "target": "8675\\masks\\semantic_class_map.png",
+    "source_svg": "8675\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11012_F1_scaled_png",
+    "image": "11012\\F1_scaled.png",
+    "target": "11012\\masks\\semantic_class_map.png",
+    "source_svg": "11012\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14640_F1_scaled_png",
+    "image": "14640\\F1_scaled.png",
+    "target": "14640\\masks\\semantic_class_map.png",
+    "source_svg": "14640\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3871_F1_scaled_png",
+    "image": "3871\\F1_scaled.png",
+    "target": "3871\\masks\\semantic_class_map.png",
+    "source_svg": "3871\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10122_model_clean_png",
+    "image": "10122\\model_clean.png",
+    "target": "10122\\masks\\semantic_class_map.png",
+    "source_svg": "10122\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3860_F1_scaled_png",
+    "image": "3860\\F1_scaled.png",
+    "target": "3860\\masks\\semantic_class_map.png",
+    "source_svg": "3860\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13360_F1_scaled_png",
+    "image": "13360\\F1_scaled.png",
+    "target": "13360\\masks\\semantic_class_map.png",
+    "source_svg": "13360\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11621_F1_scaled_png",
+    "image": "11621\\F1_scaled.png",
+    "target": "11621\\masks\\semantic_class_map.png",
+    "source_svg": "11621\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6583_F1_scaled_png",
+    "image": "6583\\F1_scaled.png",
+    "target": "6583\\masks\\semantic_class_map.png",
+    "source_svg": "6583\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12544_model_clean_png",
+    "image": "12544\\model_clean.png",
+    "target": "12544\\masks\\semantic_class_map.png",
+    "source_svg": "12544\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5038_model_clean_png",
+    "image": "5038\\model_clean.png",
+    "target": "5038\\masks\\semantic_class_map.png",
+    "source_svg": "5038\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5599_model_clean_png",
+    "image": "5599\\model_clean.png",
+    "target": "5599\\masks\\semantic_class_map.png",
+    "source_svg": "5599\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10231_model_clean_png",
+    "image": "10231\\model_clean.png",
+    "target": "10231\\masks\\semantic_class_map.png",
+    "source_svg": "10231\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8685_model_clean_png",
+    "image": "8685\\model_clean.png",
+    "target": "8685\\masks\\semantic_class_map.png",
+    "source_svg": "8685\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "20106_model_clean_png",
+    "image": "20106\\model_clean.png",
+    "target": "20106\\masks\\semantic_class_map.png",
+    "source_svg": "20106\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6450_F1_scaled_png",
+    "image": "6450\\F1_scaled.png",
+    "target": "6450\\masks\\semantic_class_map.png",
+    "source_svg": "6450\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9180_model_clean_png",
+    "image": "9180\\model_clean.png",
+    "target": "9180\\masks\\semantic_class_map.png",
+    "source_svg": "9180\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13118_F1_scaled_png",
+    "image": "13118\\F1_scaled.png",
+    "target": "13118\\masks\\semantic_class_map.png",
+    "source_svg": "13118\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11330_F1_scaled_png",
+    "image": "11330\\F1_scaled.png",
+    "target": "11330\\masks\\semantic_class_map.png",
+    "source_svg": "11330\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3819_model_clean_png",
+    "image": "3819\\model_clean.png",
+    "target": "3819\\masks\\semantic_class_map.png",
+    "source_svg": "3819\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9785_model_clean_png",
+    "image": "9785\\model_clean.png",
+    "target": "9785\\masks\\semantic_class_map.png",
+    "source_svg": "9785\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9135_F1_scaled_png",
+    "image": "9135\\F1_scaled.png",
+    "target": "9135\\masks\\semantic_class_map.png",
+    "source_svg": "9135\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10450_model_clean_png",
+    "image": "10450\\model_clean.png",
+    "target": "10450\\masks\\semantic_class_map.png",
+    "source_svg": "10450\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1653_model_clean_png",
+    "image": "1653\\model_clean.png",
+    "target": "1653\\masks\\semantic_class_map.png",
+    "source_svg": "1653\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5534_model_clean_png",
+    "image": "5534\\model_clean.png",
+    "target": "5534\\masks\\semantic_class_map.png",
+    "source_svg": "5534\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2183_F1_scaled_png",
+    "image": "2183\\F1_scaled.png",
+    "target": "2183\\masks\\semantic_class_map.png",
+    "source_svg": "2183\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5505_F1_scaled_png",
+    "image": "5505\\F1_scaled.png",
+    "target": "5505\\masks\\semantic_class_map.png",
+    "source_svg": "5505\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14074_F1_scaled_png",
+    "image": "14074\\F1_scaled.png",
+    "target": "14074\\masks\\semantic_class_map.png",
+    "source_svg": "14074\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "306_model_clean_png",
+    "image": "306\\model_clean.png",
+    "target": "306\\masks\\semantic_class_map.png",
+    "source_svg": "306\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11892_model_clean_png",
+    "image": "11892\\model_clean.png",
+    "target": "11892\\masks\\semantic_class_map.png",
+    "source_svg": "11892\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10491_model_clean_png",
+    "image": "10491\\model_clean.png",
+    "target": "10491\\masks\\semantic_class_map.png",
+    "source_svg": "10491\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14747_model_clean_png",
+    "image": "14747\\model_clean.png",
+    "target": "14747\\masks\\semantic_class_map.png",
+    "source_svg": "14747\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1858_F1_scaled_png",
+    "image": "1858\\F1_scaled.png",
+    "target": "1858\\masks\\semantic_class_map.png",
+    "source_svg": "1858\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3691_F1_scaled_png",
+    "image": "3691\\F1_scaled.png",
+    "target": "3691\\masks\\semantic_class_map.png",
+    "source_svg": "3691\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5981_model_clean_png",
+    "image": "5981\\model_clean.png",
+    "target": "5981\\masks\\semantic_class_map.png",
+    "source_svg": "5981\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10001_model_clean_png",
+    "image": "10001\\model_clean.png",
+    "target": "10001\\masks\\semantic_class_map.png",
+    "source_svg": "10001\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3_model_clean_png",
+    "image": "3\\model_clean.png",
+    "target": "3\\masks\\semantic_class_map.png",
+    "source_svg": "3\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14587_F1_scaled_png",
+    "image": "14587\\F1_scaled.png",
+    "target": "14587\\masks\\semantic_class_map.png",
+    "source_svg": "14587\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11176_F1_scaled_png",
+    "image": "11176\\F1_scaled.png",
+    "target": "11176\\masks\\semantic_class_map.png",
+    "source_svg": "11176\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13527_model_clean_png",
+    "image": "13527\\model_clean.png",
+    "target": "13527\\masks\\semantic_class_map.png",
+    "source_svg": "13527\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12677_F1_scaled_png",
+    "image": "12677\\F1_scaled.png",
+    "target": "12677\\masks\\semantic_class_map.png",
+    "source_svg": "12677\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13395_model_clean_png",
+    "image": "13395\\model_clean.png",
+    "target": "13395\\masks\\semantic_class_map.png",
+    "source_svg": "13395\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10786_F1_scaled_png",
+    "image": "10786\\F1_scaled.png",
+    "target": "10786\\masks\\semantic_class_map.png",
+    "source_svg": "10786\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1816_model_clean_png",
+    "image": "1816\\model_clean.png",
+    "target": "1816\\masks\\semantic_class_map.png",
+    "source_svg": "1816\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1030_model_clean_png",
+    "image": "1030\\model_clean.png",
+    "target": "1030\\masks\\semantic_class_map.png",
+    "source_svg": "1030\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3844_F1_scaled_png",
+    "image": "3844\\F1_scaled.png",
+    "target": "3844\\masks\\semantic_class_map.png",
+    "source_svg": "3844\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14537_model_clean_png",
+    "image": "14537\\model_clean.png",
+    "target": "14537\\masks\\semantic_class_map.png",
+    "source_svg": "14537\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6033_F1_scaled_png",
+    "image": "6033\\F1_scaled.png",
+    "target": "6033\\masks\\semantic_class_map.png",
+    "source_svg": "6033\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13120_F1_scaled_png",
+    "image": "13120\\F1_scaled.png",
+    "target": "13120\\masks\\semantic_class_map.png",
+    "source_svg": "13120\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "2142_model_clean_png",
+    "image": "2142\\model_clean.png",
+    "target": "2142\\masks\\semantic_class_map.png",
+    "source_svg": "2142\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6389_F1_scaled_png",
+    "image": "6389\\F1_scaled.png",
+    "target": "6389\\masks\\semantic_class_map.png",
+    "source_svg": "6389\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9054_model_clean_png",
+    "image": "9054\\model_clean.png",
+    "target": "9054\\masks\\semantic_class_map.png",
+    "source_svg": "9054\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13612_F1_scaled_png",
+    "image": "13612\\F1_scaled.png",
+    "target": "13612\\masks\\semantic_class_map.png",
+    "source_svg": "13612\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11645_F1_scaled_png",
+    "image": "11645\\F1_scaled.png",
+    "target": "11645\\masks\\semantic_class_map.png",
+    "source_svg": "11645\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11079_model_clean_png",
+    "image": "11079\\model_clean.png",
+    "target": "11079\\masks\\semantic_class_map.png",
+    "source_svg": "11079\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6123_F1_scaled_png",
+    "image": "6123\\F1_scaled.png",
+    "target": "6123\\masks\\semantic_class_map.png",
+    "source_svg": "6123\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13483_model_clean_png",
+    "image": "13483\\model_clean.png",
+    "target": "13483\\masks\\semantic_class_map.png",
+    "source_svg": "13483\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13640_model_clean_png",
+    "image": "13640\\model_clean.png",
+    "target": "13640\\masks\\semantic_class_map.png",
+    "source_svg": "13640\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8762_F1_scaled_png",
+    "image": "8762\\F1_scaled.png",
+    "target": "8762\\masks\\semantic_class_map.png",
+    "source_svg": "8762\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13797_model_clean_png",
+    "image": "13797\\model_clean.png",
+    "target": "13797\\masks\\semantic_class_map.png",
+    "source_svg": "13797\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1967_F1_scaled_png",
+    "image": "1967\\F1_scaled.png",
+    "target": "1967\\masks\\semantic_class_map.png",
+    "source_svg": "1967\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11005_F1_scaled_png",
+    "image": "11005\\F1_scaled.png",
+    "target": "11005\\masks\\semantic_class_map.png",
+    "source_svg": "11005\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7949_F1_scaled_png",
+    "image": "7949\\F1_scaled.png",
+    "target": "7949\\masks\\semantic_class_map.png",
+    "source_svg": "7949\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5680_F1_scaled_png",
+    "image": "5680\\F1_scaled.png",
+    "target": "5680\\masks\\semantic_class_map.png",
+    "source_svg": "5680\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8425_F1_scaled_png",
+    "image": "8425\\F1_scaled.png",
+    "target": "8425\\masks\\semantic_class_map.png",
+    "source_svg": "8425\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4774_model_clean_png",
+    "image": "4774\\model_clean.png",
+    "target": "4774\\masks\\semantic_class_map.png",
+    "source_svg": "4774\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11846_model_clean_png",
+    "image": "11846\\model_clean.png",
+    "target": "11846\\masks\\semantic_class_map.png",
+    "source_svg": "11846\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9925_F1_scaled_png",
+    "image": "9925\\F1_scaled.png",
+    "target": "9925\\masks\\semantic_class_map.png",
+    "source_svg": "9925\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8717_model_clean_png",
+    "image": "8717\\model_clean.png",
+    "target": "8717\\masks\\semantic_class_map.png",
+    "source_svg": "8717\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5905_model_clean_png",
+    "image": "5905\\model_clean.png",
+    "target": "5905\\masks\\semantic_class_map.png",
+    "source_svg": "5905\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3061_model_clean_png",
+    "image": "3061\\model_clean.png",
+    "target": "3061\\masks\\semantic_class_map.png",
+    "source_svg": "3061\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1975_F1_scaled_png",
+    "image": "1975\\F1_scaled.png",
+    "target": "1975\\masks\\semantic_class_map.png",
+    "source_svg": "1975\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11779_F1_scaled_png",
+    "image": "11779\\F1_scaled.png",
+    "target": "11779\\masks\\semantic_class_map.png",
+    "source_svg": "11779\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7711_model_clean_png",
+    "image": "7711\\model_clean.png",
+    "target": "7711\\masks\\semantic_class_map.png",
+    "source_svg": "7711\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8332_model_clean_png",
+    "image": "8332\\model_clean.png",
+    "target": "8332\\masks\\semantic_class_map.png",
+    "source_svg": "8332\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9505_F1_scaled_png",
+    "image": "9505\\F1_scaled.png",
+    "target": "9505\\masks\\semantic_class_map.png",
+    "source_svg": "9505\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12879_F1_scaled_png",
+    "image": "12879\\F1_scaled.png",
+    "target": "12879\\masks\\semantic_class_map.png",
+    "source_svg": "12879\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6152_model_clean_png",
+    "image": "6152\\model_clean.png",
+    "target": "6152\\masks\\semantic_class_map.png",
+    "source_svg": "6152\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10163_F1_scaled_png",
+    "image": "10163\\F1_scaled.png",
+    "target": "10163\\masks\\semantic_class_map.png",
+    "source_svg": "10163\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4790_model_clean_png",
+    "image": "4790\\model_clean.png",
+    "target": "4790\\masks\\semantic_class_map.png",
+    "source_svg": "4790\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4595_F1_scaled_png",
+    "image": "4595\\F1_scaled.png",
+    "target": "4595\\masks\\semantic_class_map.png",
+    "source_svg": "4595\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6172_model_clean_png",
+    "image": "6172\\model_clean.png",
+    "target": "6172\\masks\\semantic_class_map.png",
+    "source_svg": "6172\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9453_F1_scaled_png",
+    "image": "9453\\F1_scaled.png",
+    "target": "9453\\masks\\semantic_class_map.png",
+    "source_svg": "9453\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11005_model_clean_png",
+    "image": "11005\\model_clean.png",
+    "target": "11005\\masks\\semantic_class_map.png",
+    "source_svg": "11005\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10212_F1_scaled_png",
+    "image": "10212\\F1_scaled.png",
+    "target": "10212\\masks\\semantic_class_map.png",
+    "source_svg": "10212\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12652_F1_scaled_png",
+    "image": "12652\\F1_scaled.png",
+    "target": "12652\\masks\\semantic_class_map.png",
+    "source_svg": "12652\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9875_F1_scaled_png",
+    "image": "9875\\F1_scaled.png",
+    "target": "9875\\masks\\semantic_class_map.png",
+    "source_svg": "9875\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8199_model_clean_png",
+    "image": "8199\\model_clean.png",
+    "target": "8199\\masks\\semantic_class_map.png",
+    "source_svg": "8199\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7103_model_clean_png",
+    "image": "7103\\model_clean.png",
+    "target": "7103\\masks\\semantic_class_map.png",
+    "source_svg": "7103\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1533_model_clean_png",
+    "image": "1533\\model_clean.png",
+    "target": "1533\\masks\\semantic_class_map.png",
+    "source_svg": "1533\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9088_F1_scaled_png",
+    "image": "9088\\F1_scaled.png",
+    "target": "9088\\masks\\semantic_class_map.png",
+    "source_svg": "9088\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4906_model_clean_png",
+    "image": "4906\\model_clean.png",
+    "target": "4906\\masks\\semantic_class_map.png",
+    "source_svg": "4906\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10733_model_clean_png",
+    "image": "10733\\model_clean.png",
+    "target": "10733\\masks\\semantic_class_map.png",
+    "source_svg": "10733\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1601_F1_scaled_png",
+    "image": "1601\\F1_scaled.png",
+    "target": "1601\\masks\\semantic_class_map.png",
+    "source_svg": "1601\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "211_F1_scaled_png",
+    "image": "211\\F1_scaled.png",
+    "target": "211\\masks\\semantic_class_map.png",
+    "source_svg": "211\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3654_model_clean_png",
+    "image": "3654\\model_clean.png",
+    "target": "3654\\masks\\semantic_class_map.png",
+    "source_svg": "3654\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "225_F1_scaled_png",
+    "image": "225\\F1_scaled.png",
+    "target": "225\\masks\\semantic_class_map.png",
+    "source_svg": "225\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12912_model_clean_png",
+    "image": "12912\\model_clean.png",
+    "target": "12912\\masks\\semantic_class_map.png",
+    "source_svg": "12912\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14563_F1_scaled_png",
+    "image": "14563\\F1_scaled.png",
+    "target": "14563\\masks\\semantic_class_map.png",
+    "source_svg": "14563\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6459_F1_scaled_png",
+    "image": "6459\\F1_scaled.png",
+    "target": "6459\\masks\\semantic_class_map.png",
+    "source_svg": "6459\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13301_F1_scaled_png",
+    "image": "13301\\F1_scaled.png",
+    "target": "13301\\masks\\semantic_class_map.png",
+    "source_svg": "13301\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6335_model_clean_png",
+    "image": "6335\\model_clean.png",
+    "target": "6335\\masks\\semantic_class_map.png",
+    "source_svg": "6335\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1945_model_clean_png",
+    "image": "1945\\model_clean.png",
+    "target": "1945\\masks\\semantic_class_map.png",
+    "source_svg": "1945\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11258_model_clean_png",
+    "image": "11258\\model_clean.png",
+    "target": "11258\\masks\\semantic_class_map.png",
+    "source_svg": "11258\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "163_model_clean_png",
+    "image": "163\\model_clean.png",
+    "target": "163\\masks\\semantic_class_map.png",
+    "source_svg": "163\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13123_model_clean_png",
+    "image": "13123\\model_clean.png",
+    "target": "13123\\masks\\semantic_class_map.png",
+    "source_svg": "13123\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8741_model_clean_png",
+    "image": "8741\\model_clean.png",
+    "target": "8741\\masks\\semantic_class_map.png",
+    "source_svg": "8741\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7639_model_clean_png",
+    "image": "7639\\model_clean.png",
+    "target": "7639\\masks\\semantic_class_map.png",
+    "source_svg": "7639\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "925_model_clean_png",
+    "image": "925\\model_clean.png",
+    "target": "925\\masks\\semantic_class_map.png",
+    "source_svg": "925\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9535_model_clean_png",
+    "image": "9535\\model_clean.png",
+    "target": "9535\\masks\\semantic_class_map.png",
+    "source_svg": "9535\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11684_F1_scaled_png",
+    "image": "11684\\F1_scaled.png",
+    "target": "11684\\masks\\semantic_class_map.png",
+    "source_svg": "11684\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10543_model_clean_png",
+    "image": "10543\\model_clean.png",
+    "target": "10543\\masks\\semantic_class_map.png",
+    "source_svg": "10543\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9782_model_clean_png",
+    "image": "9782\\model_clean.png",
+    "target": "9782\\masks\\semantic_class_map.png",
+    "source_svg": "9782\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11439_F1_scaled_png",
+    "image": "11439\\F1_scaled.png",
+    "target": "11439\\masks\\semantic_class_map.png",
+    "source_svg": "11439\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12841_model_clean_png",
+    "image": "12841\\model_clean.png",
+    "target": "12841\\masks\\semantic_class_map.png",
+    "source_svg": "12841\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11512_model_clean_png",
+    "image": "11512\\model_clean.png",
+    "target": "11512\\masks\\semantic_class_map.png",
+    "source_svg": "11512\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "585_model_clean_png",
+    "image": "585\\model_clean.png",
+    "target": "585\\masks\\semantic_class_map.png",
+    "source_svg": "585\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12289_F1_scaled_png",
+    "image": "12289\\F1_scaled.png",
+    "target": "12289\\masks\\semantic_class_map.png",
+    "source_svg": "12289\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "372_model_clean_png",
+    "image": "372\\model_clean.png",
+    "target": "372\\masks\\semantic_class_map.png",
+    "source_svg": "372\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11169_model_clean_png",
+    "image": "11169\\model_clean.png",
+    "target": "11169\\masks\\semantic_class_map.png",
+    "source_svg": "11169\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8617_F1_scaled_png",
+    "image": "8617\\F1_scaled.png",
+    "target": "8617\\masks\\semantic_class_map.png",
+    "source_svg": "8617\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12029_model_clean_png",
+    "image": "12029\\model_clean.png",
+    "target": "12029\\masks\\semantic_class_map.png",
+    "source_svg": "12029\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6013_model_clean_png",
+    "image": "6013\\model_clean.png",
+    "target": "6013\\masks\\semantic_class_map.png",
+    "source_svg": "6013\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4825_model_clean_png",
+    "image": "4825\\model_clean.png",
+    "target": "4825\\masks\\semantic_class_map.png",
+    "source_svg": "4825\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5533_F1_scaled_png",
+    "image": "5533\\F1_scaled.png",
+    "target": "5533\\masks\\semantic_class_map.png",
+    "source_svg": "5533\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7879_F1_scaled_png",
+    "image": "7879\\F1_scaled.png",
+    "target": "7879\\masks\\semantic_class_map.png",
+    "source_svg": "7879\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12483_model_clean_png",
+    "image": "12483\\model_clean.png",
+    "target": "12483\\masks\\semantic_class_map.png",
+    "source_svg": "12483\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "913_model_clean_png",
+    "image": "913\\model_clean.png",
+    "target": "913\\masks\\semantic_class_map.png",
+    "source_svg": "913\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10646_F1_scaled_png",
+    "image": "10646\\F1_scaled.png",
+    "target": "10646\\masks\\semantic_class_map.png",
+    "source_svg": "10646\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1812_model_clean_png",
+    "image": "1812\\model_clean.png",
+    "target": "1812\\masks\\semantic_class_map.png",
+    "source_svg": "1812\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "651_F1_scaled_png",
+    "image": "651\\F1_scaled.png",
+    "target": "651\\masks\\semantic_class_map.png",
+    "source_svg": "651\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13048_model_clean_png",
+    "image": "13048\\model_clean.png",
+    "target": "13048\\masks\\semantic_class_map.png",
+    "source_svg": "13048\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6553_model_clean_png",
+    "image": "6553\\model_clean.png",
+    "target": "6553\\masks\\semantic_class_map.png",
+    "source_svg": "6553\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13118_model_clean_png",
+    "image": "13118\\model_clean.png",
+    "target": "13118\\masks\\semantic_class_map.png",
+    "source_svg": "13118\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12449_model_clean_png",
+    "image": "12449\\model_clean.png",
+    "target": "12449\\masks\\semantic_class_map.png",
+    "source_svg": "12449\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10271_F1_scaled_png",
+    "image": "10271\\F1_scaled.png",
+    "target": "10271\\masks\\semantic_class_map.png",
+    "source_svg": "10271\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13157_F1_scaled_png",
+    "image": "13157\\F1_scaled.png",
+    "target": "13157\\masks\\semantic_class_map.png",
+    "source_svg": "13157\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1966_model_clean_png",
+    "image": "1966\\model_clean.png",
+    "target": "1966\\masks\\semantic_class_map.png",
+    "source_svg": "1966\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4866_F1_scaled_png",
+    "image": "4866\\F1_scaled.png",
+    "target": "4866\\masks\\semantic_class_map.png",
+    "source_svg": "4866\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "634_model_clean_png",
+    "image": "634\\model_clean.png",
+    "target": "634\\masks\\semantic_class_map.png",
+    "source_svg": "634\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7901_F1_scaled_png",
+    "image": "7901\\F1_scaled.png",
+    "target": "7901\\masks\\semantic_class_map.png",
+    "source_svg": "7901\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14646_F1_scaled_png",
+    "image": "14646\\F1_scaled.png",
+    "target": "14646\\masks\\semantic_class_map.png",
+    "source_svg": "14646\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10016_model_clean_png",
+    "image": "10016\\model_clean.png",
+    "target": "10016\\masks\\semantic_class_map.png",
+    "source_svg": "10016\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11601_model_clean_png",
+    "image": "11601\\model_clean.png",
+    "target": "11601\\masks\\semantic_class_map.png",
+    "source_svg": "11601\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10695_model_clean_png",
+    "image": "10695\\model_clean.png",
+    "target": "10695\\masks\\semantic_class_map.png",
+    "source_svg": "10695\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3868_model_clean_png",
+    "image": "3868\\model_clean.png",
+    "target": "3868\\masks\\semantic_class_map.png",
+    "source_svg": "3868\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11761_F1_scaled_png",
+    "image": "11761\\F1_scaled.png",
+    "target": "11761\\masks\\semantic_class_map.png",
+    "source_svg": "11761\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12546_model_clean_png",
+    "image": "12546\\model_clean.png",
+    "target": "12546\\masks\\semantic_class_map.png",
+    "source_svg": "12546\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11604_model_clean_png",
+    "image": "11604\\model_clean.png",
+    "target": "11604\\masks\\semantic_class_map.png",
+    "source_svg": "11604\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10738_F1_scaled_png",
+    "image": "10738\\F1_scaled.png",
+    "target": "10738\\masks\\semantic_class_map.png",
+    "source_svg": "10738\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6007_model_clean_png",
+    "image": "6007\\model_clean.png",
+    "target": "6007\\masks\\semantic_class_map.png",
+    "source_svg": "6007\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12823_F1_scaled_png",
+    "image": "12823\\F1_scaled.png",
+    "target": "12823\\masks\\semantic_class_map.png",
+    "source_svg": "12823\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9717_F1_scaled_png",
+    "image": "9717\\F1_scaled.png",
+    "target": "9717\\masks\\semantic_class_map.png",
+    "source_svg": "9717\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5535_F1_scaled_png",
+    "image": "5535\\F1_scaled.png",
+    "target": "5535\\masks\\semantic_class_map.png",
+    "source_svg": "5535\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12120_model_clean_png",
+    "image": "12120\\model_clean.png",
+    "target": "12120\\masks\\semantic_class_map.png",
+    "source_svg": "12120\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7791_F1_scaled_png",
+    "image": "7791\\F1_scaled.png",
+    "target": "7791\\masks\\semantic_class_map.png",
+    "source_svg": "7791\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11041_model_clean_png",
+    "image": "11041\\model_clean.png",
+    "target": "11041\\masks\\semantic_class_map.png",
+    "source_svg": "11041\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7529_F1_scaled_png",
+    "image": "7529\\F1_scaled.png",
+    "target": "7529\\masks\\semantic_class_map.png",
+    "source_svg": "7529\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5046_F1_scaled_png",
+    "image": "5046\\F1_scaled.png",
+    "target": "5046\\masks\\semantic_class_map.png",
+    "source_svg": "5046\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10547_F1_scaled_png",
+    "image": "10547\\F1_scaled.png",
+    "target": "10547\\masks\\semantic_class_map.png",
+    "source_svg": "10547\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "541_model_clean_png",
+    "image": "541\\model_clean.png",
+    "target": "541\\masks\\semantic_class_map.png",
+    "source_svg": "541\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4517_F1_scaled_png",
+    "image": "4517\\F1_scaled.png",
+    "target": "4517\\masks\\semantic_class_map.png",
+    "source_svg": "4517\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13309_F1_scaled_png",
+    "image": "13309\\F1_scaled.png",
+    "target": "13309\\masks\\semantic_class_map.png",
+    "source_svg": "13309\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14967_F1_scaled_png",
+    "image": "14967\\F1_scaled.png",
+    "target": "14967\\masks\\semantic_class_map.png",
+    "source_svg": "14967\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "481_model_clean_png",
+    "image": "481\\model_clean.png",
+    "target": "481\\masks\\semantic_class_map.png",
+    "source_svg": "481\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13216_F1_scaled_png",
+    "image": "13216\\F1_scaled.png",
+    "target": "13216\\masks\\semantic_class_map.png",
+    "source_svg": "13216\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1666_F1_scaled_png",
+    "image": "1666\\F1_scaled.png",
+    "target": "1666\\masks\\semantic_class_map.png",
+    "source_svg": "1666\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1772_F1_scaled_png",
+    "image": "1772\\F1_scaled.png",
+    "target": "1772\\masks\\semantic_class_map.png",
+    "source_svg": "1772\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8471_F1_scaled_png",
+    "image": "8471\\F1_scaled.png",
+    "target": "8471\\masks\\semantic_class_map.png",
+    "source_svg": "8471\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3153_F1_scaled_png",
+    "image": "3153\\F1_scaled.png",
+    "target": "3153\\masks\\semantic_class_map.png",
+    "source_svg": "3153\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12304_model_clean_png",
+    "image": "12304\\model_clean.png",
+    "target": "12304\\masks\\semantic_class_map.png",
+    "source_svg": "12304\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9852_F1_scaled_png",
+    "image": "9852\\F1_scaled.png",
+    "target": "9852\\masks\\semantic_class_map.png",
+    "source_svg": "9852\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8155_F1_scaled_png",
+    "image": "8155\\F1_scaled.png",
+    "target": "8155\\masks\\semantic_class_map.png",
+    "source_svg": "8155\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8819_F1_scaled_png",
+    "image": "8819\\F1_scaled.png",
+    "target": "8819\\masks\\semantic_class_map.png",
+    "source_svg": "8819\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14761_model_clean_png",
+    "image": "14761\\model_clean.png",
+    "target": "14761\\masks\\semantic_class_map.png",
+    "source_svg": "14761\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7805_F1_scaled_png",
+    "image": "7805\\F1_scaled.png",
+    "target": "7805\\masks\\semantic_class_map.png",
+    "source_svg": "7805\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3927_model_clean_png",
+    "image": "3927\\model_clean.png",
+    "target": "3927\\masks\\semantic_class_map.png",
+    "source_svg": "3927\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11201_model_clean_png",
+    "image": "11201\\model_clean.png",
+    "target": "11201\\masks\\semantic_class_map.png",
+    "source_svg": "11201\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12628_F1_scaled_png",
+    "image": "12628\\F1_scaled.png",
+    "target": "12628\\masks\\semantic_class_map.png",
+    "source_svg": "12628\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10765_model_clean_png",
+    "image": "10765\\model_clean.png",
+    "target": "10765\\masks\\semantic_class_map.png",
+    "source_svg": "10765\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8736_F1_scaled_png",
+    "image": "8736\\F1_scaled.png",
+    "target": "8736\\masks\\semantic_class_map.png",
+    "source_svg": "8736\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4_F1_scaled_png",
+    "image": "4\\F1_scaled.png",
+    "target": "4\\masks\\semantic_class_map.png",
+    "source_svg": "4\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11514_model_clean_png",
+    "image": "11514\\model_clean.png",
+    "target": "11514\\masks\\semantic_class_map.png",
+    "source_svg": "11514\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11542_model_clean_png",
+    "image": "11542\\model_clean.png",
+    "target": "11542\\masks\\semantic_class_map.png",
+    "source_svg": "11542\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10489_F1_scaled_png",
+    "image": "10489\\F1_scaled.png",
+    "target": "10489\\masks\\semantic_class_map.png",
+    "source_svg": "10489\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6309_model_clean_png",
+    "image": "6309\\model_clean.png",
+    "target": "6309\\masks\\semantic_class_map.png",
+    "source_svg": "6309\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "559_F1_scaled_png",
+    "image": "559\\F1_scaled.png",
+    "target": "559\\masks\\semantic_class_map.png",
+    "source_svg": "559\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4649_F1_scaled_png",
+    "image": "4649\\F1_scaled.png",
+    "target": "4649\\masks\\semantic_class_map.png",
+    "source_svg": "4649\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10678_model_clean_png",
+    "image": "10678\\model_clean.png",
+    "target": "10678\\masks\\semantic_class_map.png",
+    "source_svg": "10678\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2084_model_clean_png",
+    "image": "2084\\model_clean.png",
+    "target": "2084\\masks\\semantic_class_map.png",
+    "source_svg": "2084\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14538_model_clean_png",
+    "image": "14538\\model_clean.png",
+    "target": "14538\\masks\\semantic_class_map.png",
+    "source_svg": "14538\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10589_F1_scaled_png",
+    "image": "10589\\F1_scaled.png",
+    "target": "10589\\masks\\semantic_class_map.png",
+    "source_svg": "10589\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11160_model_clean_png",
+    "image": "11160\\model_clean.png",
+    "target": "11160\\masks\\semantic_class_map.png",
+    "source_svg": "11160\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "20049_F1_scaled_png",
+    "image": "20049\\F1_scaled.png",
+    "target": "20049\\masks\\semantic_class_map.png",
+    "source_svg": "20049\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12677_model_clean_png",
+    "image": "12677\\model_clean.png",
+    "target": "12677\\masks\\semantic_class_map.png",
+    "source_svg": "12677\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10440_model_clean_png",
+    "image": "10440\\model_clean.png",
+    "target": "10440\\masks\\semantic_class_map.png",
+    "source_svg": "10440\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11866_model_clean_png",
+    "image": "11866\\model_clean.png",
+    "target": "11866\\masks\\semantic_class_map.png",
+    "source_svg": "11866\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13722_F1_scaled_png",
+    "image": "13722\\F1_scaled.png",
+    "target": "13722\\masks\\semantic_class_map.png",
+    "source_svg": "13722\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1645_F1_scaled_png",
+    "image": "1645\\F1_scaled.png",
+    "target": "1645\\masks\\semantic_class_map.png",
+    "source_svg": "1645\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20062_F1_scaled_png",
+    "image": "20062\\F1_scaled.png",
+    "target": "20062\\masks\\semantic_class_map.png",
+    "source_svg": "20062\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1954_model_clean_png",
+    "image": "1954\\model_clean.png",
+    "target": "1954\\masks\\semantic_class_map.png",
+    "source_svg": "1954\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13070_F1_scaled_png",
+    "image": "13070\\F1_scaled.png",
+    "target": "13070\\masks\\semantic_class_map.png",
+    "source_svg": "13070\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4584_F1_scaled_png",
+    "image": "4584\\F1_scaled.png",
+    "target": "4584\\masks\\semantic_class_map.png",
+    "source_svg": "4584\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10108_model_clean_png",
+    "image": "10108\\model_clean.png",
+    "target": "10108\\masks\\semantic_class_map.png",
+    "source_svg": "10108\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11063_model_clean_png",
+    "image": "11063\\model_clean.png",
+    "target": "11063\\masks\\semantic_class_map.png",
+    "source_svg": "11063\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2078_F1_scaled_png",
+    "image": "2078\\F1_scaled.png",
+    "target": "2078\\masks\\semantic_class_map.png",
+    "source_svg": "2078\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7675_F1_scaled_png",
+    "image": "7675\\F1_scaled.png",
+    "target": "7675\\masks\\semantic_class_map.png",
+    "source_svg": "7675\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "571_model_clean_png",
+    "image": "571\\model_clean.png",
+    "target": "571\\masks\\semantic_class_map.png",
+    "source_svg": "571\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8321_F1_scaled_png",
+    "image": "8321\\F1_scaled.png",
+    "target": "8321\\masks\\semantic_class_map.png",
+    "source_svg": "8321\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6441_model_clean_png",
+    "image": "6441\\model_clean.png",
+    "target": "6441\\masks\\semantic_class_map.png",
+    "source_svg": "6441\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13162_F1_scaled_png",
+    "image": "13162\\F1_scaled.png",
+    "target": "13162\\masks\\semantic_class_map.png",
+    "source_svg": "13162\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3875_model_clean_png",
+    "image": "3875\\model_clean.png",
+    "target": "3875\\masks\\semantic_class_map.png",
+    "source_svg": "3875\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10492_model_clean_png",
+    "image": "10492\\model_clean.png",
+    "target": "10492\\masks\\semantic_class_map.png",
+    "source_svg": "10492\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10394_model_clean_png",
+    "image": "10394\\model_clean.png",
+    "target": "10394\\masks\\semantic_class_map.png",
+    "source_svg": "10394\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12941_F1_scaled_png",
+    "image": "12941\\F1_scaled.png",
+    "target": "12941\\masks\\semantic_class_map.png",
+    "source_svg": "12941\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11287_model_clean_png",
+    "image": "11287\\model_clean.png",
+    "target": "11287\\masks\\semantic_class_map.png",
+    "source_svg": "11287\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8406_F1_scaled_png",
+    "image": "8406\\F1_scaled.png",
+    "target": "8406\\masks\\semantic_class_map.png",
+    "source_svg": "8406\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6570_F1_scaled_png",
+    "image": "6570\\F1_scaled.png",
+    "target": "6570\\masks\\semantic_class_map.png",
+    "source_svg": "6570\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10126_F1_scaled_png",
+    "image": "10126\\F1_scaled.png",
+    "target": "10126\\masks\\semantic_class_map.png",
+    "source_svg": "10126\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1328_model_clean_png",
+    "image": "1328\\model_clean.png",
+    "target": "1328\\masks\\semantic_class_map.png",
+    "source_svg": "1328\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9057_model_clean_png",
+    "image": "9057\\model_clean.png",
+    "target": "9057\\masks\\semantic_class_map.png",
+    "source_svg": "9057\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14065_model_clean_png",
+    "image": "14065\\model_clean.png",
+    "target": "14065\\masks\\semantic_class_map.png",
+    "source_svg": "14065\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1241_F1_scaled_png",
+    "image": "1241\\F1_scaled.png",
+    "target": "1241\\masks\\semantic_class_map.png",
+    "source_svg": "1241\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13204_model_clean_png",
+    "image": "13204\\model_clean.png",
+    "target": "13204\\masks\\semantic_class_map.png",
+    "source_svg": "13204\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11977_model_clean_png",
+    "image": "11977\\model_clean.png",
+    "target": "11977\\masks\\semantic_class_map.png",
+    "source_svg": "11977\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11053_F1_scaled_png",
+    "image": "11053\\F1_scaled.png",
+    "target": "11053\\masks\\semantic_class_map.png",
+    "source_svg": "11053\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13052_model_clean_png",
+    "image": "13052\\model_clean.png",
+    "target": "13052\\masks\\semantic_class_map.png",
+    "source_svg": "13052\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4898_F1_scaled_png",
+    "image": "4898\\F1_scaled.png",
+    "target": "4898\\masks\\semantic_class_map.png",
+    "source_svg": "4898\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "32_model_clean_png",
+    "image": "32\\model_clean.png",
+    "target": "32\\masks\\semantic_class_map.png",
+    "source_svg": "32\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7758_model_clean_png",
+    "image": "7758\\model_clean.png",
+    "target": "7758\\masks\\semantic_class_map.png",
+    "source_svg": "7758\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4821_model_clean_png",
+    "image": "4821\\model_clean.png",
+    "target": "4821\\masks\\semantic_class_map.png",
+    "source_svg": "4821\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "690_model_clean_png",
+    "image": "690\\model_clean.png",
+    "target": "690\\masks\\semantic_class_map.png",
+    "source_svg": "690\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12966_F1_scaled_png",
+    "image": "12966\\F1_scaled.png",
+    "target": "12966\\masks\\semantic_class_map.png",
+    "source_svg": "12966\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20100_model_clean_png",
+    "image": "20100\\model_clean.png",
+    "target": "20100\\masks\\semantic_class_map.png",
+    "source_svg": "20100\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7509_F1_scaled_png",
+    "image": "7509\\F1_scaled.png",
+    "target": "7509\\masks\\semantic_class_map.png",
+    "source_svg": "7509\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12210_model_clean_png",
+    "image": "12210\\model_clean.png",
+    "target": "12210\\masks\\semantic_class_map.png",
+    "source_svg": "12210\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9357_model_clean_png",
+    "image": "9357\\model_clean.png",
+    "target": "9357\\masks\\semantic_class_map.png",
+    "source_svg": "9357\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11874_model_clean_png",
+    "image": "11874\\model_clean.png",
+    "target": "11874\\masks\\semantic_class_map.png",
+    "source_svg": "11874\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6349_model_clean_png",
+    "image": "6349\\model_clean.png",
+    "target": "6349\\masks\\semantic_class_map.png",
+    "source_svg": "6349\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7777_model_clean_png",
+    "image": "7777\\model_clean.png",
+    "target": "7777\\masks\\semantic_class_map.png",
+    "source_svg": "7777\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3586_model_clean_png",
+    "image": "3586\\model_clean.png",
+    "target": "3586\\masks\\semantic_class_map.png",
+    "source_svg": "3586\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7556_model_clean_png",
+    "image": "7556\\model_clean.png",
+    "target": "7556\\masks\\semantic_class_map.png",
+    "source_svg": "7556\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1121_F1_scaled_png",
+    "image": "1121\\F1_scaled.png",
+    "target": "1121\\masks\\semantic_class_map.png",
+    "source_svg": "1121\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9719_F1_scaled_png",
+    "image": "9719\\F1_scaled.png",
+    "target": "9719\\masks\\semantic_class_map.png",
+    "source_svg": "9719\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11959_F1_scaled_png",
+    "image": "11959\\F1_scaled.png",
+    "target": "11959\\masks\\semantic_class_map.png",
+    "source_svg": "11959\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6728_F1_scaled_png",
+    "image": "6728\\F1_scaled.png",
+    "target": "6728\\masks\\semantic_class_map.png",
+    "source_svg": "6728\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11224_model_clean_png",
+    "image": "11224\\model_clean.png",
+    "target": "11224\\masks\\semantic_class_map.png",
+    "source_svg": "11224\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12443_model_clean_png",
+    "image": "12443\\model_clean.png",
+    "target": "12443\\masks\\semantic_class_map.png",
+    "source_svg": "12443\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9629_F1_scaled_png",
+    "image": "9629\\F1_scaled.png",
+    "target": "9629\\masks\\semantic_class_map.png",
+    "source_svg": "9629\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13315_F1_scaled_png",
+    "image": "13315\\F1_scaled.png",
+    "target": "13315\\masks\\semantic_class_map.png",
+    "source_svg": "13315\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12889_F1_scaled_png",
+    "image": "12889\\F1_scaled.png",
+    "target": "12889\\masks\\semantic_class_map.png",
+    "source_svg": "12889\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1809_model_clean_png",
+    "image": "1809\\model_clean.png",
+    "target": "1809\\masks\\semantic_class_map.png",
+    "source_svg": "1809\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6507_model_clean_png",
+    "image": "6507\\model_clean.png",
+    "target": "6507\\masks\\semantic_class_map.png",
+    "source_svg": "6507\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13829_model_clean_png",
+    "image": "13829\\model_clean.png",
+    "target": "13829\\masks\\semantic_class_map.png",
+    "source_svg": "13829\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13622_F1_scaled_png",
+    "image": "13622\\F1_scaled.png",
+    "target": "13622\\masks\\semantic_class_map.png",
+    "source_svg": "13622\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9346_F1_scaled_png",
+    "image": "9346\\F1_scaled.png",
+    "target": "9346\\masks\\semantic_class_map.png",
+    "source_svg": "9346\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7592_F1_scaled_png",
+    "image": "7592\\F1_scaled.png",
+    "target": "7592\\masks\\semantic_class_map.png",
+    "source_svg": "7592\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14879_model_clean_png",
+    "image": "14879\\model_clean.png",
+    "target": "14879\\masks\\semantic_class_map.png",
+    "source_svg": "14879\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1376_model_clean_png",
+    "image": "1376\\model_clean.png",
+    "target": "1376\\masks\\semantic_class_map.png",
+    "source_svg": "1376\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3510_model_clean_png",
+    "image": "3510\\model_clean.png",
+    "target": "3510\\masks\\semantic_class_map.png",
+    "source_svg": "3510\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3876_F1_scaled_png",
+    "image": "3876\\F1_scaled.png",
+    "target": "3876\\masks\\semantic_class_map.png",
+    "source_svg": "3876\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8713_model_clean_png",
+    "image": "8713\\model_clean.png",
+    "target": "8713\\masks\\semantic_class_map.png",
+    "source_svg": "8713\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14158_F1_scaled_png",
+    "image": "14158\\F1_scaled.png",
+    "target": "14158\\masks\\semantic_class_map.png",
+    "source_svg": "14158\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4721_F1_scaled_png",
+    "image": "4721\\F1_scaled.png",
+    "target": "4721\\masks\\semantic_class_map.png",
+    "source_svg": "4721\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6043_F1_scaled_png",
+    "image": "6043\\F1_scaled.png",
+    "target": "6043\\masks\\semantic_class_map.png",
+    "source_svg": "6043\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13312_model_clean_png",
+    "image": "13312\\model_clean.png",
+    "target": "13312\\masks\\semantic_class_map.png",
+    "source_svg": "13312\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12578_F1_scaled_png",
+    "image": "12578\\F1_scaled.png",
+    "target": "12578\\masks\\semantic_class_map.png",
+    "source_svg": "12578\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6369_model_clean_png",
+    "image": "6369\\model_clean.png",
+    "target": "6369\\masks\\semantic_class_map.png",
+    "source_svg": "6369\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8416_F1_scaled_png",
+    "image": "8416\\F1_scaled.png",
+    "target": "8416\\masks\\semantic_class_map.png",
+    "source_svg": "8416\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12252_F1_scaled_png",
+    "image": "12252\\F1_scaled.png",
+    "target": "12252\\masks\\semantic_class_map.png",
+    "source_svg": "12252\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13180_model_clean_png",
+    "image": "13180\\model_clean.png",
+    "target": "13180\\masks\\semantic_class_map.png",
+    "source_svg": "13180\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11011_model_clean_png",
+    "image": "11011\\model_clean.png",
+    "target": "11011\\masks\\semantic_class_map.png",
+    "source_svg": "11011\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10146_F1_scaled_png",
+    "image": "10146\\F1_scaled.png",
+    "target": "10146\\masks\\semantic_class_map.png",
+    "source_svg": "10146\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1746_model_clean_png",
+    "image": "1746\\model_clean.png",
+    "target": "1746\\masks\\semantic_class_map.png",
+    "source_svg": "1746\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "2073_model_clean_png",
+    "image": "2073\\model_clean.png",
+    "target": "2073\\masks\\semantic_class_map.png",
+    "source_svg": "2073\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6606_model_clean_png",
+    "image": "6606\\model_clean.png",
+    "target": "6606\\masks\\semantic_class_map.png",
+    "source_svg": "6606\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5814_model_clean_png",
+    "image": "5814\\model_clean.png",
+    "target": "5814\\masks\\semantic_class_map.png",
+    "source_svg": "5814\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "20031_model_clean_png",
+    "image": "20031\\model_clean.png",
+    "target": "20031\\masks\\semantic_class_map.png",
+    "source_svg": "20031\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8264_F1_scaled_png",
+    "image": "8264\\F1_scaled.png",
+    "target": "8264\\masks\\semantic_class_map.png",
+    "source_svg": "8264\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12555_model_clean_png",
+    "image": "12555\\model_clean.png",
+    "target": "12555\\masks\\semantic_class_map.png",
+    "source_svg": "12555\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "774_F1_scaled_png",
+    "image": "774\\F1_scaled.png",
+    "target": "774\\masks\\semantic_class_map.png",
+    "source_svg": "774\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3904_F1_scaled_png",
+    "image": "3904\\F1_scaled.png",
+    "target": "3904\\masks\\semantic_class_map.png",
+    "source_svg": "3904\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9121_model_clean_png",
+    "image": "9121\\model_clean.png",
+    "target": "9121\\masks\\semantic_class_map.png",
+    "source_svg": "9121\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9070_F1_scaled_png",
+    "image": "9070\\F1_scaled.png",
+    "target": "9070\\masks\\semantic_class_map.png",
+    "source_svg": "9070\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6716_F1_scaled_png",
+    "image": "6716\\F1_scaled.png",
+    "target": "6716\\masks\\semantic_class_map.png",
+    "source_svg": "6716\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12566_F1_scaled_png",
+    "image": "12566\\F1_scaled.png",
+    "target": "12566\\masks\\semantic_class_map.png",
+    "source_svg": "12566\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9531_F1_scaled_png",
+    "image": "9531\\F1_scaled.png",
+    "target": "9531\\masks\\semantic_class_map.png",
+    "source_svg": "9531\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11949_F1_scaled_png",
+    "image": "11949\\F1_scaled.png",
+    "target": "11949\\masks\\semantic_class_map.png",
+    "source_svg": "11949\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3035_F1_scaled_png",
+    "image": "3035\\F1_scaled.png",
+    "target": "3035\\masks\\semantic_class_map.png",
+    "source_svg": "3035\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10089_F1_scaled_png",
+    "image": "10089\\F1_scaled.png",
+    "target": "10089\\masks\\semantic_class_map.png",
+    "source_svg": "10089\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3912_model_clean_png",
+    "image": "3912\\model_clean.png",
+    "target": "3912\\masks\\semantic_class_map.png",
+    "source_svg": "3912\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12965_F1_scaled_png",
+    "image": "12965\\F1_scaled.png",
+    "target": "12965\\masks\\semantic_class_map.png",
+    "source_svg": "12965\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9043_F1_scaled_png",
+    "image": "9043\\F1_scaled.png",
+    "target": "9043\\masks\\semantic_class_map.png",
+    "source_svg": "9043\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4890_model_clean_png",
+    "image": "4890\\model_clean.png",
+    "target": "4890\\masks\\semantic_class_map.png",
+    "source_svg": "4890\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13009_model_clean_png",
+    "image": "13009\\model_clean.png",
+    "target": "13009\\masks\\semantic_class_map.png",
+    "source_svg": "13009\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1372_model_clean_png",
+    "image": "1372\\model_clean.png",
+    "target": "1372\\masks\\semantic_class_map.png",
+    "source_svg": "1372\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12747_model_clean_png",
+    "image": "12747\\model_clean.png",
+    "target": "12747\\masks\\semantic_class_map.png",
+    "source_svg": "12747\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13861_model_clean_png",
+    "image": "13861\\model_clean.png",
+    "target": "13861\\masks\\semantic_class_map.png",
+    "source_svg": "13861\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12167_F1_scaled_png",
+    "image": "12167\\F1_scaled.png",
+    "target": "12167\\masks\\semantic_class_map.png",
+    "source_svg": "12167\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "2032_model_clean_png",
+    "image": "2032\\model_clean.png",
+    "target": "2032\\masks\\semantic_class_map.png",
+    "source_svg": "2032\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1185_F1_scaled_png",
+    "image": "1185\\F1_scaled.png",
+    "target": "1185\\masks\\semantic_class_map.png",
+    "source_svg": "1185\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13550_model_clean_png",
+    "image": "13550\\model_clean.png",
+    "target": "13550\\masks\\semantic_class_map.png",
+    "source_svg": "13550\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8634_model_clean_png",
+    "image": "8634\\model_clean.png",
+    "target": "8634\\masks\\semantic_class_map.png",
+    "source_svg": "8634\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10231_F1_scaled_png",
+    "image": "10231\\F1_scaled.png",
+    "target": "10231\\masks\\semantic_class_map.png",
+    "source_svg": "10231\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13664_F1_scaled_png",
+    "image": "13664\\F1_scaled.png",
+    "target": "13664\\masks\\semantic_class_map.png",
+    "source_svg": "13664\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9311_F1_scaled_png",
+    "image": "9311\\F1_scaled.png",
+    "target": "9311\\masks\\semantic_class_map.png",
+    "source_svg": "9311\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6083_F1_scaled_png",
+    "image": "6083\\F1_scaled.png",
+    "target": "6083\\masks\\semantic_class_map.png",
+    "source_svg": "6083\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5048_model_clean_png",
+    "image": "5048\\model_clean.png",
+    "target": "5048\\masks\\semantic_class_map.png",
+    "source_svg": "5048\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4525_F1_scaled_png",
+    "image": "4525\\F1_scaled.png",
+    "target": "4525\\masks\\semantic_class_map.png",
+    "source_svg": "4525\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "86_F1_scaled_png",
+    "image": "86\\F1_scaled.png",
+    "target": "86\\masks\\semantic_class_map.png",
+    "source_svg": "86\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7655_model_clean_png",
+    "image": "7655\\model_clean.png",
+    "target": "7655\\masks\\semantic_class_map.png",
+    "source_svg": "7655\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12580_F1_scaled_png",
+    "image": "12580\\F1_scaled.png",
+    "target": "12580\\masks\\semantic_class_map.png",
+    "source_svg": "12580\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1778_F1_scaled_png",
+    "image": "1778\\F1_scaled.png",
+    "target": "1778\\masks\\semantic_class_map.png",
+    "source_svg": "1778\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "130_model_clean_png",
+    "image": "130\\model_clean.png",
+    "target": "130\\masks\\semantic_class_map.png",
+    "source_svg": "130\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10775_F1_scaled_png",
+    "image": "10775\\F1_scaled.png",
+    "target": "10775\\masks\\semantic_class_map.png",
+    "source_svg": "10775\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12588_F1_scaled_png",
+    "image": "12588\\F1_scaled.png",
+    "target": "12588\\masks\\semantic_class_map.png",
+    "source_svg": "12588\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13516_model_clean_png",
+    "image": "13516\\model_clean.png",
+    "target": "13516\\masks\\semantic_class_map.png",
+    "source_svg": "13516\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12867_model_clean_png",
+    "image": "12867\\model_clean.png",
+    "target": "12867\\masks\\semantic_class_map.png",
+    "source_svg": "12867\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4850_model_clean_png",
+    "image": "4850\\model_clean.png",
+    "target": "4850\\masks\\semantic_class_map.png",
+    "source_svg": "4850\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7072_F1_scaled_png",
+    "image": "7072\\F1_scaled.png",
+    "target": "7072\\masks\\semantic_class_map.png",
+    "source_svg": "7072\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1582_F1_scaled_png",
+    "image": "1582\\F1_scaled.png",
+    "target": "1582\\masks\\semantic_class_map.png",
+    "source_svg": "1582\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "190_F1_scaled_png",
+    "image": "190\\F1_scaled.png",
+    "target": "190\\masks\\semantic_class_map.png",
+    "source_svg": "190\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20096_model_clean_png",
+    "image": "20096\\model_clean.png",
+    "target": "20096\\masks\\semantic_class_map.png",
+    "source_svg": "20096\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7941_model_clean_png",
+    "image": "7941\\model_clean.png",
+    "target": "7941\\masks\\semantic_class_map.png",
+    "source_svg": "7941\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3619_F1_scaled_png",
+    "image": "3619\\F1_scaled.png",
+    "target": "3619\\masks\\semantic_class_map.png",
+    "source_svg": "3619\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5111_model_clean_png",
+    "image": "5111\\model_clean.png",
+    "target": "5111\\masks\\semantic_class_map.png",
+    "source_svg": "5111\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12883_model_clean_png",
+    "image": "12883\\model_clean.png",
+    "target": "12883\\masks\\semantic_class_map.png",
+    "source_svg": "12883\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "59_F1_scaled_png",
+    "image": "59\\F1_scaled.png",
+    "target": "59\\masks\\semantic_class_map.png",
+    "source_svg": "59\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "313_F1_scaled_png",
+    "image": "313\\F1_scaled.png",
+    "target": "313\\masks\\semantic_class_map.png",
+    "source_svg": "313\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7098_model_clean_png",
+    "image": "7098\\model_clean.png",
+    "target": "7098\\masks\\semantic_class_map.png",
+    "source_svg": "7098\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11787_model_clean_png",
+    "image": "11787\\model_clean.png",
+    "target": "11787\\masks\\semantic_class_map.png",
+    "source_svg": "11787\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1581_model_clean_png",
+    "image": "1581\\model_clean.png",
+    "target": "1581\\masks\\semantic_class_map.png",
+    "source_svg": "1581\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11559_F1_scaled_png",
+    "image": "11559\\F1_scaled.png",
+    "target": "11559\\masks\\semantic_class_map.png",
+    "source_svg": "11559\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6557_F1_scaled_png",
+    "image": "6557\\F1_scaled.png",
+    "target": "6557\\masks\\semantic_class_map.png",
+    "source_svg": "6557\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1849_F1_scaled_png",
+    "image": "1849\\F1_scaled.png",
+    "target": "1849\\masks\\semantic_class_map.png",
+    "source_svg": "1849\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5688_F1_scaled_png",
+    "image": "5688\\F1_scaled.png",
+    "target": "5688\\masks\\semantic_class_map.png",
+    "source_svg": "5688\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14078_F1_scaled_png",
+    "image": "14078\\F1_scaled.png",
+    "target": "14078\\masks\\semantic_class_map.png",
+    "source_svg": "14078\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1560_model_clean_png",
+    "image": "1560\\model_clean.png",
+    "target": "1560\\masks\\semantic_class_map.png",
+    "source_svg": "1560\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11084_model_clean_png",
+    "image": "11084\\model_clean.png",
+    "target": "11084\\masks\\semantic_class_map.png",
+    "source_svg": "11084\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "207_F1_scaled_png",
+    "image": "207\\F1_scaled.png",
+    "target": "207\\masks\\semantic_class_map.png",
+    "source_svg": "207\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8502_F1_scaled_png",
+    "image": "8502\\F1_scaled.png",
+    "target": "8502\\masks\\semantic_class_map.png",
+    "source_svg": "8502\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10114_F1_scaled_png",
+    "image": "10114\\F1_scaled.png",
+    "target": "10114\\masks\\semantic_class_map.png",
+    "source_svg": "10114\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13730_F1_scaled_png",
+    "image": "13730\\F1_scaled.png",
+    "target": "13730\\masks\\semantic_class_map.png",
+    "source_svg": "13730\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "585_F1_scaled_png",
+    "image": "585\\F1_scaled.png",
+    "target": "585\\masks\\semantic_class_map.png",
+    "source_svg": "585\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9208_F1_scaled_png",
+    "image": "9208\\F1_scaled.png",
+    "target": "9208\\masks\\semantic_class_map.png",
+    "source_svg": "9208\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10630_model_clean_png",
+    "image": "10630\\model_clean.png",
+    "target": "10630\\masks\\semantic_class_map.png",
+    "source_svg": "10630\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14182_F1_scaled_png",
+    "image": "14182\\F1_scaled.png",
+    "target": "14182\\masks\\semantic_class_map.png",
+    "source_svg": "14182\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "602_F1_scaled_png",
+    "image": "602\\F1_scaled.png",
+    "target": "602\\masks\\semantic_class_map.png",
+    "source_svg": "602\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9678_F1_scaled_png",
+    "image": "9678\\F1_scaled.png",
+    "target": "9678\\masks\\semantic_class_map.png",
+    "source_svg": "9678\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "353_F1_scaled_png",
+    "image": "353\\F1_scaled.png",
+    "target": "353\\masks\\semantic_class_map.png",
+    "source_svg": "353\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13793_model_clean_png",
+    "image": "13793\\model_clean.png",
+    "target": "13793\\masks\\semantic_class_map.png",
+    "source_svg": "13793\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10351_model_clean_png",
+    "image": "10351\\model_clean.png",
+    "target": "10351\\masks\\semantic_class_map.png",
+    "source_svg": "10351\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8090_model_clean_png",
+    "image": "8090\\model_clean.png",
+    "target": "8090\\masks\\semantic_class_map.png",
+    "source_svg": "8090\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "410_F1_scaled_png",
+    "image": "410\\F1_scaled.png",
+    "target": "410\\masks\\semantic_class_map.png",
+    "source_svg": "410\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "948_F1_scaled_png",
+    "image": "948\\F1_scaled.png",
+    "target": "948\\masks\\semantic_class_map.png",
+    "source_svg": "948\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4938_F1_scaled_png",
+    "image": "4938\\F1_scaled.png",
+    "target": "4938\\masks\\semantic_class_map.png",
+    "source_svg": "4938\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6293_model_clean_png",
+    "image": "6293\\model_clean.png",
+    "target": "6293\\masks\\semantic_class_map.png",
+    "source_svg": "6293\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13274_model_clean_png",
+    "image": "13274\\model_clean.png",
+    "target": "13274\\masks\\semantic_class_map.png",
+    "source_svg": "13274\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7910_F1_scaled_png",
+    "image": "7910\\F1_scaled.png",
+    "target": "7910\\masks\\semantic_class_map.png",
+    "source_svg": "7910\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8755_model_clean_png",
+    "image": "8755\\model_clean.png",
+    "target": "8755\\masks\\semantic_class_map.png",
+    "source_svg": "8755\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1106_model_clean_png",
+    "image": "1106\\model_clean.png",
+    "target": "1106\\masks\\semantic_class_map.png",
+    "source_svg": "1106\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12576_F1_scaled_png",
+    "image": "12576\\F1_scaled.png",
+    "target": "12576\\masks\\semantic_class_map.png",
+    "source_svg": "12576\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5566_F1_scaled_png",
+    "image": "5566\\F1_scaled.png",
+    "target": "5566\\masks\\semantic_class_map.png",
+    "source_svg": "5566\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6352_model_clean_png",
+    "image": "6352\\model_clean.png",
+    "target": "6352\\masks\\semantic_class_map.png",
+    "source_svg": "6352\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4849_F1_scaled_png",
+    "image": "4849\\F1_scaled.png",
+    "target": "4849\\masks\\semantic_class_map.png",
+    "source_svg": "4849\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10700_model_clean_png",
+    "image": "10700\\model_clean.png",
+    "target": "10700\\masks\\semantic_class_map.png",
+    "source_svg": "10700\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12036_model_clean_png",
+    "image": "12036\\model_clean.png",
+    "target": "12036\\masks\\semantic_class_map.png",
+    "source_svg": "12036\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6644_model_clean_png",
+    "image": "6644\\model_clean.png",
+    "target": "6644\\masks\\semantic_class_map.png",
+    "source_svg": "6644\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14490_F1_scaled_png",
+    "image": "14490\\F1_scaled.png",
+    "target": "14490\\masks\\semantic_class_map.png",
+    "source_svg": "14490\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14246_model_clean_png",
+    "image": "14246\\model_clean.png",
+    "target": "14246\\masks\\semantic_class_map.png",
+    "source_svg": "14246\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8745_model_clean_png",
+    "image": "8745\\model_clean.png",
+    "target": "8745\\masks\\semantic_class_map.png",
+    "source_svg": "8745\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8471_model_clean_png",
+    "image": "8471\\model_clean.png",
+    "target": "8471\\masks\\semantic_class_map.png",
+    "source_svg": "8471\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13370_F1_scaled_png",
+    "image": "13370\\F1_scaled.png",
+    "target": "13370\\masks\\semantic_class_map.png",
+    "source_svg": "13370\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10211_model_clean_png",
+    "image": "10211\\model_clean.png",
+    "target": "10211\\masks\\semantic_class_map.png",
+    "source_svg": "10211\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4685_F1_scaled_png",
+    "image": "4685\\F1_scaled.png",
+    "target": "4685\\masks\\semantic_class_map.png",
+    "source_svg": "4685\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9042_model_clean_png",
+    "image": "9042\\model_clean.png",
+    "target": "9042\\masks\\semantic_class_map.png",
+    "source_svg": "9042\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13361_model_clean_png",
+    "image": "13361\\model_clean.png",
+    "target": "13361\\masks\\semantic_class_map.png",
+    "source_svg": "13361\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11661_F1_scaled_png",
+    "image": "11661\\F1_scaled.png",
+    "target": "11661\\masks\\semantic_class_map.png",
+    "source_svg": "11661\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8002_model_clean_png",
+    "image": "8002\\model_clean.png",
+    "target": "8002\\masks\\semantic_class_map.png",
+    "source_svg": "8002\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9618_F1_scaled_png",
+    "image": "9618\\F1_scaled.png",
+    "target": "9618\\masks\\semantic_class_map.png",
+    "source_svg": "9618\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8638_F1_scaled_png",
+    "image": "8638\\F1_scaled.png",
+    "target": "8638\\masks\\semantic_class_map.png",
+    "source_svg": "8638\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "928_model_clean_png",
+    "image": "928\\model_clean.png",
+    "target": "928\\masks\\semantic_class_map.png",
+    "source_svg": "928\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "502_F1_scaled_png",
+    "image": "502\\F1_scaled.png",
+    "target": "502\\masks\\semantic_class_map.png",
+    "source_svg": "502\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4991_model_clean_png",
+    "image": "4991\\model_clean.png",
+    "target": "4991\\masks\\semantic_class_map.png",
+    "source_svg": "4991\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11696_model_clean_png",
+    "image": "11696\\model_clean.png",
+    "target": "11696\\masks\\semantic_class_map.png",
+    "source_svg": "11696\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14156_F1_scaled_png",
+    "image": "14156\\F1_scaled.png",
+    "target": "14156\\masks\\semantic_class_map.png",
+    "source_svg": "14156\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7838_F1_scaled_png",
+    "image": "7838\\F1_scaled.png",
+    "target": "7838\\masks\\semantic_class_map.png",
+    "source_svg": "7838\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12716_F1_scaled_png",
+    "image": "12716\\F1_scaled.png",
+    "target": "12716\\masks\\semantic_class_map.png",
+    "source_svg": "12716\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6457_F1_scaled_png",
+    "image": "6457\\F1_scaled.png",
+    "target": "6457\\masks\\semantic_class_map.png",
+    "source_svg": "6457\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8719_model_clean_png",
+    "image": "8719\\model_clean.png",
+    "target": "8719\\masks\\semantic_class_map.png",
+    "source_svg": "8719\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12222_F1_scaled_png",
+    "image": "12222\\F1_scaled.png",
+    "target": "12222\\masks\\semantic_class_map.png",
+    "source_svg": "12222\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4032_F1_scaled_png",
+    "image": "4032\\F1_scaled.png",
+    "target": "4032\\masks\\semantic_class_map.png",
+    "source_svg": "4032\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11168_F1_scaled_png",
+    "image": "11168\\F1_scaled.png",
+    "target": "11168\\masks\\semantic_class_map.png",
+    "source_svg": "11168\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6120_model_clean_png",
+    "image": "6120\\model_clean.png",
+    "target": "6120\\masks\\semantic_class_map.png",
+    "source_svg": "6120\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "20014_model_clean_png",
+    "image": "20014\\model_clean.png",
+    "target": "20014\\masks\\semantic_class_map.png",
+    "source_svg": "20014\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11285_model_clean_png",
+    "image": "11285\\model_clean.png",
+    "target": "11285\\masks\\semantic_class_map.png",
+    "source_svg": "11285\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12537_model_clean_png",
+    "image": "12537\\model_clean.png",
+    "target": "12537\\masks\\semantic_class_map.png",
+    "source_svg": "12537\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11554_model_clean_png",
+    "image": "11554\\model_clean.png",
+    "target": "11554\\masks\\semantic_class_map.png",
+    "source_svg": "11554\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "543_model_clean_png",
+    "image": "543\\model_clean.png",
+    "target": "543\\masks\\semantic_class_map.png",
+    "source_svg": "543\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10161_model_clean_png",
+    "image": "10161\\model_clean.png",
+    "target": "10161\\masks\\semantic_class_map.png",
+    "source_svg": "10161\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12045_F1_scaled_png",
+    "image": "12045\\F1_scaled.png",
+    "target": "12045\\masks\\semantic_class_map.png",
+    "source_svg": "12045\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8576_model_clean_png",
+    "image": "8576\\model_clean.png",
+    "target": "8576\\masks\\semantic_class_map.png",
+    "source_svg": "8576\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10252_model_clean_png",
+    "image": "10252\\model_clean.png",
+    "target": "10252\\masks\\semantic_class_map.png",
+    "source_svg": "10252\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7691_F1_scaled_png",
+    "image": "7691\\F1_scaled.png",
+    "target": "7691\\masks\\semantic_class_map.png",
+    "source_svg": "7691\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10348_F1_scaled_png",
+    "image": "10348\\F1_scaled.png",
+    "target": "10348\\masks\\semantic_class_map.png",
+    "source_svg": "10348\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5906_model_clean_png",
+    "image": "5906\\model_clean.png",
+    "target": "5906\\masks\\semantic_class_map.png",
+    "source_svg": "5906\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8070_model_clean_png",
+    "image": "8070\\model_clean.png",
+    "target": "8070\\masks\\semantic_class_map.png",
+    "source_svg": "8070\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10628_model_clean_png",
+    "image": "10628\\model_clean.png",
+    "target": "10628\\masks\\semantic_class_map.png",
+    "source_svg": "10628\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5886_model_clean_png",
+    "image": "5886\\model_clean.png",
+    "target": "5886\\masks\\semantic_class_map.png",
+    "source_svg": "5886\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12284_model_clean_png",
+    "image": "12284\\model_clean.png",
+    "target": "12284\\masks\\semantic_class_map.png",
+    "source_svg": "12284\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13814_model_clean_png",
+    "image": "13814\\model_clean.png",
+    "target": "13814\\masks\\semantic_class_map.png",
+    "source_svg": "13814\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10465_model_clean_png",
+    "image": "10465\\model_clean.png",
+    "target": "10465\\masks\\semantic_class_map.png",
+    "source_svg": "10465\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9556_F1_scaled_png",
+    "image": "9556\\F1_scaled.png",
+    "target": "9556\\masks\\semantic_class_map.png",
+    "source_svg": "9556\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7642_F1_scaled_png",
+    "image": "7642\\F1_scaled.png",
+    "target": "7642\\masks\\semantic_class_map.png",
+    "source_svg": "7642\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10156_model_clean_png",
+    "image": "10156\\model_clean.png",
+    "target": "10156\\masks\\semantic_class_map.png",
+    "source_svg": "10156\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1974_F1_scaled_png",
+    "image": "1974\\F1_scaled.png",
+    "target": "1974\\masks\\semantic_class_map.png",
+    "source_svg": "1974\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10740_model_clean_png",
+    "image": "10740\\model_clean.png",
+    "target": "10740\\masks\\semantic_class_map.png",
+    "source_svg": "10740\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12676_model_clean_png",
+    "image": "12676\\model_clean.png",
+    "target": "12676\\masks\\semantic_class_map.png",
+    "source_svg": "12676\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14817_model_clean_png",
+    "image": "14817\\model_clean.png",
+    "target": "14817\\masks\\semantic_class_map.png",
+    "source_svg": "14817\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "767_F1_scaled_png",
+    "image": "767\\F1_scaled.png",
+    "target": "767\\masks\\semantic_class_map.png",
+    "source_svg": "767\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12984_F1_scaled_png",
+    "image": "12984\\F1_scaled.png",
+    "target": "12984\\masks\\semantic_class_map.png",
+    "source_svg": "12984\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8609_model_clean_png",
+    "image": "8609\\model_clean.png",
+    "target": "8609\\masks\\semantic_class_map.png",
+    "source_svg": "8609\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7766_model_clean_png",
+    "image": "7766\\model_clean.png",
+    "target": "7766\\masks\\semantic_class_map.png",
+    "source_svg": "7766\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13673_model_clean_png",
+    "image": "13673\\model_clean.png",
+    "target": "13673\\masks\\semantic_class_map.png",
+    "source_svg": "13673\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13573_F1_scaled_png",
+    "image": "13573\\F1_scaled.png",
+    "target": "13573\\masks\\semantic_class_map.png",
+    "source_svg": "13573\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1816_F1_scaled_png",
+    "image": "1816\\F1_scaled.png",
+    "target": "1816\\masks\\semantic_class_map.png",
+    "source_svg": "1816\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12165_F1_scaled_png",
+    "image": "12165\\F1_scaled.png",
+    "target": "12165\\masks\\semantic_class_map.png",
+    "source_svg": "12165\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13578_F1_scaled_png",
+    "image": "13578\\F1_scaled.png",
+    "target": "13578\\masks\\semantic_class_map.png",
+    "source_svg": "13578\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "875_F1_scaled_png",
+    "image": "875\\F1_scaled.png",
+    "target": "875\\masks\\semantic_class_map.png",
+    "source_svg": "875\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12780_F1_scaled_png",
+    "image": "12780\\F1_scaled.png",
+    "target": "12780\\masks\\semantic_class_map.png",
+    "source_svg": "12780\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8604_model_clean_png",
+    "image": "8604\\model_clean.png",
+    "target": "8604\\masks\\semantic_class_map.png",
+    "source_svg": "8604\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11849_model_clean_png",
+    "image": "11849\\model_clean.png",
+    "target": "11849\\masks\\semantic_class_map.png",
+    "source_svg": "11849\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1857_F1_scaled_png",
+    "image": "1857\\F1_scaled.png",
+    "target": "1857\\masks\\semantic_class_map.png",
+    "source_svg": "1857\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11376_F1_scaled_png",
+    "image": "11376\\F1_scaled.png",
+    "target": "11376\\masks\\semantic_class_map.png",
+    "source_svg": "11376\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14965_model_clean_png",
+    "image": "14965\\model_clean.png",
+    "target": "14965\\masks\\semantic_class_map.png",
+    "source_svg": "14965\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "577_model_clean_png",
+    "image": "577\\model_clean.png",
+    "target": "577\\masks\\semantic_class_map.png",
+    "source_svg": "577\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10754_F1_scaled_png",
+    "image": "10754\\F1_scaled.png",
+    "target": "10754\\masks\\semantic_class_map.png",
+    "source_svg": "10754\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10219_model_clean_png",
+    "image": "10219\\model_clean.png",
+    "target": "10219\\masks\\semantic_class_map.png",
+    "source_svg": "10219\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6037_F1_scaled_png",
+    "image": "6037\\F1_scaled.png",
+    "target": "6037\\masks\\semantic_class_map.png",
+    "source_svg": "6037\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4044_model_clean_png",
+    "image": "4044\\model_clean.png",
+    "target": "4044\\masks\\semantic_class_map.png",
+    "source_svg": "4044\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4848_F1_scaled_png",
+    "image": "4848\\F1_scaled.png",
+    "target": "4848\\masks\\semantic_class_map.png",
+    "source_svg": "4848\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14441_F1_scaled_png",
+    "image": "14441\\F1_scaled.png",
+    "target": "14441\\masks\\semantic_class_map.png",
+    "source_svg": "14441\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10218_model_clean_png",
+    "image": "10218\\model_clean.png",
+    "target": "10218\\masks\\semantic_class_map.png",
+    "source_svg": "10218\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9763_model_clean_png",
+    "image": "9763\\model_clean.png",
+    "target": "9763\\masks\\semantic_class_map.png",
+    "source_svg": "9763\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "5503_model_clean_png",
+    "image": "5503\\model_clean.png",
+    "target": "5503\\masks\\semantic_class_map.png",
+    "source_svg": "5503\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11300_F1_scaled_png",
+    "image": "11300\\F1_scaled.png",
+    "target": "11300\\masks\\semantic_class_map.png",
+    "source_svg": "11300\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "193_F1_scaled_png",
+    "image": "193\\F1_scaled.png",
+    "target": "193\\masks\\semantic_class_map.png",
+    "source_svg": "193\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9506_model_clean_png",
+    "image": "9506\\model_clean.png",
+    "target": "9506\\masks\\semantic_class_map.png",
+    "source_svg": "9506\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "688_F1_scaled_png",
+    "image": "688\\F1_scaled.png",
+    "target": "688\\masks\\semantic_class_map.png",
+    "source_svg": "688\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14587_model_clean_png",
+    "image": "14587\\model_clean.png",
+    "target": "14587\\masks\\semantic_class_map.png",
+    "source_svg": "14587\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "8302_F1_scaled_png",
+    "image": "8302\\F1_scaled.png",
+    "target": "8302\\masks\\semantic_class_map.png",
+    "source_svg": "8302\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6252_model_clean_png",
+    "image": "6252\\model_clean.png",
+    "target": "6252\\masks\\semantic_class_map.png",
+    "source_svg": "6252\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6100_F1_scaled_png",
+    "image": "6100\\F1_scaled.png",
+    "target": "6100\\masks\\semantic_class_map.png",
+    "source_svg": "6100\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13662_F1_scaled_png",
+    "image": "13662\\F1_scaled.png",
+    "target": "13662\\masks\\semantic_class_map.png",
+    "source_svg": "13662\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14394_F1_scaled_png",
+    "image": "14394\\F1_scaled.png",
+    "target": "14394\\masks\\semantic_class_map.png",
+    "source_svg": "14394\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10234_F1_scaled_png",
+    "image": "10234\\F1_scaled.png",
+    "target": "10234\\masks\\semantic_class_map.png",
+    "source_svg": "10234\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9327_model_clean_png",
+    "image": "9327\\model_clean.png",
+    "target": "9327\\masks\\semantic_class_map.png",
+    "source_svg": "9327\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1584_F1_scaled_png",
+    "image": "1584\\F1_scaled.png",
+    "target": "1584\\masks\\semantic_class_map.png",
+    "source_svg": "1584\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12918_F1_scaled_png",
+    "image": "12918\\F1_scaled.png",
+    "target": "12918\\masks\\semantic_class_map.png",
+    "source_svg": "12918\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12234_F1_scaled_png",
+    "image": "12234\\F1_scaled.png",
+    "target": "12234\\masks\\semantic_class_map.png",
+    "source_svg": "12234\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "2037_F1_scaled_png",
+    "image": "2037\\F1_scaled.png",
+    "target": "2037\\masks\\semantic_class_map.png",
+    "source_svg": "2037\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12245_model_clean_png",
+    "image": "12245\\model_clean.png",
+    "target": "12245\\masks\\semantic_class_map.png",
+    "source_svg": "12245\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4963_model_clean_png",
+    "image": "4963\\model_clean.png",
+    "target": "4963\\masks\\semantic_class_map.png",
+    "source_svg": "4963\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9064_F1_scaled_png",
+    "image": "9064\\F1_scaled.png",
+    "target": "9064\\masks\\semantic_class_map.png",
+    "source_svg": "9064\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3766_model_clean_png",
+    "image": "3766\\model_clean.png",
+    "target": "3766\\masks\\semantic_class_map.png",
+    "source_svg": "3766\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7104_F1_scaled_png",
+    "image": "7104\\F1_scaled.png",
+    "target": "7104\\masks\\semantic_class_map.png",
+    "source_svg": "7104\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7607_model_clean_png",
+    "image": "7607\\model_clean.png",
+    "target": "7607\\masks\\semantic_class_map.png",
+    "source_svg": "7607\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3619_model_clean_png",
+    "image": "3619\\model_clean.png",
+    "target": "3619\\masks\\semantic_class_map.png",
+    "source_svg": "3619\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14794_F1_scaled_png",
+    "image": "14794\\F1_scaled.png",
+    "target": "14794\\masks\\semantic_class_map.png",
+    "source_svg": "14794\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14402_model_clean_png",
+    "image": "14402\\model_clean.png",
+    "target": "14402\\masks\\semantic_class_map.png",
+    "source_svg": "14402\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "7688_F1_scaled_png",
+    "image": "7688\\F1_scaled.png",
+    "target": "7688\\masks\\semantic_class_map.png",
+    "source_svg": "7688\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13230_model_clean_png",
+    "image": "13230\\model_clean.png",
+    "target": "13230\\masks\\semantic_class_map.png",
+    "source_svg": "13230\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13829_F1_scaled_png",
+    "image": "13829\\F1_scaled.png",
+    "target": "13829\\masks\\semantic_class_map.png",
+    "source_svg": "13829\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1004_F1_scaled_png",
+    "image": "1004\\F1_scaled.png",
+    "target": "1004\\masks\\semantic_class_map.png",
+    "source_svg": "1004\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20036_F1_scaled_png",
+    "image": "20036\\F1_scaled.png",
+    "target": "20036\\masks\\semantic_class_map.png",
+    "source_svg": "20036\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14313_model_clean_png",
+    "image": "14313\\model_clean.png",
+    "target": "14313\\masks\\semantic_class_map.png",
+    "source_svg": "14313\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4609_F1_scaled_png",
+    "image": "4609\\F1_scaled.png",
+    "target": "4609\\masks\\semantic_class_map.png",
+    "source_svg": "4609\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7819_model_clean_png",
+    "image": "7819\\model_clean.png",
+    "target": "7819\\masks\\semantic_class_map.png",
+    "source_svg": "7819\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10158_model_clean_png",
+    "image": "10158\\model_clean.png",
+    "target": "10158\\masks\\semantic_class_map.png",
+    "source_svg": "10158\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6414_model_clean_png",
+    "image": "6414\\model_clean.png",
+    "target": "6414\\masks\\semantic_class_map.png",
+    "source_svg": "6414\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "4752_F1_scaled_png",
+    "image": "4752\\F1_scaled.png",
+    "target": "4752\\masks\\semantic_class_map.png",
+    "source_svg": "4752\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7876_F1_scaled_png",
+    "image": "7876\\F1_scaled.png",
+    "target": "7876\\masks\\semantic_class_map.png",
+    "source_svg": "7876\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14396_model_clean_png",
+    "image": "14396\\model_clean.png",
+    "target": "14396\\masks\\semantic_class_map.png",
+    "source_svg": "14396\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14806_model_clean_png",
+    "image": "14806\\model_clean.png",
+    "target": "14806\\masks\\semantic_class_map.png",
+    "source_svg": "14806\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12108_model_clean_png",
+    "image": "12108\\model_clean.png",
+    "target": "12108\\masks\\semantic_class_map.png",
+    "source_svg": "12108\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10567_model_clean_png",
+    "image": "10567\\model_clean.png",
+    "target": "10567\\masks\\semantic_class_map.png",
+    "source_svg": "10567\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14759_F1_scaled_png",
+    "image": "14759\\F1_scaled.png",
+    "target": "14759\\masks\\semantic_class_map.png",
+    "source_svg": "14759\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1910_F1_scaled_png",
+    "image": "1910\\F1_scaled.png",
+    "target": "1910\\masks\\semantic_class_map.png",
+    "source_svg": "1910\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3691_model_clean_png",
+    "image": "3691\\model_clean.png",
+    "target": "3691\\masks\\semantic_class_map.png",
+    "source_svg": "3691\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13622_model_clean_png",
+    "image": "13622\\model_clean.png",
+    "target": "13622\\masks\\semantic_class_map.png",
+    "source_svg": "13622\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14630_model_clean_png",
+    "image": "14630\\model_clean.png",
+    "target": "14630\\masks\\semantic_class_map.png",
+    "source_svg": "14630\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "14754_F1_scaled_png",
+    "image": "14754\\F1_scaled.png",
+    "target": "14754\\masks\\semantic_class_map.png",
+    "source_svg": "14754\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10579_model_clean_png",
+    "image": "10579\\model_clean.png",
+    "target": "10579\\masks\\semantic_class_map.png",
+    "source_svg": "10579\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12188_model_clean_png",
+    "image": "12188\\model_clean.png",
+    "target": "12188\\masks\\semantic_class_map.png",
+    "source_svg": "12188\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6551_F1_scaled_png",
+    "image": "6551\\F1_scaled.png",
+    "target": "6551\\masks\\semantic_class_map.png",
+    "source_svg": "6551\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11557_F1_scaled_png",
+    "image": "11557\\F1_scaled.png",
+    "target": "11557\\masks\\semantic_class_map.png",
+    "source_svg": "11557\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6393_F1_scaled_png",
+    "image": "6393\\F1_scaled.png",
+    "target": "6393\\masks\\semantic_class_map.png",
+    "source_svg": "6393\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14341_F1_scaled_png",
+    "image": "14341\\F1_scaled.png",
+    "target": "14341\\masks\\semantic_class_map.png",
+    "source_svg": "14341\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12448_model_clean_png",
+    "image": "12448\\model_clean.png",
+    "target": "12448\\masks\\semantic_class_map.png",
+    "source_svg": "12448\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11530_F1_scaled_png",
+    "image": "11530\\F1_scaled.png",
+    "target": "11530\\masks\\semantic_class_map.png",
+    "source_svg": "11530\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9672_model_clean_png",
+    "image": "9672\\model_clean.png",
+    "target": "9672\\masks\\semantic_class_map.png",
+    "source_svg": "9672\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10735_model_clean_png",
+    "image": "10735\\model_clean.png",
+    "target": "10735\\masks\\semantic_class_map.png",
+    "source_svg": "10735\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3656_F1_scaled_png",
+    "image": "3656\\F1_scaled.png",
+    "target": "3656\\masks\\semantic_class_map.png",
+    "source_svg": "3656\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13470_F1_scaled_png",
+    "image": "13470\\F1_scaled.png",
+    "target": "13470\\masks\\semantic_class_map.png",
+    "source_svg": "13470\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "13661_F1_scaled_png",
+    "image": "13661\\F1_scaled.png",
+    "target": "13661\\masks\\semantic_class_map.png",
+    "source_svg": "13661\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12903_F1_scaled_png",
+    "image": "12903\\F1_scaled.png",
+    "target": "12903\\masks\\semantic_class_map.png",
+    "source_svg": "12903\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12501_model_clean_png",
+    "image": "12501\\model_clean.png",
+    "target": "12501\\masks\\semantic_class_map.png",
+    "source_svg": "12501\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13075_model_clean_png",
+    "image": "13075\\model_clean.png",
+    "target": "13075\\masks\\semantic_class_map.png",
+    "source_svg": "13075\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6634_model_clean_png",
+    "image": "6634\\model_clean.png",
+    "target": "6634\\masks\\semantic_class_map.png",
+    "source_svg": "6634\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "10714_model_clean_png",
+    "image": "10714\\model_clean.png",
+    "target": "10714\\masks\\semantic_class_map.png",
+    "source_svg": "10714\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1636_model_clean_png",
+    "image": "1636\\model_clean.png",
+    "target": "1636\\masks\\semantic_class_map.png",
+    "source_svg": "1636\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12943_F1_scaled_png",
+    "image": "12943\\F1_scaled.png",
+    "target": "12943\\masks\\semantic_class_map.png",
+    "source_svg": "12943\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12544_F1_scaled_png",
+    "image": "12544\\F1_scaled.png",
+    "target": "12544\\masks\\semantic_class_map.png",
+    "source_svg": "12544\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5559_F1_scaled_png",
+    "image": "5559\\F1_scaled.png",
+    "target": "5559\\masks\\semantic_class_map.png",
+    "source_svg": "5559\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20106_F1_scaled_png",
+    "image": "20106\\F1_scaled.png",
+    "target": "20106\\masks\\semantic_class_map.png",
+    "source_svg": "20106\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3124_F1_scaled_png",
+    "image": "3124\\F1_scaled.png",
+    "target": "3124\\masks\\semantic_class_map.png",
+    "source_svg": "3124\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8002_F1_scaled_png",
+    "image": "8002\\F1_scaled.png",
+    "target": "8002\\masks\\semantic_class_map.png",
+    "source_svg": "8002\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9521_model_clean_png",
+    "image": "9521\\model_clean.png",
+    "target": "9521\\masks\\semantic_class_map.png",
+    "source_svg": "9521\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12969_F1_scaled_png",
+    "image": "12969\\F1_scaled.png",
+    "target": "12969\\masks\\semantic_class_map.png",
+    "source_svg": "12969\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5705_model_clean_png",
+    "image": "5705\\model_clean.png",
+    "target": "5705\\masks\\semantic_class_map.png",
+    "source_svg": "5705\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12611_F1_scaled_png",
+    "image": "12611\\F1_scaled.png",
+    "target": "12611\\masks\\semantic_class_map.png",
+    "source_svg": "12611\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7669_F1_scaled_png",
+    "image": "7669\\F1_scaled.png",
+    "target": "7669\\masks\\semantic_class_map.png",
+    "source_svg": "7669\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "12756_F1_scaled_png",
+    "image": "12756\\F1_scaled.png",
+    "target": "12756\\masks\\semantic_class_map.png",
+    "source_svg": "12756\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1767_F1_scaled_png",
+    "image": "1767\\F1_scaled.png",
+    "target": "1767\\masks\\semantic_class_map.png",
+    "source_svg": "1767\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "20022_F1_scaled_png",
+    "image": "20022\\F1_scaled.png",
+    "target": "20022\\masks\\semantic_class_map.png",
+    "source_svg": "20022\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7560_F1_scaled_png",
+    "image": "7560\\F1_scaled.png",
+    "target": "7560\\masks\\semantic_class_map.png",
+    "source_svg": "7560\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "11625_F1_scaled_png",
+    "image": "11625\\F1_scaled.png",
+    "target": "11625\\masks\\semantic_class_map.png",
+    "source_svg": "11625\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1707_F1_scaled_png",
+    "image": "1707\\F1_scaled.png",
+    "target": "1707\\masks\\semantic_class_map.png",
+    "source_svg": "1707\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8737_F1_scaled_png",
+    "image": "8737\\F1_scaled.png",
+    "target": "8737\\masks\\semantic_class_map.png",
+    "source_svg": "8737\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "14910_model_clean_png",
+    "image": "14910\\model_clean.png",
+    "target": "14910\\masks\\semantic_class_map.png",
+    "source_svg": "14910\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "253_F1_scaled_png",
+    "image": "253\\F1_scaled.png",
+    "target": "253\\masks\\semantic_class_map.png",
+    "source_svg": "253\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6706_F1_scaled_png",
+    "image": "6706\\F1_scaled.png",
+    "target": "6706\\masks\\semantic_class_map.png",
+    "source_svg": "6706\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8573_F1_scaled_png",
+    "image": "8573\\F1_scaled.png",
+    "target": "8573\\masks\\semantic_class_map.png",
+    "source_svg": "8573\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "5064_F1_scaled_png",
+    "image": "5064\\F1_scaled.png",
+    "target": "5064\\masks\\semantic_class_map.png",
+    "source_svg": "5064\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1660_model_clean_png",
+    "image": "1660\\model_clean.png",
+    "target": "1660\\masks\\semantic_class_map.png",
+    "source_svg": "1660\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "9492_model_clean_png",
+    "image": "9492\\model_clean.png",
+    "target": "9492\\masks\\semantic_class_map.png",
+    "source_svg": "9492\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "13436_F1_scaled_png",
+    "image": "13436\\F1_scaled.png",
+    "target": "13436\\masks\\semantic_class_map.png",
+    "source_svg": "13436\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "4879_model_clean_png",
+    "image": "4879\\model_clean.png",
+    "target": "4879\\masks\\semantic_class_map.png",
+    "source_svg": "4879\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "3941_F1_scaled_png",
+    "image": "3941\\F1_scaled.png",
+    "target": "3941\\masks\\semantic_class_map.png",
+    "source_svg": "3941\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3516_model_clean_png",
+    "image": "3516\\model_clean.png",
+    "target": "3516\\masks\\semantic_class_map.png",
+    "source_svg": "3516\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "6075_model_clean_png",
+    "image": "6075\\model_clean.png",
+    "target": "6075\\masks\\semantic_class_map.png",
+    "source_svg": "6075\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1896_F1_scaled_png",
+    "image": "1896\\F1_scaled.png",
+    "target": "1896\\masks\\semantic_class_map.png",
+    "source_svg": "1896\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "8333_model_clean_png",
+    "image": "8333\\model_clean.png",
+    "target": "8333\\masks\\semantic_class_map.png",
+    "source_svg": "8333\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11353_model_clean_png",
+    "image": "11353\\model_clean.png",
+    "target": "11353\\masks\\semantic_class_map.png",
+    "source_svg": "11353\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "1834_model_clean_png",
+    "image": "1834\\model_clean.png",
+    "target": "1834\\masks\\semantic_class_map.png",
+    "source_svg": "1834\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "11232_model_clean_png",
+    "image": "11232\\model_clean.png",
+    "target": "11232\\masks\\semantic_class_map.png",
+    "source_svg": "11232\\model.svg",
+    "input_type": "svg_rendered_clean"
+  },
+  {
+    "sample_id": "12639_F1_scaled_png",
+    "image": "12639\\F1_scaled.png",
+    "target": "12639\\masks\\semantic_class_map.png",
+    "source_svg": "12639\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3925_F1_scaled_png",
+    "image": "3925\\F1_scaled.png",
+    "target": "3925\\masks\\semantic_class_map.png",
+    "source_svg": "3925\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "10435_F1_scaled_png",
+    "image": "10435\\F1_scaled.png",
+    "target": "10435\\masks\\semantic_class_map.png",
+    "source_svg": "10435\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "1895_model_clean_png",
+    "image": "1895\\model_clean.png",
+    "target": "1895\\masks\\semantic_class_map.png",
+    "source_svg": "1895\\model.svg",
+    "input_type": "svg_rendered_clean"
+  }
+]

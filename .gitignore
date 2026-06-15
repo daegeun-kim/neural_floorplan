@@ -1,1 +1,17 @@
 /docs/original_vector
+/checkpoints/segformer_b0
+/features/segformer_b0
+*.pt
+/features/segformer_b0
+*.pt
+/features/segformer_b0
+/checkpoints/segformer_b0
+
+checkpoints/segformer_b0/
+
+features/
+code_sample/
+docs/original_vector/
+features/
+code_sample/
+docs/original_vector/

@@ -1,0 +1,37 @@
+[
+  {
+    "sample_id": "1837_F1_scaled_png",
+    "image": "1837\\F1_scaled.png",
+    "target": "1837\\masks\\semantic_class_map.png",
+    "source_svg": "1837\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "9618_F1_scaled_png",
+    "image": "9618\\F1_scaled.png",
+    "target": "9618\\masks\\semantic_class_map.png",
+    "source_svg": "9618\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "6583_F1_scaled_png",
+    "image": "6583\\F1_scaled.png",
+    "target": "6583\\masks\\semantic_class_map.png",
+    "source_svg": "6583\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "3941_F1_scaled_png",
+    "image": "3941\\F1_scaled.png",
+    "target": "3941\\masks\\semantic_class_map.png",
+    "source_svg": "3941\\model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "7688_F1_scaled_png",
+    "image": "7688\\F1_scaled.png",
+    "target": "7688\\masks\\semantic_class_map.png",
+    "source_svg": "7688\\model.svg",
+    "input_type": "original_raster"
+  }
+]
