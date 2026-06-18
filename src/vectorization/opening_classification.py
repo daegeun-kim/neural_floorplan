@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Optional
 
 import cv2
 import numpy as np
 
-from .primitives import DoorPrimitive, OpeningPrimitive, WindowPrimitive
+from .primitives import DoorPrimitive, OpeningPrimitive, WallPrimitive, WindowPrimitive
 
 
 @dataclass
@@ -30,13 +31,52 @@ def _aspect_ratio_from_mask_component(
     return long_side / short_side
 
 
+def _pick_swing_direction(
+    opening: OpeningPrimitive,
+    room_mask: np.ndarray,
+    probe_dist: int = 20,
+    n_probes: int = 6,
+) -> str:
+    """Return "left" or "right" swing direction based on which side has more room pixels.
+
+    "left"  = CCW perpendicular from the wall direction (angle + 90°)
+    "right" = CW perpendicular from the wall direction  (angle − 90°)
+    Falls back to "left" when room_mask is unavailable or evidence is tied.
+    """
+    if room_mask is None:
+        return "left"
+
+    cx, cy = opening.center
+    angle_rad = math.radians(opening.orientation_angle)
+    h, w = room_mask.shape
+
+    def _count_room(perp_rad: float) -> int:
+        cos_p, sin_p = math.cos(perp_rad), math.sin(perp_rad)
+        count = 0
+        for step in range(1, n_probes + 1):
+            dist = probe_dist * step / n_probes
+            px = int(round(cx + cos_p * dist))
+            py = int(round(cy + sin_p * dist))
+            if 0 <= px < w and 0 <= py < h and room_mask[py, px] > 0:
+                count += 1
+        return count
+
+    left_count  = _count_room(angle_rad + math.pi / 2.0)
+    right_count = _count_room(angle_rad - math.pi / 2.0)
+
+    return "left" if left_count >= right_count else "right"
+
+
 def classify_openings(
     openings: list[OpeningPrimitive],
     opening_mask: np.ndarray,
     config: ClassificationConfig | None = None,
+    room_mask: Optional[np.ndarray] = None,
+    walls: Optional[list[WallPrimitive]] = None,
 ) -> tuple[list[DoorPrimitive], list[WindowPrimitive], list[OpeningPrimitive]]:
     if config is None:
         config = ClassificationConfig()
+    wall_map = {w.primitive_id: w for w in walls} if walls else {}
 
     n_labels, labels = cv2.connectedComponents(opening_mask, connectivity=8)
 
@@ -72,12 +112,15 @@ def classify_openings(
             conf = 0.4
 
         if label == "window_candidate" and conf >= config.min_confidence_for_type:
+            host_wall = wall_map.get(op.host_wall_id) if op.host_wall_id else None
+            thickness = host_wall.thickness if host_wall else 8.0
             windows.append(
                 WindowPrimitive(
                     primitive_id=op.primitive_id.replace("opening", "window"),
                     center=op.center,
                     width=op.width,
                     orientation_angle=op.orientation_angle,
+                    thickness=thickness,
                     host_wall_id=op.host_wall_id,
                     confidence=conf,
                     scale_info=op.scale_info,
@@ -85,13 +128,14 @@ def classify_openings(
             )
         elif label == "door_candidate" and conf >= config.min_confidence_for_type:
             hx, hy = op.start
+            swing = _pick_swing_direction(op, room_mask)
             doors.append(
                 DoorPrimitive(
                     primitive_id=op.primitive_id.replace("opening", "door"),
                     hinge_point=(hx, hy),
                     width=op.width,
                     orientation_angle=op.orientation_angle,
-                    swing_direction="left",
+                    swing_direction=swing,
                     host_wall_id=op.host_wall_id,
                     confidence=conf,
                     scale_info=op.scale_info,

@@ -144,17 +144,14 @@ class TestDoorPrimitive:
 # ---------------------------------------------------------------------------
 
 class TestWindowPrimitive:
-    def test_svg_contains_window_group(self):
-        win = WindowPrimitive("win1", center=(50.0, 50.0), width=120.0)
-        svg = win.to_svg()
-        assert '<g id="win1"' in svg
-        assert 'data-type="window"' in svg
+    """Window is a blue wall-centerline-style line (task06), not a polygon box."""
 
-    def test_svg_contains_polygon_and_line(self):
+    def test_svg_is_a_blue_line(self):
         win = WindowPrimitive("win1", center=(50.0, 50.0), width=120.0)
         svg = win.to_svg()
-        assert "<polygon" in svg
-        assert "<line" in svg
+        assert '<line id="win1"' in svg
+        assert 'data-type="window"' in svg
+        assert "#3355cc" in svg
 
     def test_endpoints_symmetric(self):
         win = WindowPrimitive("win1", center=(50.0, 0.0), width=100.0, orientation_angle=0.0)
@@ -162,10 +159,12 @@ class TestWindowPrimitive:
         assert s[0] == pytest.approx(0.0)
         assert e[0] == pytest.approx(100.0)
 
-    def test_bounds_include_sill_depth(self):
-        win = WindowPrimitive("win1", center=(50.0, 50.0), width=100.0, orientation_angle=0.0)
+    def test_bounds_include_thickness(self):
+        win = WindowPrimitive(
+            "win1", center=(50.0, 50.0), width=100.0, orientation_angle=0.0, thickness=8.0
+        )
         xmin, ymin, xmax, ymax = win.bounds()
-        assert ymax - ymin == pytest.approx(WindowPrimitive.SILL_DEPTH)
+        assert ymax - ymin == pytest.approx(win.thickness)
 
     def test_transform_width_scale(self):
         win = WindowPrimitive("win1", center=(0.0, 0.0), width=100.0)
@@ -213,9 +212,9 @@ class TestRoomPrimitive:
         room.transform(dx=5.0, dy=5.0)
         assert room.polygon[0] == pytest.approx((5.0, 5.0))
 
-    def test_icon_class_not_in_primitives(self):
+    def test_icon_primitive_added_in_task06(self):
         from src.vectorization.primitives import __all__ as exports
-        assert "IconPrimitive" not in exports
+        assert "IconPrimitive" in exports
 
 
 # ---------------------------------------------------------------------------

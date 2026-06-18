@@ -1,5 +1,7 @@
 """Main entry point for the v008 mask-to-vector reconstruction pipeline.
 
+Pipeline order (per spec_v008 / task06): wall -> floor -> opening -> icon.
+
 Usage:
     python -m src.vectorization.run_mask_to_vector
     python -m src.vectorization.run_mask_to_vector --config configs/vectorization_v008.yaml
@@ -12,16 +14,17 @@ from pathlib import Path
 
 import yaml
 
-from .cleanup import clean_opening_mask, clean_room_mask, clean_wall_mask
+from .cleanup import clean_icon_mask, clean_opening_mask, clean_room_mask, clean_wall_mask
 from .decode_prediction import decode_color_mask
 from .export_svg import build_svg, save_svg
-from .geometry_rules import apply_geometry_rules
+from .floor_extraction import extract_floor
+from .geometry_rules import apply_geometry_rules, split_walls_at_openings
+from .icon_extraction import extract_icons
 from .load_prediction import find_prediction_images, load_image_as_array
 from .masks import split_class_masks
 from .opening_classification import ClassificationConfig, classify_openings
 from .opening_extraction import extract_openings
 from .primitives import ScaleInfo
-from .room_extraction import extract_rooms
 from .wall_extraction import extract_walls
 
 
@@ -44,6 +47,7 @@ def process_single(
     config: dict,
     scale_info: ScaleInfo,
     output_dir: Path,
+    output_filename: str | None = None,
 ) -> None:
     print(f"  Processing: {image_path.name}")
 
@@ -65,20 +69,32 @@ def process_single(
         raw_masks["room"],
         min_area=cleanup_cfg.get("min_room_component_area", 100),
     )
+    icon_mask = clean_icon_mask(
+        raw_masks["icon"],
+        min_area=cleanup_cfg.get("min_icon_component_area", 20),
+    )
 
+    # --- 1. Wall: outer rectilinear loop first, then inner walls ---
     wall_cfg = config.get("wall_extraction", {})
-    walls = extract_walls(
+    outer_walls, inner_walls, outer_polygon = extract_walls(
         wall_mask,
+        room_mask=room_mask,
         snap_angle_deg=wall_cfg.get("snap_angle_degrees", 8.0),
         merge_distance_px=wall_cfg.get("merge_distance_px", 6.0),
         min_wall_length_px=wall_cfg.get("min_wall_length_px", 10.0),
         scale_info=scale_info,
     )
+    walls = outer_walls + inner_walls
 
-    openings_raw = extract_openings(
-        opening_mask,
-        walls,
-        scale_info=scale_info,
+    # --- 2. Floor: direct translation of the outer wall loop ---
+    floor = extract_floor(outer_polygon, scale_info=scale_info)
+
+    # --- 3. Opening: extract, snap+project onto walls, classify, split ---
+    openings_raw = extract_openings(opening_mask, walls, scale_info=scale_info)
+
+    walls, openings_raw = apply_geometry_rules(
+        walls, openings_raw,
+        snap_threshold_deg=wall_cfg.get("snap_angle_degrees", 8.0),
     )
 
     cls_cfg = config.get("opening_classification", {})
@@ -89,15 +105,22 @@ def process_single(
     )
     enabled = cls_cfg.get("enabled", True)
     if enabled:
-        doors, windows, unresolved = classify_openings(openings_raw, opening_mask, cls_config)
+        doors, windows, unresolved = classify_openings(
+            openings_raw, opening_mask, cls_config, room_mask=room_mask, walls=walls
+        )
     else:
         doors, windows, unresolved = [], [], openings_raw
 
-    rooms = extract_rooms(room_mask, scale_info=scale_info)
+    hosted_for_split = [o for o in (doors + windows) if o.host_wall_id]
+    if hosted_for_split:
+        walls = split_walls_at_openings(walls, hosted_for_split)
 
-    walls, unresolved = apply_geometry_rules(
-        walls, unresolved,
-        snap_threshold_deg=wall_cfg.get("snap_angle_degrees", 8.0),
+    # --- 4. Icon: simplified filled shapes, generated last ---
+    icon_cfg = config.get("icon_extraction", {})
+    icons = extract_icons(
+        icon_mask,
+        min_area=icon_cfg.get("min_icon_area_px", 20),
+        scale_info=scale_info,
     )
 
     h, w = rgb.shape[:2]
@@ -106,22 +129,26 @@ def process_single(
         image_width=w,
         image_height=h,
         walls=walls,
-        openings=[],
         doors=doors,
         windows=windows,
-        rooms=rooms,
+        icons=icons,
+        floor=floor,
         unresolved_openings=unresolved,
         scale_info=scale_info,
         svg_config=svg_cfg,
     )
 
-    stem = image_path.stem.replace("_prediction", "")
-    out_path = output_dir / f"{stem}_vector.svg"
+    if output_filename is not None:
+        out_path = output_dir / output_filename
+    else:
+        stem = image_path.stem.replace("_prediction", "")
+        out_path = output_dir / f"{stem}_vector.svg"
     save_svg(svg_content, out_path)
 
     print(
-        f"    walls={len(walls)}, doors={len(doors)}, "
-        f"windows={len(windows)}, rooms={len(rooms)}, "
+        f"    walls={len(walls)} (outer={len(outer_walls)}, inner={len(inner_walls)}), "
+        f"floor={'yes' if floor else 'no'}, doors={len(doors)}, "
+        f"windows={len(windows)}, icons={len(icons)}, "
         f"unresolved={len(unresolved)}"
     )
     print(f"    -> {out_path}")

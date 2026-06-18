@@ -46,7 +46,7 @@ Rules:
 - Before coding, create a plan.
 - After coding, run tests.
 - Use feature branches.
-- Commit only after successful test/lint.
+- All github actions should be done manually my the user. You do not have access
 - Keep experiment outputs out of Git unless explicitly approved.
 - /specs are blueprint of the project, /tasks are smaller updates, fix, and minor changes.
 - after each task is performed inside /tasks, merge the content of task md into appropriate spec md file, and convert the name of task md file by adding "done". eg: (task01.md to task01_done.md)

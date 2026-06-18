@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" data-unit="px" data-scale-status="unknown">
+  <g id="floor">
+    <polygon id="floor_0" class="floor" points="47.0,59.0 47.0,262.0 162.0,262.0 162.0,333.0 242.0,333.0 242.0,464.0 290.0,464.0 290.0,449.0 290.0,479.0 472.0,479.0 472.0,59.0" fill="#f5f0e8" stroke="none" />
+  </g>
+  <g id="wall">
+    <line id="wall_outer_0000" x1="47.00" y1="59.00" x2="47.00" y2="262.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0001_s0" x1="47.00" y1="262.00" x2="56.34" y2="262.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0001_s1" x1="128.34" y1="262.00" x2="162.00" y2="262.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0002" x1="162.00" y1="262.00" x2="162.00" y2="333.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0003" x1="162.00" y1="333.00" x2="242.00" y2="333.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0004" x1="242.00" y1="333.00" x2="242.00" y2="464.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0005" x1="242.00" y1="464.00" x2="290.00" y2="464.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0007" x1="290.00" y1="449.00" x2="290.00" y2="479.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0008" x1="290.00" y1="479.00" x2="472.00" y2="479.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0009_s0" x1="472.00" y1="479.00" x2="472.00" y2="451.43" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0009_s1" x1="472.00" y1="433.43" x2="472.00" y2="330.97" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0009_s2" x1="472.00" y1="244.97" x2="472.00" y2="191.58" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0009_s3" x1="472.00" y1="103.58" x2="472.00" y2="59.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_outer_0010" x1="472.00" y1="59.00" x2="47.00" y2="59.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0000" x1="94.00" y1="71.00" x2="459.00" y2="71.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0001" x1="322.00" y1="220.00" x2="460.00" y2="220.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0002" x1="256.00" y1="450.00" x2="256.00" y2="263.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0003" x1="460.00" y1="241.00" x2="460.00" y2="194.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0004" x1="262.50" y1="180.00" x2="262.50" y2="82.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0005" x1="321.50" y1="330.00" x2="321.50" y2="353.00" stroke="#cccccc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0006" x1="323.00" y1="464.25" x2="458.00" y2="464.25" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0007_s0" x1="389.50" y1="370.50" x2="453.00" y2="370.50" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0008" x1="174.00" y1="261.00" x2="253.00" y2="261.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0009" x1="322.00" y1="363.00" x2="379.00" y2="363.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0010" x1="321.00" y1="463.00" x2="321.00" y2="425.00" stroke="#888888" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0011" x1="459.50" y1="381.00" x2="459.50" y2="430.00" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0012" x1="322.00" y1="269.00" x2="322.00" y2="240.00" stroke="#888888" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0013_s0" x1="410.50" y1="465.01" x2="410.50" y2="434.99" stroke="#222222" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0014" x1="322.00" y1="374.00" x2="322.00" y2="388.00" stroke="#cccccc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0015" x1="258.00" y1="452.00" x2="279.00" y2="452.00" stroke="#cccccc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0016" x1="460.00" y1="332.00" x2="460.00" y2="363.00" stroke="#888888" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0017_s0" x1="92.50" y1="75.49" x2="92.50" y2="92.01" stroke="#cccccc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0018" x1="262.50" y1="180.99" x2="262.50" y2="211.01" stroke="#888888" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0019" x1="321.50" y1="270.99" x2="321.50" y2="294.01" stroke="#cccccc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0020" x1="460.00" y1="101.00" x2="460.00" y2="72.00" stroke="#888888" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0021" x1="266.99" y1="213.50" x2="287.01" y2="213.50" stroke="#cccccc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0022_s0" x1="321.50" y1="231.99" x2="321.50" y2="237.01" stroke="#888888" stroke-width="8.00" stroke-linecap="square" />
+    <line id="wall_inner_0023_s0" x1="410.00" y1="425.00" x2="410.00" y2="436.00" stroke="#cccccc" stroke-width="8.00" stroke-linecap="square" />
+  </g>
+  <g id="opening">
+    <line id="window_0001" data-type="window" x1="92.50" y1="70.49" x2="92.50" y2="75.49" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0002" data-type="window" x1="41.95" y1="145.05" x2="143.95" y2="145.05" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0003" data-type="window" x1="472.00" y1="191.58" x2="472.00" y2="103.58" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0004" data-type="window" x1="472.00" y1="189.36" x2="472.00" y2="159.36" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0005" data-type="window" x1="321.50" y1="189.99" x2="321.50" y2="231.99" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0006" data-type="window" x1="56.34" y1="262.00" x2="128.34" y2="262.00" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0007" data-type="window" x1="472.00" y1="330.97" x2="472.00" y2="244.97" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0009" data-type="window" x1="410.50" y1="434.99" x2="410.50" y2="400.99" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0010" data-type="window" x1="290.00" y1="514.45" x2="290.00" y2="392.45" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0011" data-type="window" x1="384.50" y1="370.50" x2="389.50" y2="370.50" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0012" data-type="window" x1="410.00" y1="417.00" x2="410.00" y2="425.00" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <line id="window_0013" data-type="window" x1="472.00" y1="451.43" x2="472.00" y2="433.43" stroke="#3355cc" stroke-width="8.00" stroke-linecap="square" />
+    <g id="door_0008" data-type="door"><line x1="77.17" y1="262.00" x2="66.17" y2="262.00" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="77.17" y1="262.00" x2="77.17" y2="251.00" stroke="#222222" stroke-width="1.5" /><path d="M 66.17 262.00 A 11.00 11.00 0 0 1 77.17 251.00" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+  </g>
+  <g id="icon">
+    <polygon id="icon_0001" data-type="icon" points="268.00,75.00 264.00,210.00 288.00,210.00 289.00,75.00" fill="#4caf50" stroke="#2e7d32" stroke-width="1" />
+    <polygon id="icon_0002" data-type="icon" points="325.00,224.00 325.00,281.00 347.00,281.00 349.00,224.00" fill="#4caf50" stroke="#2e7d32" stroke-width="1" />
+    <polygon id="icon_0003" data-type="icon" points="260.00,331.00 260.00,447.00 282.00,449.00 283.00,337.00" fill="#4caf50" stroke="#2e7d32" stroke-width="1" />
+    <polygon id="icon_0004" data-type="icon" points="324.00,333.00 326.00,360.00 457.00,358.00 455.00,332.00" fill="#4caf50" stroke="#2e7d32" stroke-width="1" />
+    <polygon id="icon_0005" data-type="icon" points="345.00,367.00 349.00,386.00 370.00,385.00 371.00,366.00" fill="#4caf50" stroke="#2e7d32" stroke-width="1" />
+    <polygon id="icon_0006" data-type="icon" points="388.00,387.00 391.00,386.00 406.00,387.00 406.00,383.00 405.00,381.00 394.00,381.00 394.00,383.00 389.00,385.00" fill="#4caf50" stroke="#2e7d32" stroke-width="1" />
+    <polygon id="icon_0007" data-type="icon" points="416.00,383.00 412.00,407.00 432.00,426.00 415.00,430.00 414.00,457.00 456.00,458.00 456.00,385.00" fill="#4caf50" stroke="#2e7d32" stroke-width="1" />
+    <polygon id="icon_0008" data-type="icon" points="407.00,424.00 379.00,419.00 349.00,434.00 325.00,431.00 327.00,460.00 372.00,461.00 374.00,432.00 376.00,460.00 405.00,461.00" fill="#4caf50" stroke="#2e7d32" stroke-width="1" />
+  </g>
+</svg>

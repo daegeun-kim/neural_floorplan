@@ -1,11 +1,11 @@
-"""Extract RoomPrimitive objects from a cleaned room binary mask."""
+"""Extract IconPrimitive objects from a cleaned icon binary mask."""
 
 from __future__ import annotations
 
 import cv2
 import numpy as np
 
-from .primitives import RoomPrimitive, ScaleInfo
+from .primitives import IconPrimitive, ScaleInfo
 
 
 def _simplify_contour(contour: np.ndarray, epsilon_factor: float = 0.02) -> list[tuple[float, float]]:
@@ -16,28 +16,25 @@ def _simplify_contour(contour: np.ndarray, epsilon_factor: float = 0.02) -> list
     return pts
 
 
-def extract_rooms(
-    room_mask: np.ndarray,
-    min_area: int = 100,
+def extract_icons(
+    icon_mask: np.ndarray,
+    min_area: int = 20,
     scale_info: ScaleInfo | None = None,
-) -> list[RoomPrimitive]:
-    if not room_mask.any():
+) -> list[IconPrimitive]:
+    """Extract simplified filled icon/furniture shapes from the icon mask."""
+    if icon_mask is None or not icon_mask.any():
         return []
 
-    n, labels, stats, _ = cv2.connectedComponentsWithStats(
-        room_mask, connectivity=8
-    )
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(icon_mask, connectivity=8)
 
-    primitives: list[RoomPrimitive] = []
+    primitives: list[IconPrimitive] = []
     for i in range(1, n):
         area = stats[i, cv2.CC_STAT_AREA]
         if area < min_area:
             continue
 
         comp_mask = (labels == i).astype(np.uint8) * 255
-        contours, _ = cv2.findContours(
-            comp_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(comp_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         if not contours:
             continue
         contour = max(contours, key=cv2.contourArea)
@@ -45,10 +42,10 @@ def extract_rooms(
         if len(pts) < 3:
             continue
 
-        confidence = min(1.0, area / 2000.0)
+        confidence = min(1.0, area / 500.0)
         primitives.append(
-            RoomPrimitive(
-                primitive_id=f"room_{i:04d}",
+            IconPrimitive(
+                primitive_id=f"icon_{i:04d}",
                 polygon=pts,
                 confidence=confidence,
                 scale_info=scale_info,
