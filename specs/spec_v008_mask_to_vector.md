@@ -641,3 +641,270 @@ Possible future improvements:
 - support multiple door/window primitive variants
 - optionally retrain CNN with separate door/window classes if heuristics fail
 ```
+
+## 18. Execution Notebook — Multi-Checkpoint Comparison (task03)
+
+### Context
+
+Each model checkpoint iteration (`segformer_b0_run1`, `segformer_b0_run2`, etc.) is treated as a separate run whose vectorization outputs can be compared independently.
+
+The original `outputs/vectorization/v008` was generated from:
+
+```text
+checkpoints/segformer_b0_v005/best.pt
+```
+
+using prediction images stored in `runs/segformer_b0/previews/epoch_030`.
+
+### Notebook
+
+A reusable execution notebook was created at:
+
+```text
+notebooks/run_vectorization_v008_run1.ipynb
+```
+
+This notebook:
+
+1. Loads `checkpoints/segformer_b0_run1/best.pt` (decoder weights only, arch_version=`v2_custom_decoder`, val_mIoU=0.8337 at epoch 48).
+2. Does **not** load `latest.pt`.
+3. Builds a fresh SegFormer-B0 backbone (pretrained) + `FloorplanDecoder`.
+4. Loads the first 4 entries from `splits/val.json` — the same preview sample set used during training epoch previews.
+5. Runs inference to produce color-coded segmentation predictions.
+6. Saves `input.png` (denormalized input raster) and `prediction.png` (CNN mask) per sample.
+7. Applies the v008 vectorization pipeline (`configs/vectorization_v008.yaml`) to each prediction.
+8. Saves `vector.svg` per sample.
+9. Overwrites `outputs/vectorization/v008/` with the new structured output.
+
+### Output Structure
+
+```text
+outputs/vectorization/v008/
+  sample_000/
+    input.png
+    prediction.png
+    vector.svg
+  sample_001/
+    input.png
+    prediction.png
+    vector.svg
+  sample_002/
+    input.png
+    prediction.png
+    vector.svg
+  sample_003/
+    input.png
+    prediction.png
+    vector.svg
+```
+
+### Notes
+
+- Source code was not modified to make the notebook executable.
+- The notebook inlines the v008 pipeline steps directly to control the per-sample output path (`vector.svg` rather than `stem_vector.svg`).
+- The class colour palette used for encoding predictions matches `_CLASS_COLORS` in `src/train_segmentation.py`.
+
+### Refactor — Import-Based Runner (task04)
+
+The notebook was refactored to be a thin execution wrapper that imports from `src/` instead of duplicating implementations in cells.
+
+**Source changes:**
+
+- `src/train_segmentation.py` — two new public helpers:
+  - `make_preview_loader(train_config_path, n_samples)` — loads training YAML, normalises config, returns a `DataLoader` for the first N val samples.
+  - `save_sample_artifacts(full_model, loader, device, output_dir, n_samples)` — runs inference and writes `sample_NNN/input.png` + `sample_NNN/prediction.png`; returns list of prediction paths.
+- `src/vectorization/run_mask_to_vector.py` — `process_single` gained an optional `output_filename` parameter so callers can override the default `{stem}_vector.svg` name (used to save `vector.svg` directly).
+
+**Notebook imports:**
+
+```python
+from src.checkpointing import load_checkpoint
+from src.models import FloorplanSegModel, build_backbone, build_decoder
+from src.train_segmentation import make_preview_loader, save_sample_artifacts
+from src.vectorization.run_mask_to_vector import _scale_info_from_config, load_config, process_single
+```
+
+**`MODEL_RUN` switch:**
+
+```python
+MODEL_RUN = "run1"  # change to "run2" to switch checkpoint
+CHECKPOINT_PATH = PROJECT_ROOT / f"checkpoints/segformer_b0_{MODEL_RUN}/best.pt"
+assert MODEL_RUN in {"run1", "run2"}
+assert CHECKPOINT_PATH.exists(), CHECKPOINT_PATH
+```
+
+The notebook validates both the run name and the checkpoint existence before proceeding. `latest.pt` is never referenced.
+
+---
+
+## 19. Topology-Aware Vectorization (task05)
+
+### Goal
+
+Move from pixel-contour tracing to spatially generalised, topology-aware primitives. CNN segmentation output is used as evidence, not as a pixel-perfect boundary.
+
+### Floor / Building Footprint
+
+- Floor is derived from the union of `wall + opening + room + icon` foreground masks.
+- Implemented in `src/vectorization/floor_extraction.py`:
+  - `_rectilinearize_contour(pts)` — classifies each contour segment as H or V, cascades snapping, and closes the polygon so the wrap-around edge is also axis-aligned.
+  - `extract_floor(masks, scale_info, dilate_px, simplify_epsilon_ratio)` — dilates/closes the union mask, finds the largest contour, simplifies it, and calls `_rectilinearize_contour`.
+- `FloorPrimitive` defined in `src/vectorization/primitives/floor.py` — renders a filled `<polygon>` element.
+- Floor appears first in the SVG (behind all other geometry).
+- `split_class_masks()` now returns an `"icon"` key in addition to wall/opening/room.
+
+### Door Primitive (3-component parametric symbol)
+
+Each door contains exactly three SVG elements:
+
+1. **Origin segment** — along the wall (hinge → leaf end)
+2. **Opening segment** — perpendicular to the wall, same length (hinge → panel end)
+3. **Swing arc** — quarter arc from origin end to panel end, radius = width, centre = hinge
+
+Implemented in `src/vectorization/primitives/door.py`:
+- `_leaf_end()` — tip of closed door (along wall direction, sign determined by swing side)
+- `_panel_end()` — tip of open door (perpendicular to wall; `angle + 90°` for "left", `angle − 90°` for "right")
+
+**Swing direction** chosen by probing `room_mask` pixels in each perpendicular direction from the opening centre (`_pick_swing_direction` in `src/vectorization/opening_classification.py`). Falls back to `"left"` when room evidence is tied or absent. `classify_openings()` now accepts `room_mask` parameter.
+
+### Wall Splitting at Openings
+
+Implemented in `src/vectorization/geometry_rules.py` → `split_walls_at_openings(walls, hosted, min_segment_px)`:
+
+1. Project each hosted opening/window center ± width/2 onto the host wall (parametric t-values).
+2. Sort and merge overlapping gap intervals.
+3. Output is the complement: solid wall segments outside every gap.
+4. Walls with no hosted openings are returned unchanged.
+
+Called in `process_single` after `apply_geometry_rules`, on windows and hosted-unresolved openings.
+
+### SVG Layer Order
+
+Back-to-front (as rendered):
+
+```
+floor → rooms → walls → openings → windows → doors → debug
+```
+
+### Integration
+
+`src/vectorization/run_mask_to_vector.py` `process_single`:
+
+1. Calls `classify_openings(..., room_mask=room_mask)` for swing direction.
+2. Calls `split_walls_at_openings(walls, hosted_for_split)` after geometry rules.
+3. Calls `extract_floor({wall, opening, room, icon masks})` to build the floor footprint.
+4. Passes `floor=floor` to `build_svg`.
+
+### Tests Added (task05)
+
+All 9 validation cases from the task are covered in `tests/test_vectorization_v008.py`:
+
+| Case | Test class / name |
+|------|-------------------|
+| 1. Floor polygon from foreground union | `TestFloorExtraction::test_floor_polygon_generated_from_foreground_union` |
+| 2. Floor boundary is rectilinear | `TestFloorExtraction::test_floor_polygon_boundary_is_rectilinear` |
+| 3. Door origin aligns with host wall | `TestDoorPrimitiveGeometry::test_door_origin_aligns_with_host_wall` |
+| 4. Opening segment perpendicular to origin | `TestDoorPrimitiveGeometry::test_door_opening_segment_perpendicular_to_origin` |
+| 5. Opening segment same length as origin | `TestDoorPrimitiveGeometry::test_door_opening_segment_same_length_as_origin` |
+| 6. Arc is quarter arc (90°) | `TestDoorPrimitiveGeometry::test_door_swing_arc_is_quarter_arc` |
+| 7. Opening projected onto host wall centerline | `TestProjectionAndSplitting::test_opening_projected_onto_host_wall_centerline` |
+| 8. Host walls split at opening endpoints | `TestProjectionAndSplitting::test_host_walls_split_at_opening_endpoints` |
+| 9. Unhosted openings go to debug layer | `TestUnhostedOpeningsDebug::test_unhosted_openings_appear_in_debug_layer` |
+
+A bug was found and fixed during testing: `_rectilinearize_contour` did not close the polygon — the wrap-around edge (last → first vertex) was diagonal. Fixed by aligning `snapped[0]` with `snapped[-1]` after the cascade.
+
+---
+
+## 20. Four Final Vector Classes — Floor / Wall / Opening / Icon Only (task06)
+
+### Goal
+
+Supersede the room-as-separate-vector-class direction from task05. CNN class
+`3 - room` is now treated purely as **floor evidence**; the final SVG exports
+**exactly four** singular-named classes in this group order:
+
+```
+<g id="floor"> <g id="wall"> <g id="opening"> <g id="icon">
+```
+
+produced procedurally in pipeline order `wall → floor → opening → icon`.
+Background (class 0) is ignored as before.
+
+This section supersedes:
+- §6 "SVG should use separate layers/groups" (`rooms`/`walls`/`openings`/`doors`/`windows`/`debug`) → now `floor`/`wall`/`opening`/`icon` (+ debug-only, non-final).
+- §8 module structure listing `room_extraction.py` and `primitives/room.py` as pipeline modules → both removed from the pipeline (see below).
+- §9 example config's `svg:` block and `draw_rooms`/`draw_doors`/`draw_windows` keys → replaced by `draw_floor`/`draw_wall`/`draw_opening`/`draw_icon`.
+- §19 "SVG Layer Order" (`floor → rooms → walls → openings → windows → doors → debug`) → now `floor → wall → opening (doors+windows) → icon → debug`.
+
+### Wall: Outer Rectilinear Loop, Then Inner Walls
+
+`src/vectorization/wall_extraction.py` is now a two-stage, contour-driven extractor:
+
+1. **`extract_outer_wall_loop(wall_mask, room_mask=None, ...)`** — unions wall + room evidence, closes/dilates to bridge gaps, takes the largest external contour, simplifies it, and rectilinearizes it with `_rectilinearize_contour` (moved here from `floor_extraction.py`). The polygon vertices become a closed ring of axis-aligned `WallPrimitive` centerline segments (`wall_outer_NNNN`), guaranteed rectilinear by construction. Returns `(outer_walls, outer_polygon)`.
+2. **`extract_inner_walls(wall_mask, outer_polygon, thickness, ...)`** — erases a band around the outer polygon from `wall_mask` (`_erase_outer_band`), then runs the existing skeletonize + `HoughLinesP` + collinear-merge pipeline on the remainder. Returns `inner_walls` (`wall_inner_NNNN`).
+3. **`extract_walls(wall_mask, room_mask=None, ...)`** — thin orchestrator: `(outer_walls, inner_walls, outer_polygon) = extract_walls(...)`. Outer loop is always computed before inner walls.
+
+Wall angle snapping moved to `geometry_rules.snap_walls_to_45` (replaces `snap_walls_to_cardinal`): walls within `snap_threshold_deg` of a cardinal (0/90) snap to that cardinal (orthogonal preference); all other walls snap to the nearest 45° multiple, so every wall reads as architectural linework.
+
+### Floor: Direct Translation of the Outer Wall Loop
+
+`floor_extraction.py` no longer unions all four class masks. `extract_floor(outer_polygon, scale_info=None)` is now a thin wrapper that returns `FloorPrimitive(polygon=outer_polygon)` directly — the floor boundary *is* the outer wall loop, filled with `stroke="none"`.
+
+### Opening: Project Before Classify, Then Split
+
+Pipeline order in `run_mask_to_vector.process_single` was corrected so opening centers are projected onto the (already 45°-snapped) host wall centerline **before** door/window classification — previously classification ran first, so door hinge points could be computed from an unprojected center. Order is now:
+
+```
+extract_openings → apply_geometry_rules (snap walls + project openings) → classify_openings → split_walls_at_openings
+```
+
+`classify_openings` gained an optional `walls` parameter so `WindowPrimitive` can inherit the host wall's `thickness` instead of a hardcoded fallback.
+
+Doors and windows are **not** separate top-level SVG classes — both render inside the single `<g id="opening">` group. Unresolved/floating openings remain debug-only (`<g id="debug">`), never in `opening`.
+
+### Window Primitive Simplified
+
+`primitives/window.py`: replaced the polygon+midline sill box with a single `<line>` styled like a wall centerline (`stroke="#3355cc"`, `stroke-width=thickness`) — "blue wall-aligned line segment" per the task. `WindowPrimitive` gained a `thickness` field.
+
+### New IconPrimitive
+
+`primitives/icon.py` (new) + `icon_extraction.py` (new): `extract_icons(icon_mask, min_area, scale_info)` follows the same connected-components → largest contour → `approxPolyDP` simplify pattern as the old room extraction, producing filled `IconPrimitive` shapes (`fill="#4caf50"`). `cleanup.clean_icon_mask` added alongside the existing wall/opening/room cleanup functions.
+
+### RoomPrimitive / room_extraction Removed From the Pipeline
+
+`room_extraction.py` was deleted (floor and door-swing-direction logic only need the raw `room_mask`, not room polygons). `primitives/room.py` (`RoomPrimitive`) is kept as a standalone primitive — still exported from `src/vectorization/primitives/__init__.py` and covered by `tests/test_vectorization_v007.py` — but it is never imported by `run_mask_to_vector.py`, `export_svg.py`, or `floor_extraction.py`, so it never appears in final SVG output.
+
+### `export_svg.build_svg` New Signature
+
+```python
+build_svg(image_width, image_height, walls, doors, windows, icons,
+          floor=None, unresolved_openings=None, scale_info=None, svg_config=None)
+```
+
+Emits exactly `floor → wall → opening (windows then doors) → icon → [debug]`. `svg_config` keys are now `draw_floor` / `draw_wall` / `draw_opening` / `draw_icon` / `include_debug_layer`.
+
+### Config Changes (`configs/vectorization_v008.yaml`)
+
+- `cleanup.min_icon_component_area` added.
+- `icon_extraction.min_icon_area_px` section added.
+- `svg.draw_rooms` / `draw_walls` / `draw_openings` / `draw_doors` / `draw_windows` replaced by `svg.draw_floor` / `draw_wall` / `draw_opening` / `draw_icon`.
+
+### Tests Added (task06)
+
+All 11 validation cases plus acceptance criteria are covered in `tests/test_vectorization_v008.py` (70 tests) and `tests/test_vectorization_v007.py` (33 tests, updated for the new `WindowPrimitive` shape and `IconPrimitive` addition):
+
+| Case | Test class / name |
+|------|-------------------|
+| 1. No `rooms` group in final SVG | `TestExportSvgFinalGroups::test_no_rooms_or_plural_groups_in_final_output` |
+| 2. Exactly 4 final groups | `TestExportSvgFinalGroups::test_exactly_four_final_semantic_groups` |
+| 3. Group order floor/wall/opening/icon | `TestExportSvgFinalGroups::test_group_order_is_floor_wall_opening_icon` |
+| 4. Floor filled, `stroke="none"` | `TestFloorExtraction::test_floor_primitive_to_svg_is_filled_with_no_stroke` |
+| 5. Wall before opening (pipeline dependency) | `TestWallExtraction::test_walls_extracted_before_openings_pipeline_dependency` |
+| 6. Outer wall closed rectilinear loop | `TestOuterWallLoop::test_outer_loop_is_closed_rectilinear` |
+| 7. Wall angles snapped to 45° | `TestSnapWallsTo45::test_diagonal_wall_snapped_to_nearest_45` |
+| 8. Openings trim/split host walls | `TestProjectionAndSplitting::test_host_walls_split_at_opening_endpoints` |
+| 9. Door origin segment replaces trimmed wall | `TestProjectionAndSplitting::test_door_origin_segment_replaces_trimmed_wall_portion` |
+| 10. Window is a blue wall-aligned line | `TestWindowPrimitiveGeometry::test_window_svg_is_a_single_blue_line` |
+| 11. Icons are simplified filled shapes | `TestIconExtraction::test_extracts_icons_as_simplified_filled_shapes` |
+
+Verified end-to-end against a real prediction (`runs/segformer_b0/previews/epoch_030/sample_000_prediction.png`): output SVG contains exactly `['floor', 'wall', 'opening', 'icon']` groups in order, no forbidden plural/room group ids.

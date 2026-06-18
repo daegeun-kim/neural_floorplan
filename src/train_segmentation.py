@@ -281,6 +281,59 @@ def build_preview_loader(
     return DataLoader(ds, batch_size=n_samples, shuffle=False)
 
 
+def make_preview_loader(
+    train_config_path: str | Path,
+    n_samples: int = 4,
+) -> DataLoader:
+    """Build a DataLoader for preview samples from a training YAML config path."""
+    cfg = _normalize_config(load_config(train_config_path))
+    return build_preview_loader(cfg, n_samples=n_samples)
+
+
+@torch.no_grad()
+def save_sample_artifacts(
+    full_model: "FloorplanSegModel",
+    loader: DataLoader,
+    device: torch.device,
+    output_dir: Path,
+    n_samples: int = 4,
+) -> list[Path]:
+    """Run inference and write input.png + prediction.png into per-sample subdirs.
+
+    Returns a list of the saved prediction.png paths.
+    """
+    output_dir = Path(output_dir)
+    full_model.eval()
+    prediction_paths: list[Path] = []
+
+    saved = 0
+    for batch in loader:
+        if saved >= n_samples:
+            break
+        images = batch["image"].to(device)
+        logits = full_model(images)
+        preds  = logits.argmax(dim=1).cpu().numpy()
+
+        for i in range(len(images)):
+            if saved >= n_samples:
+                break
+            img_np = images[i].cpu().permute(1, 2, 0).numpy()
+            img_np = img_np * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])
+            img_np = (np.clip(img_np, 0.0, 1.0) * 255).astype(np.uint8)
+            pred_rgb = _mask_to_rgb(preds[i])
+
+            sample_dir = output_dir / f"sample_{saved:03d}"
+            sample_dir.mkdir(parents=True, exist_ok=True)
+
+            Image.fromarray(img_np).save(sample_dir / "input.png")
+            pred_path = sample_dir / "prediction.png"
+            Image.fromarray(pred_rgb).save(pred_path)
+            prediction_paths.append(pred_path)
+            saved += 1
+
+    return prediction_paths
+
+
 # ---------------------------------------------------------------------------
 # Training loop
 # ---------------------------------------------------------------------------

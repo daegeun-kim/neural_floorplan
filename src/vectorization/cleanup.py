@@ -42,3 +42,10 @@ def clean_room_mask(
     closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     cleaned = _remove_small_components(closed, min_area)
     return cleaned
+
+
+def clean_icon_mask(
+    mask: np.ndarray,
+    min_area: int = 20,
+) -> np.ndarray:
+    return _remove_small_components(mask, min_area)

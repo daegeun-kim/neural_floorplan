@@ -18,4 +18,5 @@ def split_class_masks(class_map: np.ndarray) -> dict[str, np.ndarray]:
         "wall":    (class_map == CLASS_WALL).astype(np.uint8) * 255,
         "opening": (class_map == CLASS_OPENING).astype(np.uint8) * 255,
         "room":    (class_map == CLASS_ROOM).astype(np.uint8) * 255,
+        "icon":    (class_map == CLASS_ICON).astype(np.uint8) * 255,
     }

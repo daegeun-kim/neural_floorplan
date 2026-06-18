@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" data-unit="px" data-scale-status="unknown">
+  <g id="floor">
+    <polygon id="floor_0" class="floor" points="10.0,15.0 10.0,361.0 60.0,361.0 60.0,478.0 123.0,478.0 263.0,478.0 263.0,490.0 511.0,490.0 511.0,197.0 343.0,197.0 343.0,104.0 198.0,104.0 198.0,15.0" fill="#f5f0e8" stroke="none" />
+  </g>
+  <g id="rooms">
+    <polygon id="room_0001" points="34.00,45.00 77.00,446.00 370.00,443.00 366.00,223.00 128.00,214.00 318.00,186.00 330.00,113.00 208.00,148.00 168.00,48.00" fill="rgba(80,160,220,0.40)" stroke="#3388aa" stroke-width="1" />
+    <polygon id="room_0002" points="32.00,219.00 32.00,234.00 42.00,244.00 50.00,245.00 52.00,242.00 50.00,223.00 43.00,218.00" fill="rgba(80,160,220,0.10)" stroke="#3388aa" stroke-width="1" />
+    <polygon id="room_0003" points="396.00,223.00 423.00,320.00 392.00,445.00 450.00,459.00 471.00,413.00 416.00,355.00 491.00,306.00 494.00,239.00 474.00,288.00 471.00,222.00" fill="rgba(80,160,220,0.40)" stroke="#3388aa" stroke-width="1" />
+    <polygon id="room_0004" points="297.00,477.00 300.00,481.00 310.00,482.00 319.00,479.00 319.00,477.00 313.00,475.00 305.00,475.00 302.00,473.00" fill="rgba(80,160,220,0.10)" stroke="#3388aa" stroke-width="1" />
+    <polygon id="room_0005" points="220.00,488.00 238.00,495.00 242.00,502.00 269.00,487.00 273.00,480.00 229.00,477.00 220.00,482.00" fill="rgba(80,160,220,0.17)" stroke="#3388aa" stroke-width="1" />
+  </g>
+  <g id="walls">
+    <line id="wall_0000" x1="36.00" y1="40.50" x2="136.00" y2="40.50" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0001" x1="384.00" y1="361.91" x2="384.00" y2="408.09" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0002_s0" x1="27.50" y1="33.00" x2="27.50" y2="118.06" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0003" x1="264.00" y1="203.00" x2="276.00" y2="203.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0004" x1="28.00" y1="178.00" x2="28.00" y2="200.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0005" x1="166.00" y1="206.00" x2="194.00" y2="206.00" stroke="#888888" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0006" x1="377.00" y1="328.96" x2="377.00" y2="353.04" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0007" x1="503.50" y1="229.99" x2="503.50" y2="275.01" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0008" x1="242.25" y1="318.00" x2="242.25" y2="361.00" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0009" x1="401.00" y1="215.00" x2="429.00" y2="215.00" stroke="#888888" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0010_s0" x1="177.86" y1="460.00" x2="190.00" y2="460.00" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0011" x1="507.00" y1="284.00" x2="507.00" y2="354.00" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0012" x1="482.00" y1="458.00" x2="495.00" y2="458.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0013" x1="384.00" y1="416.00" x2="384.00" y2="434.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0014" x1="299.00" y1="208.00" x2="318.00" y2="208.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0015" x1="404.00" y1="460.00" x2="427.00" y2="460.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0016" x1="508.50" y1="406.99" x2="508.50" y2="437.01" stroke="#888888" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0017" x1="243.00" y1="231.00" x2="243.00" y2="245.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0018" x1="373.00" y1="390.00" x2="373.00" y2="406.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0019" x1="247.00" y1="211.62" x2="293.00" y2="211.62" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0020" x1="448.00" y1="321.00" x2="471.00" y2="321.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0021" x1="242.00" y1="246.00" x2="242.00" y2="261.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0022_s0" x1="466.00" y1="211.50" x2="485.00" y2="211.50" stroke="#888888" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0023" x1="433.00" y1="461.50" x2="474.00" y2="461.50" stroke="#222222" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0024" x1="375.00" y1="273.00" x2="375.00" y2="284.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0025" x1="74.00" y1="365.00" x2="81.00" y2="384.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0026" x1="52.00" y1="359.00" x2="54.00" y2="370.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0027" x1="133.00" y1="28.00" x2="145.00" y2="39.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0028" x1="322.94" y1="214.00" x2="339.06" y2="214.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0029" x1="244.00" y1="377.00" x2="244.00" y2="395.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0031" x1="92.00" y1="450.00" x2="104.00" y2="450.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0032" x1="198.00" y1="458.00" x2="208.00" y2="458.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0033_s1" x1="140.31" y1="207.76" x2="147.00" y2="204.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0035" x1="375.00" y1="265.00" x2="379.00" y2="245.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0036" x1="38.00" y1="25.00" x2="57.00" y2="25.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0037" x1="366.00" y1="458.00" x2="380.00" y2="455.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0038" x1="91.99" y1="462.50" x2="119.01" y2="462.50" stroke="#888888" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0039" x1="119.98" y1="213.50" x2="133.02" y2="213.50" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0040" x1="374.50" y1="294.98" x2="374.50" y2="307.02" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0042" x1="325.00" y1="200.00" x2="337.00" y2="200.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0043" x1="149.00" y1="41.00" x2="159.00" y2="43.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0044" x1="68.00" y1="373.00" x2="80.00" y2="373.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0045" x1="28.00" y1="309.00" x2="46.00" y2="309.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0046" x1="78.00" y1="446.00" x2="87.00" y2="460.00" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+    <line id="wall_0047" x1="76.98" y1="379.50" x2="90.02" y2="379.50" stroke="#cccccc" stroke-width="10.00" stroke-linecap="square" />
+  </g>
+  <g id="windows">
+    <g id="window_0003" data-type="window"><polygon points="94.62,95.70 113.62,95.70 113.62,101.70 94.62,101.70" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="94.62" y1="98.70" x2="113.62" y2="98.70" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0007" data-type="window"><polygon points="32.51,118.06 32.51,133.06 26.51,133.06 26.51,118.06" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="29.51" y1="118.06" x2="29.51" y2="133.06" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0008" data-type="window"><polygon points="30.92,136.83 32.31,175.81 26.32,176.02 24.92,137.05" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="27.92" y1="136.94" x2="29.31" y2="175.92" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0009" data-type="window"><polygon points="73.83,190.29 93.83,190.29 93.83,196.29 73.83,196.29" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="73.83" y1="193.29" x2="93.83" y2="193.29" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0015" data-type="window"><polygon points="133.82,214.59 141.67,210.18 144.61,215.41 136.77,219.82" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="135.30" y1="217.21" x2="143.14" y2="212.79" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0018" data-type="window"><polygon points="56.05,222.50 56.05,231.50 50.05,231.50 50.05,222.50" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="53.05" y1="222.50" x2="53.05" y2="231.50" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0020" data-type="window"><polygon points="48.00,242.04 48.00,249.04 42.00,249.04 42.00,242.04" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="45.00" y1="242.04" x2="45.00" y2="249.04" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0021" data-type="window"><polygon points="64.30,248.89 64.30,259.89 58.30,259.89 58.30,248.89" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="61.30" y1="248.89" x2="61.30" y2="259.89" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0022" data-type="window"><polygon points="29.14,260.16 29.14,295.16 23.14,295.16 23.14,260.16" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="26.14" y1="260.16" x2="26.14" y2="295.16" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0023" data-type="window"><polygon points="48.53,260.27 48.53,268.27 42.53,268.27 42.53,260.27" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="45.53" y1="260.27" x2="45.53" y2="268.27" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0031" data-type="window"><polygon points="504.46,406.13 505.96,361.15 511.96,361.35 510.46,406.33" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="507.46" y1="406.23" x2="508.96" y2="361.25" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0033" data-type="window"><polygon points="83.61,392.48 85.69,398.11 80.06,400.19 77.98,394.56" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="80.80" y1="393.52" x2="82.87" y2="399.15" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0034" data-type="window"><polygon points="234.48,424.08 234.48,411.08 240.48,411.08 240.48,424.08" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="237.48" y1="424.08" x2="237.48" y2="411.08" stroke="#3355cc" stroke-width="1.5" /></g>
+    <g id="window_0035" data-type="window"><polygon points="185.47,463.37 350.47,463.37 350.47,469.37 185.47,469.37" fill="#d0e8ff" stroke="#3355cc" stroke-width="1" /><line x1="185.47" y1="466.37" x2="350.47" y2="466.37" stroke="#3355cc" stroke-width="1.5" /></g>
+  </g>
+  <g id="doors">
+    <g id="door_0001" data-type="door"><line x1="83.56" y1="79.76" x2="92.56" y2="79.76" stroke="#888888" stroke-width="2" stroke-linecap="square" /><line x1="83.56" y1="79.76" x2="83.56" y2="88.76" stroke="#888888" stroke-width="1.5" /><path d="M 92.56 79.76 A 9.00 9.00 0 0 0 83.56 88.76" fill="none" stroke="#888888" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0002" data-type="door"><line x1="83.12" y1="98.44" x2="78.12" y2="98.44" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="83.12" y1="98.44" x2="83.12" y2="93.44" stroke="#222222" stroke-width="1.5" /><path d="M 78.12 98.44 A 5.00 5.00 0 0 1 83.12 93.44" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0004" data-type="door"><line x1="55.23" y1="125.30" x2="100.23" y2="125.30" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="55.23" y1="125.30" x2="55.23" y2="170.30" stroke="#222222" stroke-width="1.5" /><path d="M 100.23 125.30 A 45.00 45.00 0 0 0 55.23 170.30" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0005" data-type="door"><line x1="281.54" y1="125.70" x2="329.54" y2="125.70" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="281.54" y1="125.70" x2="281.54" y2="173.70" stroke="#222222" stroke-width="1.5" /><path d="M 329.54 125.70 A 48.00 48.00 0 0 0 281.54 173.70" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0006" data-type="door"><line x1="187.43" y1="129.68" x2="227.43" y2="129.68" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="187.43" y1="129.68" x2="187.43" y2="169.68" stroke="#222222" stroke-width="1.5" /><path d="M 227.43 129.68 A 40.00 40.00 0 0 0 187.43 169.68" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0010" data-type="door"><line x1="200.23" y1="208.20" x2="229.23" y2="208.20" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="200.23" y1="208.20" x2="200.23" y2="237.20" stroke="#222222" stroke-width="1.5" /><path d="M 229.23 208.20 A 29.00 29.00 0 0 0 200.23 237.20" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0011" data-type="door"><line x1="29.50" y1="201.33" x2="29.50" y2="196.33" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="29.50" y1="201.33" x2="34.50" y2="201.33" stroke="#222222" stroke-width="1.5" /><path d="M 29.50 196.33 A 5.00 5.00 0 0 0 34.50 201.33" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0012" data-type="door"><line x1="327.42" y1="206.94" x2="339.42" y2="206.94" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="327.42" y1="206.94" x2="327.42" y2="218.94" stroke="#222222" stroke-width="1.5" /><path d="M 339.42 206.94 A 12.00 12.00 0 0 0 327.42 218.94" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0013" data-type="door"><line x1="266.23" y1="209.40" x2="274.23" y2="209.40" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="266.23" y1="209.40" x2="266.23" y2="217.40" stroke="#222222" stroke-width="1.5" /><path d="M 274.23 209.40 A 8.00 8.00 0 0 0 266.23 217.40" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0014" data-type="door"><line x1="26.46" y1="217.01" x2="26.46" y2="210.01" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="26.46" y1="217.01" x2="33.46" y2="217.01" stroke="#222222" stroke-width="1.5" /><path d="M 26.46 210.01 A 7.00 7.00 0 0 0 33.46 217.01" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0019" data-type="door"><line x1="87.25" y1="267.38" x2="154.25" y2="267.38" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="87.25" y1="267.38" x2="87.25" y2="334.38" stroke="#222222" stroke-width="1.5" /><path d="M 154.25 267.38 A 67.00 67.00 0 0 0 87.25 334.38" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0024" data-type="door"><line x1="422.47" y1="292.60" x2="464.47" y2="292.60" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="422.47" y1="292.60" x2="422.47" y2="334.60" stroke="#222222" stroke-width="1.5" /><path d="M 464.47 292.60 A 42.00 42.00 0 0 0 422.47 334.60" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0025" data-type="door"><line x1="11.92" y1="321.85" x2="93.92" y2="321.85" stroke="#888888" stroke-width="2" stroke-linecap="square" /><line x1="11.92" y1="321.85" x2="11.92" y2="403.85" stroke="#888888" stroke-width="1.5" /><path d="M 93.92 321.85 A 82.00 82.00 0 0 0 11.92 403.85" fill="none" stroke="#888888" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0026" data-type="door"><line x1="406.17" y1="303.26" x2="405.75" y2="298.28" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="406.17" y1="303.26" x2="411.15" y2="302.84" stroke="#222222" stroke-width="1.5" /><path d="M 405.75 298.28 A 5.00 5.00 0 0 1 411.15 302.84" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0027" data-type="door"><line x1="401.37" y1="316.38" x2="426.37" y2="316.38" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="401.37" y1="316.38" x2="401.37" y2="341.38" stroke="#222222" stroke-width="1.5" /><path d="M 426.37 316.38 A 25.00 25.00 0 0 0 401.37 341.38" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0028" data-type="door"><line x1="121.46" y1="322.22" x2="137.46" y2="322.22" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="121.46" y1="322.22" x2="121.46" y2="338.22" stroke="#222222" stroke-width="1.5" /><path d="M 137.46 322.22 A 16.00 16.00 0 0 0 121.46 338.22" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0029" data-type="door"><line x1="412.47" y1="354.27" x2="472.47" y2="354.27" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="412.47" y1="354.27" x2="412.47" y2="414.27" stroke="#222222" stroke-width="1.5" /><path d="M 472.47 354.27 A 60.00 60.00 0 0 0 412.47 414.27" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0032" data-type="door"><line x1="33.72" y1="366.54" x2="34.61" y2="371.46" stroke="#222222" stroke-width="2" stroke-linecap="square" /><line x1="33.72" y1="366.54" x2="28.80" y2="367.43" stroke="#222222" stroke-width="1.5" /><path d="M 34.61 371.46 A 5.00 5.00 0 0 0 28.80 367.43" fill="none" stroke="#222222" stroke-width="1" stroke-dasharray="3 2" /></g>
+    <g id="door_0037" data-type="door"><line x1="265.77" y1="488.82" x2="260.77" y2="488.82" stroke="#888888" stroke-width="2" stroke-linecap="square" /><line x1="265.77" y1="488.82" x2="265.77" y2="483.82" stroke="#888888" stroke-width="1.5" /><path d="M 260.77 488.82 A 5.00 5.00 0 0 1 265.77 483.82" fill="none" stroke="#888888" stroke-width="1" stroke-dasharray="3 2" /></g>
+  </g>
+  <g id="debug">
+    <line x1="454.0" y1="211.5" x2="466.0" y2="211.5" stroke="#ff8800" stroke-width="2" stroke-dasharray="6 3" data-id="opening_0016" data-type="unresolved" />
+    <line x1="28.0" y1="237.0" x2="28.0" y2="257.0" stroke="#ff8800" stroke-width="2" stroke-dasharray="6 3" data-id="opening_0017" data-type="unresolved" />
+    <line x1="75.7" y1="381.0" x2="96.3" y2="349.0" stroke="#ff8800" stroke-width="2" stroke-dasharray="6 3" data-id="opening_0030" data-type="unresolved" />
+    <line x1="118.9" y1="460.0" x2="177.9" y2="460.0" stroke="#ff8800" stroke-width="2" stroke-dasharray="6 3" data-id="opening_0036" data-type="unresolved" />
+  </g>
+</svg>
