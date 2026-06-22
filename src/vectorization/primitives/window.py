@@ -5,13 +5,23 @@ from __future__ import annotations
 import math
 from typing import Optional
 
+from ..wall_geometry import buffer_segment_polygon_svg
 from .base import BasePrimitive, ScaleInfo
 
 
 class WindowPrimitive(BasePrimitive):
-    """A linear wall-hosted window, styled like a wall centerline but blue."""
+    """A wall-hosted window, rendered as a filled blue polygon (task08), with
+    a total thickness of its own - 100mm vs the host wall's 200mm (task09),
+    not the same thickness as the wall it replaces.
 
-    COLOR = "#3355cc"
+    ``width`` is always the pixel-space width used for geometry; ``width_mm``
+    is set (and possibly snapped to a common window module) only when scale
+    is resolved/estimated with sufficient confidence - see
+    primitives.scale.snap_to_module_mm.
+    """
+
+    # Matches DEBUG_COLORS["window"] in src/generate_semantic_masks.py.
+    COLOR = "#3c78dc"
 
     def __init__(
         self,
@@ -20,15 +30,18 @@ class WindowPrimitive(BasePrimitive):
         width: float,
         orientation_angle: float = 0.0,
         thickness: float = 8.0,
+        width_mm: Optional[float] = None,
         host_wall_id: Optional[str] = None,
         confidence: float = 1.0,
         scale_info: Optional[ScaleInfo] = None,
+        **base_kwargs,
     ) -> None:
-        super().__init__(primitive_id, confidence, scale_info)
+        super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
         self.center = center
         self.width = width
         self.orientation_angle = orientation_angle
         self.thickness = thickness
+        self.width_mm = width_mm
         self.host_wall_id = host_wall_id
 
     def _endpoints(self) -> tuple[tuple[float, float], tuple[float, float]]:
@@ -42,12 +55,9 @@ class WindowPrimitive(BasePrimitive):
 
     def to_svg(self) -> str:
         s, e = self._endpoints()
-        return (
-            f'<line id="{self.primitive_id}" data-type="window" '
-            f'x1="{s[0]:.2f}" y1="{s[1]:.2f}" '
-            f'x2="{e[0]:.2f}" y2="{e[1]:.2f}" '
-            f'stroke="{self.COLOR}" stroke-width="{self.thickness:.2f}" '
-            f'stroke-linecap="square" />'
+        return buffer_segment_polygon_svg(
+            s, e, self.thickness / 2.0, self.COLOR,
+            extra_attrs=f'id="{self.primitive_id}" data-type="window"',
         )
 
     def bounds(self) -> tuple[float, float, float, float]:

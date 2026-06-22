@@ -37,8 +37,10 @@ The current active development stage is the CNN segmentation stage:
 
 ```text
 raster floorplan image
-→ 5-class semantic segmentation map
+→ 7-class semantic segmentation map
 ```
+
+The active model is `segformer_b0_run3` (see `spec_v005_segformer_train.md`). Earlier `run1`/`run2` checkpoints used a 5-class scheme and are kept only for historical comparison.
 
 The vectorization stage comes later, after the CNN output is visually and numerically reliable.
 
@@ -70,26 +72,27 @@ The current project scope is:
 ```text
 CubiCasa5K raster / SVG data
 → prepared semantic masks
-→ SegFormer-based 5-class CNN segmentation
+→ SegFormer-based 7-class CNN segmentation (segformer_b0_run3)
 → visual and metric-based evaluation
 ```
 
-The current CNN model predicts only these five classes:
+The current CNN model predicts these seven classes:
 
 | Class ID | Class Name |
 |---:|---|
 | 0 | background |
-| 1 | wall |
-| 2 | opening |
-| 3 | room |
-| 4 | icon |
+| 1 | floor |
+| 2 | wall |
+| 3 | window |
+| 4 | door_arc |
+| 5 | door_leaf |
+| 6 | door_origin |
 
 No additional semantic labels should be introduced at this stage.
 
 Do not add:
 
 ```text
-door swing labels
 hinge labels
 corner labels
 wall centerline labels
@@ -98,7 +101,7 @@ new semantic classes
 new external datasets
 ```
 
-The project size should stay fixed until the current 5-class model is satisfactory.
+The project size should stay fixed until the current 7-class model is satisfactory.
 
 ---
 
@@ -137,7 +140,7 @@ Other datasets such as HouseGAN++, RPLAN, or FloorPlanCAD may be useful later fo
 
 They are not active in the current workflow.
 
-The current priority is to make the CubiCasa5K-based 5-class CNN pipeline reliable before expanding the dataset scope.
+The current priority is to make the CubiCasa5K-based 7-class CNN pipeline reliable before expanding the dataset scope.
 
 ---
 
@@ -155,15 +158,17 @@ target:
     masks/semantic_class_map.png
 ```
 
-The target mask is a single class-ID image where each pixel belongs to one of the five classes.
+The target mask is a single class-ID image where each pixel belongs to one of the seven classes.
 
 The separate binary masks are useful for inspection and debugging:
 
 ```text
+floor_mask.png
 wall_mask.png
-opening_mask.png
-room_mask.png
-icon_mask.png
+window_mask.png
+door_arc_mask.png
+door_leaf_mask.png
+door_origin_mask.png
 ```
 
 The combined training target is:
@@ -172,7 +177,7 @@ The combined training target is:
 semantic_class_map.png
 ```
 
-Background does not need a separate mask file. Background is simply every pixel that is not assigned to wall, opening, room, or icon.
+Background does not need a separate mask file. Background is simply every pixel that is not assigned to floor, wall, window, or one of the door classes.
 
 ---
 
@@ -189,10 +194,12 @@ what semantic class does each pixel belong to?
 It should learn to recognize:
 
 ```text
+floor
 walls
-openings
-rooms
-icons
+windows
+door_arc
+door_leaf
+door_origin
 background
 ```
 
@@ -205,13 +212,13 @@ The current model direction is:
 ```text
 SegFormer-B0 pretrained backbone
 + custom trainable segmentation head
-+ 5-class semantic output
++ 7-class semantic output
 ```
 
 The model output is:
 
 ```text
-[B, 5, H, W]
+[B, 7, H, W]
 ```
 
 After prediction, the model produces a hard semantic class map for inspection and later use.
@@ -249,18 +256,20 @@ pixel_accuracy
 foreground_mIoU
 per-class IoU
 wall_IoU
-opening_IoU
-room_IoU
-icon_IoU
+window_IoU
+door_arc_IoU
+door_leaf_IoU
+door_origin_IoU
+floor_IoU
 wall_boundary_F1
-opening_boundary_F1
+door_boundary_F1
 ```
 
 Pixel accuracy matters because a well-drawn plan should produce a precise mask.
 
-Opening quality matters because openings affect circulation. A small wall dimension shift may be acceptable, but a misplaced opening can change the architectural interpretation.
+Door and window quality matters because openings affect circulation. A small wall dimension shift may be acceptable, but a misplaced or miscounted door/window can change the architectural interpretation.
 
-For this reason, the best model should be selected with a vector-readiness score that gives more weight to openings than walls.
+For this reason, the best model should be selected with a vector-readiness score that gives more weight to windows and door subclasses than walls (see `spec_v005_segformer_train.md` §16).
 
 The evaluation should also separate results by input type when possible:
 
@@ -347,7 +356,7 @@ The CNN stage should produce good semantic evidence:
 
 ```text
 raster image
-→ 5-class semantic mask
+→ 7-class semantic mask
 ```
 
 The vectorization stage, which comes later, will convert masks into geometry:
@@ -355,14 +364,17 @@ The vectorization stage, which comes later, will convert masks into geometry:
 ```text
 semantic mask
 → wall lines
-→ room polygons
-→ openings
+→ floor polygon
+→ windows
+→ doors (from door_arc/door_leaf/door_origin evidence)
 → classified JSON / SVG
 ```
 
 Architectural logic such as straightening walls, snapping corners, attaching openings to walls, and checking room adjacency belongs mainly to the vectorization stage.
 
-However, the CNN output must still be clean enough for that later process to work. That is why pixel accuracy, opening quality, and boundary quality are important during CNN evaluation.
+However, the CNN output must still be clean enough for that later process to work. That is why pixel accuracy, door/window quality, and boundary quality are important during CNN evaluation.
+
+**Implementation status note (task07):** the implemented vectorization code (`spec_v007_component_primitives.md`, `spec_v008_mask_to_vector.md`) still targets the retired 5-class scheme and has not yet been updated to consume run3's 7-class output directly — see the "Known Mismatch / Technical Debt" notes in those specs. This file describes the intended long-term boundary, not the current implementation state.
 
 ---
 
@@ -376,9 +388,9 @@ Expected objects include:
 
 ```text
 walls
-openings
+windows
+doors (reconstructed from door_arc/door_leaf/door_origin evidence)
 rooms
-icons
 adjacency relationships
 ```
 
@@ -413,11 +425,18 @@ A future JSON output may look like:
       "thickness": 150
     }
   ],
-  "openings": [
+  "windows": [
     {
       "line": [[x1, y1], [x2, y2]],
-      "host_wall_id": 3,
-      "type": "door_or_window"
+      "host_wall_id": 3
+    }
+  ],
+  "doors": [
+    {
+      "origin": [[x1, y1], [x2, y2]],
+      "opening": [[x1, y1], [x2, y2]],
+      "arc_radius": 90,
+      "host_wall_id": 5
     }
   ],
   "rooms": [
@@ -427,19 +446,13 @@ A future JSON output may look like:
       "area": 12.5
     }
   ],
-  "icons": [
-    {
-      "bbox": [[x1, y1], [x2, y2]],
-      "class": "icon"
-    }
-  ],
   "adjacency": [
     ["room_1", "room_2"]
   ]
 }
 ```
 
-The exact JSON schema should be defined later, after the vectorization stage begins.
+This sketch reflects the 7-class CNN evidence (`windows` and `doors` as separate classes, doors reconstructed from `door_arc`/`door_leaf`/`door_origin`). It does not represent a finished schema — the exact JSON schema should be defined later, after the vectorization stage is updated to consume run3 output (see the "Known Mismatch / Technical Debt" notes in `spec_v007_component_primitives.md` and `spec_v008_mask_to_vector.md`). The current implemented `outputs/vectorization/v008` pipeline does not produce this schema; it still emits the older `floor/wall/opening/icon` SVG groups.
 
 ---
 
@@ -448,7 +461,7 @@ The exact JSON schema should be defined later, after the vectorization stage beg
 The current priority is:
 
 ```text
-make the 5-class CNN segmentation model reliable
+make the 7-class CNN segmentation model (segformer_b0_run3) reliable
 ```
 
 A successful current-stage result means:
@@ -456,8 +469,8 @@ A successful current-stage result means:
 ```text
 1. Clean plans produce accurate masks.
 2. Original raster plans produce plausible masks.
-3. Openings are recognized reliably.
-4. Room regions remain spatially coherent.
+3. Windows and door subclasses are recognized reliably.
+4. Floor regions remain spatially coherent.
 5. Predictions look suitable for later vectorization.
 6. Model checkpoints are versioned and safe.
 7. Training uses GPU and does not silently fall back to CPU.
@@ -471,7 +484,7 @@ Only after this stage is satisfactory should the project move into raster-to-vec
 
 Neural Floorplan is currently a semantic segmentation project with a CAD-generation goal.
 
-The immediate objective is not to produce final CAD geometry. The immediate objective is to train a reliable 5-class floorplan segmentation model that preserves both pixel-level accuracy and architectural intention.
+The immediate objective is not to produce final CAD geometry. The immediate objective is to train a reliable 7-class floorplan segmentation model (`segformer_b0_run3`) that preserves both pixel-level accuracy and architectural intention.
 
 The long-term objective is:
 

@@ -1,8 +1,14 @@
 # Spec: Semantic Mask Generation for Neural Floorplan
 
+## 0. Active Version Notice
+
+This spec has been refreshed (task07) to match the 7-class scheme implemented by `src/generate_semantic_masks.py` and trained as `segformer_b0_run3` (see `spec_v005_segformer_train.md`). Earlier revisions of this document described a 5-class `background/wall/opening/room/icon` mapping — that mapping is retired and must not be treated as current. It survives only inside `spec_v005_segformer_train_outdated.md` as historical context.
+
 ## 1. Purpose
 
 Create a preprocessing script that converts CubiCasa5K SVG floorplan annotations into CNN-training-ready semantic masks.
+
+`model.svg` is the semantic source of truth — it is parsed and rasterized into dense pixel labels, never used as the CNN label directly.
 
 The goal is to transform:
 
@@ -13,11 +19,12 @@ model.svg
 into aligned raster label tensors:
 
 ```text
+floor_mask.png
 wall_mask.png
-door_mask.png
 window_mask.png
-room_mask.png
-icon_mask.png
+door_arc_mask.png
+door_leaf_mask.png
+door_origin_mask.png
 semantic_class_map.png
 ```
 
@@ -88,9 +95,10 @@ Optional input for validation:
 
 ```text
 model_clean.png
+F1_scaled.png
 ```
 
-`model_clean.png` is the clean raster image generated from `model.svg` in the previous SVG-to-raster stage.
+`model_clean.png` is the clean raster image rendered directly from `model.svg` in the previous SVG-to-raster stage. `F1_scaled.png` is the original CubiCasa raster image (the real-world scan/listing image), kept aligned to the same SVG-derived target.
 
 ---
 
@@ -101,24 +109,24 @@ For each sample folder, create a new subfolder:
 ```text
 sample_folder/
   masks/
+    floor_mask.png
     wall_mask.png
-    door_mask.png
     window_mask.png
-    room_mask.png
-    icon_mask.png
-    opening_mask.png
+    door_arc_mask.png
+    door_leaf_mask.png
+    door_origin_mask.png
     semantic_class_map.png
     mask_metadata.json
 ```
 
 
-### Multiple Clean Raster Inputs Per One SVG
+### Two Raster Inputs Per One SVG
 
-Some sample folders may contain both:
+Each sample folder contains both:
 
 ```text
 model_clean.png
-model_clean01.png
+F1_scaled.png
 ```
 
 Their meaning is:
@@ -126,43 +134,43 @@ Their meaning is:
 | File | Meaning |
 |---|---|
 | `model_clean.png` | Synthetic clean raster directly rendered from `model.svg` |
-| `model_clean01.png` | Manually verified clean real raster, usually derived from `F1_original.png` |
+| `F1_scaled.png` | Original CubiCasa raster image, scaled to align with the SVG coordinate space |
 
-If both files exist, they should be treated as **two separate training inputs** sharing the **same SVG-derived target masks**.
+Both files are treated as **two separate training rows** sharing the **same SVG-derived target masks**. This is implemented by `CLEAN_IMAGE_NAMES`/`INPUT_TYPE_MAP` in `src/build_splits.py`.
 
 Conceptually:
 
 ```text
 Sample A:
-X = model_clean.png
+X = F1_scaled.png
 y = masks/semantic_class_map.png
 
 Sample B:
-X = model_clean01.png
+X = model_clean.png
 y = masks/semantic_class_map.png
 ```
 
 This is not a problem because both raster inputs represent the same annotated floorplan geometry.
 
-The SVG should not be duplicated physically unless needed for a downstream dataset format. Instead, the dataset index should duplicate the sample reference.
+The SVG should not be duplicated physically unless needed for a downstream dataset format. Instead, the dataset index duplicates the sample reference.
 
 Example dataset index:
 
 ```json
 [
   {
-    "sample_id": "0001_svg_clean",
+    "sample_id": "0001_original_raster",
+    "image": "0001/F1_scaled.png",
+    "target": "0001/masks/semantic_class_map.png",
+    "source_svg": "0001/model.svg",
+    "input_type": "original_raster"
+  },
+  {
+    "sample_id": "0001_svg_rendered_clean",
     "image": "0001/model_clean.png",
     "target": "0001/masks/semantic_class_map.png",
     "source_svg": "0001/model.svg",
     "input_type": "svg_rendered_clean"
-  },
-  {
-    "sample_id": "0001_real_clean",
-    "image": "0001/model_clean01.png",
-    "target": "0001/masks/semantic_class_map.png",
-    "source_svg": "0001/model.svg",
-    "input_type": "manual_real_clean"
   }
 ]
 ```
@@ -170,30 +178,33 @@ Example dataset index:
 Important rule:
 
 ```text
-One SVG can create one target mask set.
-Multiple verified clean raster inputs can point to the same target mask set.
+One SVG creates one target mask set.
+Both raster inputs (original and SVG-rendered) point to the same target mask set.
 ```
 
-This increases training diversity without manually creating new labels.
+This increases training diversity without manually creating new labels. Evaluation should report metrics grouped by `input_type` (`svg_rendered_clean` vs `original_raster`) — see `spec_v005_segformer_train.md` §"Training Configuration" requirements.
 
 
-Minimum required outputs for the first version:
+Required outputs:
 
 ```text
 masks/
+  floor_mask.png
   wall_mask.png
-  opening_mask.png
-  room_mask.png
-  icon_mask.png
+  window_mask.png
+  door_arc_mask.png
+  door_leaf_mask.png
+  door_origin_mask.png
   semantic_class_map.png
   mask_metadata.json
 ```
 
-Optional later outputs:
+Historical/optional outputs from earlier 5-class revisions of this spec (no longer generated):
 
 ```text
-door_mask.png
-window_mask.png
+opening_mask.png
+room_mask.png
+icon_mask.png
 furniture_mask.png
 space_type_mask.png
 instance_map.png
@@ -203,35 +214,25 @@ instance_map.png
 
 ## 5. Semantic Classes
 
-Use a small number of high-confidence classes first.
+### Active Classes (run3, 7 classes)
 
-### Version 1 Classes
+This is the only class scheme produced by the current `src/generate_semantic_masks.py` and consumed by `segformer_b0_run3` (see `spec_v005_segformer_train.md`):
 
 | Class ID | Class Name | Description |
 |---:|---|---|
-| 0 | background | Empty space / white background |
-| 1 | wall | Structural wall geometry |
-| 2 | opening | Doors, windows, wall openings |
-| 3 | room | Interior room / space regions |
-| 4 | icon | Furniture, fixtures, symbols, objects |
+| 0 | background | Empty space / non-floorplan pixels |
+| 1 | floor | Room/floor surface evidence (`Space` polygons) |
+| 2 | wall | Structural wall geometry |
+| 3 | window | All window subtypes collapsed into one class |
+| 4 | door_arc | Door swing quarter-circle wedge evidence |
+| 5 | door_leaf | Opened door panel/leaf line evidence |
+| 6 | door_origin | Wall-aligned door threshold/origin segment evidence |
 
-### Version 2 Classes
+There is no separate furniture/icon/fixture class in the active scheme — furniture/fixture SVG elements are not rasterized as a target class (see `spec_v005_segformer_train.md` §10).
 
-After the first version works, split `opening` and `icon` into more detailed classes.
+### Historical Classes (retired, do not implement)
 
-| Class ID | Class Name |
-|---:|---|
-| 0 | background |
-| 1 | wall |
-| 2 | door |
-| 3 | window |
-| 4 | room |
-| 5 | furniture |
-| 6 | fixture |
-| 7 | stair |
-| 8 | text_or_annotation |
-
-Do not start with too many classes. First produce reliable wall/opening/room/icon masks.
+Earlier revisions of this spec described a 5-class `background/wall/opening/room/icon` scheme, later sketched as an 8-class `door/window/room/furniture/fixture/stair/text_or_annotation` expansion. Neither was implemented as described; both are retired in favor of the 7-class table above. They remain documented only in `spec_v005_segformer_train_outdated.md` for historical reference.
 
 ---
 
@@ -242,10 +243,12 @@ The SVG is not used directly as the CNN label. Instead, the SVG is parsed and ra
 Example:
 
 ```text
-SVG wall elements → wall_mask.png
-SVG door/window elements → opening_mask.png
-SVG space/room elements → room_mask.png
-SVG furniture/icon elements → icon_mask.png
+SVG Space elements          → floor_mask.png
+SVG Wall elements            → wall_mask.png
+SVG Window elements          → window_mask.png
+SVG Door > Threshold         → door_origin_mask.png (stroked centerline)
+SVG Door > Panel closed path → door_arc_mask.png (filled wedge)
+SVG Door > Panel line segment→ door_leaf_mask.png (stroked line)
 ```
 
 Then the masks are combined into:
@@ -260,10 +263,12 @@ Example:
 
 ```text
 0 = background
-1 = wall
-2 = opening
-3 = room
-4 = icon
+1 = floor
+2 = wall
+3 = window
+4 = door_arc
+5 = door_leaf
+6 = door_origin
 ```
 
 ---
@@ -282,6 +287,8 @@ mask height == model_clean.png height
 ```
 
 If `model_clean.png` does not exist, render masks using the native SVG dimensions.
+
+`F1_scaled.png` is expected to already be scaled to this same coordinate space (hence the name) so it can share the same target mask as a second training row — see §4 "Two Raster Inputs Per One SVG".
 
 ### Do Not
 
@@ -317,15 +324,21 @@ BeautifulSoup
 
 The script should identify semantic categories from SVG group IDs, class names, or element attributes.
 
-Possible SVG structures may include:
+The actual observed CubiCasa5K structure (see `spec_v005_segformer_train.md` §5 and the module docstring in `src/generate_semantic_masks.py`) nests doors/windows inside wall groups:
 
 ```xml
-<g id="Wall">
-<g class="Wall">
-<g id="Door">
-<g id="Window">
-<g id="Space">
-<g id="FixedFurniture">
+<g id="Wall" class="Wall External">
+  <polygon .../>
+  <g id="Window" class="Window Regular">...</g>
+  <g id="Door" class="Door Swing Beside">
+    <polygon .../>
+    <g id="Threshold">...</g>
+    <g id="Panel" class="Panel Left Positive">
+      <path d="M... q... l...Z"/>
+    </g>
+  </g>
+</g>
+<g id="<uuid>" class="Space ...">...</g>
 ```
 
 The implementation must not assume only one exact naming pattern. It should use a configurable mapping.
@@ -334,35 +347,37 @@ The implementation must not assume only one exact naming pattern. It should use 
 
 ## 9. Category Mapping
 
-Create a mapping dictionary in the script or a config file.
-
-Example:
+The active mapping, matching `CLASS_IDS`/`APPLY_ORDER` in `src/generate_semantic_masks.py`:
 
 ```python
 CATEGORY_MAP = {
-    "wall": ["wall", "walls"],
-    "opening": ["door", "doors", "window", "windows", "opening"],
-    "room": ["space", "room", "rooms", "kitchen", "bedroom", "bathroom", "livingroom"],
-    "icon": ["fixedfurniture", "furniture", "bathtub", "toilet", "sink", "stairs", "appliance"]
+    "floor": ["space"],                 # Space polygons, including kitchen/bath/entry/outdoor variants
+    "wall": ["wall"],                   # Wall / Wall External (Column, Railing only if intended as structural)
+    "window": ["window"],               # Window, Window Regular, Glass, Panel — all collapse to one class
+    "door_origin": ["door > threshold"],  # door's Threshold polygon -> stroked centerline
+    "door_arc": ["door > panel (closed path)"],  # door's Panel closed path -> filled swing wedge
+    "door_leaf": ["door > panel (line segment)"],  # door's Panel path straight `l` segment -> stroked line
 }
 ```
 
-Matching should be case-insensitive.
+Matching should be case-insensitive. Furniture/fixture elements (`FixedFurniture`, `Sink`, `Toilet`, `Closet`, etc.) are intentionally **not** mapped to any class — they are ignored as a target class, not collapsed into an `icon` class (see `spec_v005_segformer_train.md` §10).
 
 Example:
 
 ```text
 "Wall" → wall
 "WALL" → wall
-"FixedFurniture" → icon
-"Door" → opening
+"Space Kitchen" → floor
+"Door > Threshold" → door_origin
+"Door > Panel" path → door_arc and door_leaf (see §10 below)
+"FixedFurniture" → (ignored, no target class)
 ```
 
 ---
 
 ## 10. Mask Generation Method
 
-### Option A — Recommended First Method
+### Option A — Recommended First Method (active)
 
 Create temporary SVG files for each semantic category and render them with CairoSVG.
 
@@ -379,10 +394,12 @@ For each class:
 Example:
 
 ```text
-filtered_wall.svg → wall_mask.png
-filtered_opening.svg → opening_mask.png
-filtered_room.svg → room_mask.png
+filtered_floor.svg  → floor_mask.png
+filtered_wall.svg    → wall_mask.png
+filtered_window.svg  → window_mask.png
 ```
+
+`door_origin`, `door_arc`, and `door_leaf` masks are **not** produced by filtering+rendering the original SVG elements directly. They are synthesized as fixed-width stroked lines (`door_origin`, `door_leaf`) or a filled wedge (`door_arc`) derived from the `Door > Threshold` / `Door > Panel` geometry — see `spec_v005_segformer_train.md` §6 for the exact rendering rules and the shared stroke-width constant.
 
 Advantages:
 - Keeps SVG coordinate system intact
@@ -436,10 +453,12 @@ Pixel values:
 
 ```text
 0 = background
-1 = wall
-2 = opening
-3 = room
-4 = icon
+1 = floor
+2 = wall
+3 = window
+4 = door_arc
+5 = door_leaf
+6 = door_origin
 ```
 
 This is suitable for PyTorch segmentation training with cross-entropy loss.
@@ -462,28 +481,29 @@ not:
 
 Some SVG elements may overlap after rasterization.
 
-Use this class priority:
+Use this class priority (back to front — matches `APPLY_ORDER` in `src/generate_semantic_masks.py`):
 
 ```text
-wall > opening > icon > room > background
+door_leaf > door_arc > door_origin > window > wall > floor > background
 ```
 
 Reason:
-- Room regions can occupy large filled areas.
-- Walls/openings/icons are more specific.
-- If room pixels overlap walls, wall should win.
-- If furniture overlaps a room, icon should win.
+- Floor regions can occupy large filled areas behind everything else.
+- Wall, window, and door evidence are more specific and should override floor where they overlap.
+- Among door subclasses, `door_leaf` is rasterized last so the leaf stroke stays visible on top of the `door_arc` wedge fill.
 
 Implementation rule:
 
 ```python
-semantic_map[room_mask > 0] = 3
-semantic_map[icon_mask > 0] = 4
-semantic_map[opening_mask > 0] = 2
-semantic_map[wall_mask > 0] = 1
+semantic_map[floor_mask > 0] = 1
+semantic_map[wall_mask > 0] = 2
+semantic_map[window_mask > 0] = 3
+semantic_map[door_origin_mask > 0] = 6
+semantic_map[door_arc_mask > 0] = 4
+semantic_map[door_leaf_mask > 0] = 5
 ```
 
-This order makes wall the highest priority.
+This order (the real `APPLY_ORDER = ["floor", "wall", "window", "door_origin", "door_arc", "door_leaf"]`) makes `door_leaf` the highest priority.
 
 ---
 
@@ -578,17 +598,21 @@ Example:
   "height": 768,
   "classes": {
     "0": "background",
-    "1": "wall",
-    "2": "opening",
-    "3": "room",
-    "4": "icon"
+    "1": "floor",
+    "2": "wall",
+    "3": "window",
+    "4": "door_arc",
+    "5": "door_leaf",
+    "6": "door_origin"
   },
   "class_pixel_counts": {
     "background": 650000,
+    "floor": 275000,
     "wall": 52000,
-    "opening": 4000,
-    "room": 275000,
-    "icon": 12000
+    "window": 4000,
+    "door_arc": 1800,
+    "door_leaf": 600,
+    "door_origin": 600
   },
   "missing_classes": [],
   "status": "ok"
@@ -612,13 +636,15 @@ masks/debug_overlay.png
 
 This should show semantic masks overlaid on `model_clean.png` or a white background.
 
-Suggested colors:
+Suggested colors (matches `DEBUG_COLORS` in `src/generate_semantic_masks.py`):
 
 ```text
-wall = black
-opening = red
-room = light blue
-icon = green
+floor = (245, 240, 232)
+wall = (30, 30, 30)
+window = (60, 120, 220)
+door_arc = (220, 90, 90)
+door_leaf = (235, 140, 80)
+door_origin = (160, 70, 180)
 ```
 
 This is only for human inspection, not training.
@@ -630,10 +656,12 @@ This is only for human inspection, not training.
 The script must verify:
 
 ```text
+floor_mask.png exists
 wall_mask.png exists
-opening_mask.png exists
-room_mask.png exists
-icon_mask.png exists
+window_mask.png exists
+door_arc_mask.png exists
+door_leaf_mask.png exists
+door_origin_mask.png exists
 semantic_class_map.png exists
 mask_metadata.json exists
 ```
@@ -736,7 +764,7 @@ Possible input rasters:
 
 ```text
 model_clean.png
-model_clean01.png
+F1_scaled.png
 ```
 
 Shared labels:
@@ -771,11 +799,11 @@ Never augment the input without applying the identical transformation to the lab
 The CNN training stage will use:
 
 ```text
-X = model_clean.png, model_clean01.png, or augmented raster image
+X = model_clean.png, F1_scaled.png, or augmented raster image
 y = semantic_class_map.png
 ```
 
-If both `model_clean.png` and `model_clean01.png` exist, they should appear as two rows in the training dataset index, both pointing to the same target mask.
+Both `model_clean.png` and `F1_scaled.png` appear as two rows in the training dataset index, both pointing to the same target mask.
 
 
 For PyTorch:
@@ -808,12 +836,14 @@ high_quality_architectural/
   0001/
     model.svg
     model_clean.png
-    model_clean01.png
+    F1_scaled.png
     masks/
+      floor_mask.png
       wall_mask.png
-      opening_mask.png
-      room_mask.png
-      icon_mask.png
+      window_mask.png
+      door_arc_mask.png
+      door_leaf_mask.png
+      door_origin_mask.png
       semantic_class_map.png
       debug_overlay.png
       mask_metadata.json
@@ -821,11 +851,14 @@ high_quality_architectural/
   0002/
     model.svg
     model_clean.png
+    F1_scaled.png
     masks/
+      floor_mask.png
       wall_mask.png
-      opening_mask.png
-      room_mask.png
-      icon_mask.png
+      window_mask.png
+      door_arc_mask.png
+      door_leaf_mask.png
+      door_origin_mask.png
       semantic_class_map.png
       mask_metadata.json
 

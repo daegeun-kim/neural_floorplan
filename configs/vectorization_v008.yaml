@@ -1,5 +1,5 @@
 input:
-  preview_dir: "runs/segformer_b0/previews/epoch_030"
+  preview_dir: "runs/segformer_b0_run3/previews/epoch_030"
   filename_contains: "prediction"
 
 output:
@@ -9,40 +9,68 @@ output:
 
 classes:
   background: 0
-  wall: 1
-  opening: 2
-  room: 3
-  icon: 4
+  floor: 1
+  wall: 2
+  window: 3
+  door_arc: 4
+  door_leaf: 5
+  door_origin: 6
 
 scale:
-  mode: "auto"
-  fallback_unit: "px"
-  fallback_scale: 1.0
+  allow_estimated_scale: true
+  explicit_px_to_mm: null
+  door_width_modules_mm: [700, 900]
+  wall_thickness_modules_mm: [100, 200]
+  min_scale_confidence_for_metric: 0.70
+
+snapping:
+  allowed_angles_deg: [0, 45, 90, 135, 180, 225, 270, 315]
+  max_angle_snap_error_deg: 12
+  min_segment_length_mm: 100
+
+walls:
+  build_order: ["outer", "inner"]
+  bridge_opening_gaps: true
+  ortho_snap_degrees: 20
+  diagonal_snap_degrees: 10
+  merge_distance_px: 6
+  min_wall_length_px: 10
+  connect_gap_px: 20
+  inner_attach_outer_threshold_mm: 500
+
+openings:
+  require_host_wall: true
+  replace_wall_segment: true
+  max_host_wall_dist_px: 40
+  min_hosted_width_px: 10
+  corner_ambiguity_px: 25
+  min_remainder_px: 3
+
+windows:
+  min_width_mm: 300
+
+doors:
+  require_arc_group: true
+  min_door_arc_component_area: 4
+  hinge_intersection_tolerance_px: 6
+  hinge_snap_to_wall_max_dist_px: 40
+  hinge_arc_inference_enabled: true
+  door_width_modules_mm: [700, 900]
+
+floor:
+  prefer_outer_wall_when_ambiguous: true
 
 cleanup:
   min_wall_component_area: 20
-  min_opening_component_area: 8
-  min_room_component_area: 100
-  min_icon_component_area: 20
+  min_floor_component_area: 100
+  min_window_component_area: 8
+  min_door_arc_component_area: 4
+  min_door_leaf_component_area: 4
+  min_door_origin_component_area: 4
   close_wall_gap_px: 3
 
-wall_extraction:
-  snap_angle_degrees: 8
-  merge_distance_px: 6
-  min_wall_length_px: 10
-
-opening_classification:
-  enabled: true
-  window_min_aspect_ratio: 2.5
-  door_max_aspect_ratio: 2.0
-  min_confidence_for_type: 0.65
-
-icon_extraction:
-  min_icon_area_px: 20
-
 svg:
-  include_debug_layer: true
   draw_floor: true
   draw_wall: true
-  draw_opening: true
-  draw_icon: true
+  draw_window: true
+  draw_door: true

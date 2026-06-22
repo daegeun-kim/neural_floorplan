@@ -49,27 +49,27 @@ def _make_sample(tmp_path: Path, name: str = "s1", image_size: tuple[int, int] =
     wall[:5, :] = 255
     Image.fromarray(wall, "L").save(masks_dir / "wall_mask.png")
 
-    # Opening mask: small rect
-    opening = np.zeros((h, w), dtype=np.uint8)
-    opening[1:4, 20:30] = 255
-    Image.fromarray(opening, "L").save(masks_dir / "opening_mask.png")
+    # Window mask: small rect
+    window = np.zeros((h, w), dtype=np.uint8)
+    window[1:4, 20:30] = 255
+    Image.fromarray(window, "L").save(masks_dir / "window_mask.png")
 
-    # Room mask: large interior
-    room = np.zeros((h, w), dtype=np.uint8)
-    room[10:, :] = 255
-    Image.fromarray(room, "L").save(masks_dir / "room_mask.png")
+    # Floor mask: large interior
+    floor = np.zeros((h, w), dtype=np.uint8)
+    floor[10:, :] = 255
+    Image.fromarray(floor, "L").save(masks_dir / "floor_mask.png")
 
-    # Icon mask: small rect inside room
-    icon = np.zeros((h, w), dtype=np.uint8)
-    icon[15:20, 10:15] = 255
-    Image.fromarray(icon, "L").save(masks_dir / "icon_mask.png")
+    # Door origin mask: small rect inside floor
+    door_origin = np.zeros((h, w), dtype=np.uint8)
+    door_origin[15:20, 10:15] = 255
+    Image.fromarray(door_origin, "L").save(masks_dir / "door_origin_mask.png")
 
-    # Semantic class map (combined)
+    # Semantic class map (combined): background=0 floor=1 wall=2 window=3 door_origin=6
     class_map = np.zeros((h, w), dtype=np.uint8)
-    class_map[10:, :] = 3   # room
-    class_map[15:20, 10:15] = 4  # icon
-    class_map[1:4, 20:30] = 2   # opening
-    class_map[:5, :] = 1        # wall
+    class_map[10:, :] = 1        # floor
+    class_map[15:20, 10:15] = 6  # door_origin
+    class_map[1:4, 20:30] = 3    # window
+    class_map[:5, :] = 2         # wall
     Image.fromarray(class_map, "L").save(masks_dir / "semantic_class_map.png")
 
     return sample_dir

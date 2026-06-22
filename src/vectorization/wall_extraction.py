@@ -1,10 +1,15 @@
 """Extract WallPrimitive objects from a cleaned wall binary mask.
 
 Two-stage, procedural extraction:
-  1. Outer wall loop  - largest external contour of the wall (+room) evidence,
-     rectilinearized into a closed axis-aligned ring of centerline segments.
+  1. Outer wall loop  - largest external contour of the wall + opening
+     (window/door) evidence, rectilinearized into a closed axis-aligned ring
+     of centerline segments. Also wrapped as one OuterWallLoopPrimitive
+     topology reference. Deliberately does NOT use floor evidence: the floor
+     class has low CNN accuracy (task08), so the envelope must follow
+     structural/opening pixels only, never the floor/background border.
   2. Inner walls      - skeleton + Hough line evidence from whatever wall
-     mask remains after erasing a band around the outer loop.
+     mask remains after erasing a band around the outer loop, then snapped
+     onto the wall network where a dangling endpoint implies a connection.
 """
 
 from __future__ import annotations
@@ -15,7 +20,8 @@ import cv2
 import numpy as np
 from skimage.morphology import skeletonize
 
-from .primitives import ScaleInfo, WallPrimitive
+from .primitives import OuterWallLoopPrimitive, ScaleInfo, WallPrimitive
+from .wall_geometry import connect_dangling_wall_endpoints
 
 
 def _skeletonize_wall(mask: np.ndarray) -> np.ndarray:
@@ -47,6 +53,23 @@ def _estimate_wall_thickness(wall_mask: np.ndarray, skel: np.ndarray) -> float:
     if skel_pts.any():
         return float(np.median(dist[skel_pts]) * 2.0)
     return 8.0
+
+
+def wall_thickness_samples_px(wall_mask: np.ndarray) -> list[float]:
+    """A handful of representative thickness samples (px) for scale clustering.
+
+    Returns the 25th/50th/75th percentile of distance-transform-at-skeleton
+    values (doubled, since distance transform is to the nearest edge) rather
+    than a single aggregate, so primitives.scale.resolve_scale has more than
+    one measurement to cross-check door-width evidence against.
+    """
+    skel = _skeletonize_wall(wall_mask)
+    dist = cv2.distanceTransform(wall_mask, cv2.DIST_L2, 5)
+    skel_pts = skel > 0
+    if not skel_pts.any():
+        return []
+    values = dist[skel_pts] * 2.0
+    return [float(np.percentile(values, p)) for p in (25, 50, 75)]
 
 
 def _merge_collinear_segments(
@@ -159,22 +182,25 @@ def _rectilinearize_contour(pts: list[tuple[float, float]]) -> list[tuple[float,
 
 def extract_outer_wall_loop(
     wall_mask: np.ndarray,
-    room_mask: np.ndarray | None = None,
+    opening_evidence_mask: np.ndarray | None = None,
     thickness: float | None = None,
     dilate_px: int = 8,
     simplify_epsilon_ratio: float = 0.008,
     scale_info: ScaleInfo | None = None,
-) -> tuple[list[WallPrimitive], list[tuple[float, float]]]:
-    """Build the closed, rectilinear outer wall loop from wall (+ room) evidence.
+) -> tuple[list[WallPrimitive], list[tuple[float, float]], OuterWallLoopPrimitive | None]:
+    """Build the closed, rectilinear outer wall loop from wall + opening evidence.
 
-    Returns (outer_wall_segments, outer_polygon). The outer wall loop is the
-    most outer wall and is generated before any inner walls.
+    `opening_evidence_mask` should be the union of window/door_arc/door_leaf/
+    door_origin masks (NOT floor) - the building envelope must be traced from
+    structural and opening pixels only. Returns (outer_wall_segments,
+    outer_polygon, outer_loop_primitive). The outer wall loop is the most
+    outer wall and is generated before any inner walls.
     """
     fg = wall_mask
-    if room_mask is not None:
-        fg = np.maximum(wall_mask, room_mask)
+    if opening_evidence_mask is not None:
+        fg = np.maximum(wall_mask, opening_evidence_mask)
     if fg is None or not fg.any():
-        return [], []
+        return [], [], None
 
     k_size = dilate_px * 2 + 1
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (k_size, k_size))
@@ -184,11 +210,11 @@ def extract_outer_wall_loop(
 
     contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        return [], []
+        return [], [], None
 
     contour = max(contours, key=cv2.contourArea)
     if cv2.contourArea(contour) < 100:
-        return [], []
+        return [], [], None
 
     perimeter = cv2.arcLength(contour, True)
     epsilon = max(simplify_epsilon_ratio * perimeter, 3.0)
@@ -197,7 +223,7 @@ def extract_outer_wall_loop(
 
     polygon = _rectilinearize_contour(raw_pts)
     if len(polygon) < 3:
-        return [], []
+        return [], [], None
 
     if thickness is None:
         thickness = _estimate_wall_thickness(wall_mask, _skeletonize_wall(wall_mask))
@@ -215,40 +241,83 @@ def extract_outer_wall_loop(
                 start=start,
                 end=end,
                 thickness=thickness,
+                wall_type="outer",
                 confidence=1.0,
                 scale_info=scale_info,
+                source_class_ids=[2],
             )
         )
 
-    return outer_walls, polygon
+    outer_loop = OuterWallLoopPrimitive(
+        primitive_id="wall_outer_loop",
+        centerline=polygon,
+        thickness=thickness,
+        confidence=1.0,
+        scale_info=scale_info,
+        source_class_ids=[2],
+    )
+
+    return outer_walls, polygon, outer_loop
 
 
-def _erase_outer_band(
-    wall_mask: np.ndarray, outer_polygon: list[tuple[float, float]], thickness: float
+def _erase_outer_wall_band(
+    candidate_mask: np.ndarray,
+    outer_polygon: list[tuple[float, float]],
+    thickness: float,
+    band_thickness_px: int | None = None,
 ) -> np.ndarray:
-    """Remove the band of wall evidence already claimed by the outer loop."""
+    """Remove only the spatial band traced by the outer wall loop (task10).
+
+    Unlike the retired _erase_claimed_wall_components, this does NOT look up
+    connected-component identity at all - it purely subtracts the band
+    pixels from candidate_mask. Interior wall pixels that happen to be part
+    of the same CNN blob as the outer wall, but spatially outside the band,
+    survive - this is the fix for inner walls being erased wholesale
+    whenever they touch the exterior wall in the source mask (task10).
+    """
     if not outer_polygon:
-        return wall_mask
-    band = np.zeros_like(wall_mask)
+        return candidate_mask
+    band = np.zeros_like(candidate_mask)
     pts = np.array(outer_polygon, dtype=np.int32)
-    band_thickness = max(int(thickness * 1.5) + 4, 6)
-    cv2.polylines(band, [pts], isClosed=True, color=255, thickness=band_thickness)
-    remainder = wall_mask.copy()
+    band_px = band_thickness_px if band_thickness_px is not None else max(int(thickness * 1.5) + 4, 6)
+    cv2.polylines(band, [pts], isClosed=True, color=255, thickness=band_px)
+
+    remainder = candidate_mask.copy()
     remainder[band > 0] = 0
     return remainder
+
+
+def _build_inner_wall_candidate_mask(
+    wall_mask: np.ndarray,
+    door_origin_mask: np.ndarray | None,
+) -> np.ndarray:
+    """Inner-wall candidate evidence = wall pixels union door_origin (purple) pixels.
+
+    door_arc/door_leaf/window are deliberately excluded (task10 clarification):
+    only door_origin bridges a doorway gap in an interior wall's mask, the
+    same way `opening_evidence_mask` already bridges gaps for the outer loop,
+    so skeletonization doesn't truncate/break the wall at every doorway. The
+    resulting segment that "tunnels" through a door is trimmed back down to
+    the real wall span later by split_walls_at_openings once the door is
+    hosted on it.
+    """
+    if door_origin_mask is None or not door_origin_mask.any():
+        return wall_mask
+    return np.maximum(wall_mask, door_origin_mask)
 
 
 def extract_inner_walls(
     wall_mask: np.ndarray,
     outer_polygon: list[tuple[float, float]],
     thickness: float,
-    snap_angle_deg: float = 8.0,
     merge_distance_px: float = 6.0,
     min_wall_length_px: float = 10.0,
     scale_info: ScaleInfo | None = None,
+    door_origin_mask: np.ndarray | None = None,
 ) -> list[WallPrimitive]:
-    """Extract interior wall segments from wall evidence not claimed by the outer loop."""
-    remainder = _erase_outer_band(wall_mask, outer_polygon, thickness)
+    """Extract interior wall segments from wall evidence not claimed by the outer loop band."""
+    candidate = _build_inner_wall_candidate_mask(wall_mask, door_origin_mask)
+    remainder = _erase_outer_wall_band(candidate, outer_polygon, thickness)
     if not remainder.any():
         return []
 
@@ -281,8 +350,10 @@ def extract_inner_walls(
             start=(x1, y1),
             end=(x2, y2),
             thickness=thickness,
+            wall_type="inner",
             confidence=min(1.0, length / 50.0),
             scale_info=scale_info,
+            source_class_ids=[2],
         )
         inner_walls.append(wall)
 
@@ -291,32 +362,46 @@ def extract_inner_walls(
 
 def extract_walls(
     wall_mask: np.ndarray,
-    room_mask: np.ndarray | None = None,
-    snap_angle_deg: float = 8.0,
+    opening_evidence_mask: np.ndarray | None = None,
     merge_distance_px: float = 6.0,
     min_wall_length_px: float = 10.0,
+    connect_gap_px: float = 20.0,
     scale_info: ScaleInfo | None = None,
-) -> tuple[list[WallPrimitive], list[WallPrimitive], list[tuple[float, float]]]:
+    door_origin_mask: np.ndarray | None = None,
+) -> tuple[list[WallPrimitive], list[WallPrimitive], list[tuple[float, float]], OuterWallLoopPrimitive | None]:
     """Procedurally extract walls: outer rectilinear loop first, then inner walls.
 
-    Returns (outer_walls, inner_walls, outer_polygon).
+    `opening_evidence_mask` (union of window/door_arc/door_leaf/door_origin
+    masks) drives the outer loop instead of floor evidence - see
+    extract_outer_wall_loop. `door_origin_mask` alone (not the full union)
+    additionally seeds the inner-wall candidate mask (task10) so an interior
+    wall isn't broken at a doorway. After inner walls are detected, dangling
+    endpoints are snapped onto the wall network within `connect_gap_px` so
+    inner walls connect to the outer loop / other inner walls where the
+    evidence implies a connection (task08).
+
+    Returns (outer_walls, inner_walls, outer_polygon, outer_loop_primitive).
     """
     if wall_mask is None or not wall_mask.any():
-        return [], [], []
+        return [], [], [], None
 
     thickness = _estimate_wall_thickness(wall_mask, _skeletonize_wall(wall_mask))
 
-    outer_walls, outer_polygon = extract_outer_wall_loop(
-        wall_mask, room_mask, thickness=thickness, scale_info=scale_info
+    outer_walls, outer_polygon, outer_loop = extract_outer_wall_loop(
+        wall_mask, opening_evidence_mask, thickness=thickness, scale_info=scale_info
     )
     inner_walls = extract_inner_walls(
         wall_mask,
         outer_polygon,
         thickness,
-        snap_angle_deg=snap_angle_deg,
         merge_distance_px=merge_distance_px,
         min_wall_length_px=min_wall_length_px,
         scale_info=scale_info,
+        door_origin_mask=door_origin_mask,
     )
 
-    return outer_walls, inner_walls, outer_polygon
+    connect_dangling_wall_endpoints(
+        inner_walls, max_connect_dist_px=connect_gap_px, candidates=outer_walls + inner_walls
+    )
+
+    return outer_walls, inner_walls, outer_polygon, outer_loop

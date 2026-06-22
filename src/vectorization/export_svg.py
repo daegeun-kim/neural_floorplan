@@ -1,9 +1,16 @@
-"""Generate SVG output from vectorized primitives.
+"""Generate SVG output from vectorized primitives (active 7-class run3 scheme).
 
-Final SVG group order (back to front): floor -> wall -> opening -> icon.
-`opening` holds both DoorPrimitive and WindowPrimitive elements - doors and
-windows are not separate top-level classes. Unresolved/floating openings are
-debug-only and rendered in a separate, clearly non-final `debug` group.
+Final SVG group order (back to front): floor -> wall -> window -> door. Per
+task08, the final SVG contains only these four component types - no debug
+group, no unresolved/unidentified markers. `wall` is rendered as one (or a
+few, if genuinely disconnected) black filled polygon built by buffering and
+unioning every outer+inner wall centerline (wall_geometry.segments_to_polygon)
+rather than per-segment stroked lines. `door` holds one `<g>` per door
+containing its origin/leaf/arc primitives.
+
+Debug-only visualization of unresolved/unhosted evidence lives exclusively in
+run_mask_to_vector's debug_overlay.png raster and metrics.json - never in
+this SVG.
 """
 
 from __future__ import annotations
@@ -11,24 +18,23 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .primitives import (
-    DoorPrimitive,
-    FloorPrimitive,
-    IconPrimitive,
-    OpeningPrimitive,
-    ScaleInfo,
-    WallPrimitive,
-    WindowPrimitive,
-)
+from .primitives import FloorPrimitive, ScaleInfo, WallPrimitive, WindowPrimitive
+from .primitives.door import DoorArcPrimitive, DoorLeafPrimitive, DoorOriginPrimitive
+from .wall_geometry import polygon_to_svg_path, segments_to_polygon
+
+WALL_COLOR = "#000000"
 
 
 def _svg_header(width: int, height: int, scale_info: ScaleInfo) -> str:
+    px_to_mm = scale_info.px_to_mm if scale_info.px_to_mm is not None else ""
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'width="{width}" height="{height}" '
         f'viewBox="0 0 {width} {height}" '
         f'data-unit="{scale_info.unit}" '
-        f'data-scale-status="{scale_info.scale_status}">\n'
+        f'data-scale-status="{scale_info.scale_status}" '
+        f'data-px-to-mm="{px_to_mm}" '
+        f'data-scale-source="{scale_info.scale_source}">\n'
     )
 
 
@@ -42,11 +48,11 @@ def build_svg(
     image_width: int,
     image_height: int,
     walls: list[WallPrimitive],
-    doors: list[DoorPrimitive],
     windows: list[WindowPrimitive],
-    icons: list[IconPrimitive],
+    door_origins: list[DoorOriginPrimitive],
+    door_leaves: list[DoorLeafPrimitive],
+    door_arcs: list[DoorArcPrimitive],
     floor: FloorPrimitive | None = None,
-    unresolved_openings: list[OpeningPrimitive] | None = None,
     scale_info: ScaleInfo | None = None,
     svg_config: dict[str, Any] | None = None,
 ) -> str:
@@ -56,33 +62,41 @@ def build_svg(
     header = _svg_header(image_width, image_height, scale_info)
 
     floor_svg = floor.to_svg() if floor is not None and cfg.get("draw_floor", True) else ""
-    wall_svg = "\n    ".join(w.to_svg() for w in walls) if cfg.get("draw_wall", True) else ""
-    icon_svg = "\n    ".join(i.to_svg() for i in icons) if cfg.get("draw_icon", True) else ""
 
-    opening_parts: list[str] = []
-    if cfg.get("draw_opening", True):
-        opening_parts.extend(w.to_svg() for w in windows)
-        opening_parts.extend(d.to_svg() for d in doors)
-    opening_svg = "\n    ".join(opening_parts)
+    wall_svg = ""
+    if cfg.get("draw_wall", True) and walls:
+        half_width = walls[0].thickness / 2.0
+        wall_geom = segments_to_polygon([(w.start, w.end) for w in walls], half_width)
+        wall_svg = polygon_to_svg_path(wall_geom, WALL_COLOR, extra_attrs='id="wall_polygon"')
 
-    debug_parts = []
-    if cfg.get("include_debug_layer", True) and unresolved_openings:
-        for op in unresolved_openings:
-            s, e = op.start, op.end
-            debug_parts.append(
-                f'<line x1="{s[0]:.1f}" y1="{s[1]:.1f}" '
-                f'x2="{e[0]:.1f}" y2="{e[1]:.1f}" '
-                f'stroke="#ff8800" stroke-width="2" stroke-dasharray="6 3" '
-                f'data-id="{op.primitive_id}" data-type="unresolved" />'
+    window_svg = "\n    ".join(w.to_svg() for w in windows) if cfg.get("draw_window", True) else ""
+
+    door_svg = ""
+    if cfg.get("draw_door", True):
+        doors_by_id = {}
+        for origin in door_origins:
+            idx = origin.primitive_id.rsplit("_", 1)[-1]
+            doors_by_id.setdefault(idx, {})["origin"] = origin
+        for leaf in door_leaves:
+            idx = leaf.primitive_id.rsplit("_", 1)[-1]
+            doors_by_id.setdefault(idx, {})["leaf"] = leaf
+        for arc in door_arcs:
+            idx = arc.primitive_id.rsplit("_", 1)[-1]
+            doors_by_id.setdefault(idx, {})["arc"] = arc
+
+        door_groups = []
+        for idx, parts in sorted(doors_by_id.items()):
+            inner = "".join(
+                parts[key].to_svg() for key in ("origin", "leaf", "arc") if key in parts
             )
-    debug_svg = "\n    ".join(debug_parts)
+            door_groups.append(f'<g id="door_{idx}" data-type="door">{inner}</g>')
+        door_svg = "\n    ".join(door_groups)
 
     body = (
         _group("floor", floor_svg)
         + _group("wall", wall_svg)
-        + _group("opening", opening_svg)
-        + _group("icon", icon_svg)
-        + _group("debug", debug_svg)
+        + _group("window", window_svg)
+        + _group("door", door_svg)
     )
 
     return header + body + "</svg>\n"

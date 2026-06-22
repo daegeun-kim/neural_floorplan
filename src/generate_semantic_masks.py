@@ -1,18 +1,23 @@
-"""Generate semantic masks from CubiCasa5K SVG annotations (spec_v003).
+"""Generate semantic masks from CubiCasa5K SVG annotations (spec_v005 run3).
 
 CubiCasa5K SVG structure (actual):
   svg
     g[id=Model]
       g[class=Floor]
         g[class="Floorplan Floor-1"]   ← floor container
-          g[id=uuid, class="Space ..."]     ← room
+          g[id=uuid, class="Space ..."]     ← floor
           g[id=Wall, class="Wall ..."]      ← wall (may contain Door/Window children)
-            g[id=Door]                      ← opening nested in wall
-            g[id=Window]                    ← opening nested in wall
-          g[id=FixedFurnitureSet]           ← icon/furniture
+            g[id=Window]                      ← window opening nested in wall
+            g[id=Door]                        ← door opening nested in wall
+              g[id=Threshold]                   ← polygon; door_origin = its bbox centerline
+              g[id=Panel, class="Panel ..."]    ← door swing evidence
+                g[id=PanelArea]                    ← not used directly
+                path d="M... q... l...Z"           ← q=door_arc wedge, l=door_leaf line
 
-Room and opening elements have white/light fills in the SVG.  We force them
-to black before rendering so the binary mask captures the correct area.
+Floor and window elements have white/light fills in the SVG.  We force them to black
+before rendering so the binary mask captures the correct area.  door_origin/door_arc/
+door_leaf are synthesized as fixed-width stroked lines (or a filled wedge for door_arc),
+not deep copies of the original elements — see _collect_elements_by_category.
 """
 
 from __future__ import annotations
@@ -20,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import tempfile
 from copy import deepcopy
 from pathlib import Path
@@ -36,25 +42,34 @@ MASKS_DIR = "masks"
 
 CLASS_IDS: dict[str, int] = {
     "background": 0,
-    "wall": 1,
-    "opening": 2,
-    "room": 3,
-    "icon": 4,
+    "floor": 1,
+    "wall": 2,
+    "window": 3,
+    "door_arc": 4,
+    "door_leaf": 5,
+    "door_origin": 6,
 }
 
-# Priority order: last applied = highest priority
-APPLY_ORDER = ["room", "icon", "opening", "wall"]
+# Priority order: last applied = highest priority (spec_v005 run3 §11)
+APPLY_ORDER = ["floor", "wall", "window", "door_origin", "door_arc", "door_leaf"]
 
 DEBUG_COLORS: dict[str, tuple[int, int, int]] = {
-    "wall": (0, 0, 0),
-    "opening": (220, 50, 50),
-    "room": (100, 180, 220),
-    "icon": (50, 180, 80),
+    "floor": (245, 240, 232),
+    "wall": (30, 30, 30),
+    "window": (60, 120, 220),
+    "door_arc": (220, 90, 90),
+    "door_leaf": (235, 140, 80),
+    "door_origin": (160, 70, 180),
 }
 
 # Binary mask threshold: pixel value < this → class present
 # 200 avoids misclassifying window glass (#f0f0ff ≈ 242) as wall
 _MASK_THRESHOLD = 200
+
+# Fixed stroke width (native px) shared by door_leaf and door_origin lines. Constant across
+# every sample regardless of the SVG's native resolution or the door's wall thickness, so
+# every door_leaf/door_origin line is rendered at the same width.
+_DOOR_STROKE_WIDTH_PX = 6
 
 
 # ---------------------------------------------------------------------------
@@ -105,6 +120,10 @@ def _local_name(el: etree._Element) -> str:
         return ""
 
 
+def _class_tokens(el: etree._Element) -> list[str]:
+    return (el.get("class") or "").split()
+
+
 def _find_floor_containers(svg_root: etree._Element) -> list[etree._Element]:
     """Find all <g class="Floorplan ..."> containers (one per floor)."""
     containers = []
@@ -113,8 +132,7 @@ def _find_floor_containers(svg_root: etree._Element) -> list[etree._Element]:
             continue
         if _local_name(el) != "g":
             continue
-        cls_parts = (el.get("class") or "").split()
-        if "Floorplan" in cls_parts:
+        if "Floorplan" in _class_tokens(el):
             containers.append(el)
     return containers
 
@@ -122,56 +140,222 @@ def _find_floor_containers(svg_root: etree._Element) -> list[etree._Element]:
 def _classify_floor_child(el: etree._Element) -> str | None:
     """Classify a direct child of a floor container into a semantic category.
 
-    Returns "wall", "room", "opening", "icon", or None.
+    Returns "wall", "floor", "window", "door", or None.
     """
     if el.tag is etree.Comment or _is_hidden(el) or _local_name(el) != "g":
         return None
 
     elem_id = (el.get("id") or "").strip()
-    cls_parts = (el.get("class") or "").split()
+    cls_parts = _class_tokens(el)
 
     # Wall: id="Wall" or class contains "Wall"
     if elem_id == "Wall" or "Wall" in cls_parts:
         return "wall"
 
-    # Room/Space: class contains "Space", or id is "Space"/"Room"
-    if "Space" in cls_parts or elem_id.lower() in ("space", "room"):
-        return "room"
+    # Floor/Space: class contains "Space", or id is "Space"
+    if "Space" in cls_parts or elem_id.lower() == "space":
+        return "floor"
 
-    # Opening: top-level Door or Window (test SVGs / non-standard)
-    if elem_id in ("Door", "Window") or "Door" in cls_parts or "Window" in cls_parts:
-        return "opening"
+    # Window: top-level Window (test SVGs / non-standard structures)
+    if elem_id == "Window" or "Window" in cls_parts:
+        return "window"
 
-    # Icon/Furniture: FixedFurnitureSet or FixedFurniture
-    if (
-        elem_id in ("FixedFurnitureSet", "FixedFurniture")
-        or "FixedFurnitureSet" in cls_parts
-        or "FixedFurniture" in cls_parts
-        or "FixedFurniture" in elem_id
-    ):
-        return "icon"
+    # Door: top-level Door (test SVGs / non-standard structures)
+    if elem_id == "Door" or "Door" in cls_parts:
+        return "door"
 
     return None
 
 
-def _get_door_window_children(wall_el: etree._Element) -> list[etree._Element]:
-    """Return direct Door/Window child elements of a wall element."""
-    result = []
-    for child in wall_el:
+def _get_window_children(wall_el: etree._Element) -> list[etree._Element]:
+    """Return direct Window child elements of a wall element."""
+    return [
+        child for child in wall_el
+        if child.tag is not etree.Comment
+        and _local_name(child) == "g"
+        and (child.get("id") or "").strip() == "Window"
+    ]
+
+
+def _get_door_children(wall_el: etree._Element) -> list[etree._Element]:
+    """Return direct Door child elements of a wall element."""
+    return [
+        child for child in wall_el
+        if child.tag is not etree.Comment
+        and _local_name(child) == "g"
+        and (child.get("id") or "").strip() == "Door"
+    ]
+
+
+def _find_threshold_polygons(door_el: etree._Element) -> list[etree._Element]:
+    """Return the <polygon> elements nested under the Door's Threshold group(s)."""
+    polygons: list[etree._Element] = []
+    for child in door_el:
         if child.tag is etree.Comment or _local_name(child) != "g":
             continue
-        child_id = (child.get("id") or "").strip()
-        if child_id in ("Door", "Window"):
-            result.append(child)
-    return result
+        elem_id = (child.get("id") or "").strip()
+        if elem_id != "Threshold" and "Threshold" not in _class_tokens(child):
+            continue
+        for desc in child.iter():
+            if desc.tag is etree.Comment:
+                continue
+            if _local_name(desc) == "polygon":
+                polygons.append(desc)
+    return polygons
 
 
-def _collect_elements_by_category(svg_root: etree._Element) -> dict[str, list[etree._Element]]:
-    """Return all semantic elements grouped by category."""
+def _parse_points(points_str: str) -> list[tuple[float, float]]:
+    """Parse an SVG polygon "points" attribute into a list of (x, y) pairs."""
+    tokens = points_str.replace(",", " ").split()
+    coords = [float(t) for t in tokens]
+    return list(zip(coords[0::2], coords[1::2]))
+
+
+def _bbox_centerline(
+    points: list[tuple[float, float]],
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    """Centerline segment along the long axis of *points*' axis-aligned bounding box.
+
+    The threshold polygon is a rectangle spanning (door width) x (wall thickness); its
+    long axis runs along the wall, which is the "wall-aligned" origin segment (spec_v005
+    run3 §6). Short axis (wall thickness) collapses to the rectangle's midline.
+    """
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    minx, maxx = min(xs), max(xs)
+    miny, maxy = min(ys), max(ys)
+
+    if (maxx - minx) >= (maxy - miny):
+        y_mid = (miny + maxy) / 2
+        return (minx, y_mid), (maxx, y_mid)
+    x_mid = (minx + maxx) / 2
+    return (x_mid, miny), (x_mid, maxy)
+
+
+def _find_panel_paths(door_el: etree._Element) -> list[etree._Element]:
+    """Return <path> elements nested under the Door's Panel group(s).
+
+    Excludes "PanelArea" — a distinct class token used for a polygon, not a path.
+    """
+    paths: list[etree._Element] = []
+    for child in door_el:
+        if child.tag is etree.Comment or _local_name(child) != "g":
+            continue
+        elem_id = (child.get("id") or "").strip()
+        if elem_id != "Panel" and "Panel" not in _class_tokens(child):
+            continue
+        for desc in child.iter():
+            if desc.tag is etree.Comment:
+                continue
+            if _local_name(desc) == "path":
+                paths.append(desc)
+    return paths
+
+
+# ---------------------------------------------------------------------------
+# Door panel path splitting: M x,y q cx,cy ex,ey l dx,dy Z
+#   q-curve  -> door_arc wedge (whole closed path, filled)
+#   l-segment -> door_leaf line (stroked)
+# ---------------------------------------------------------------------------
+
+_PANEL_PATH_RE = re.compile(
+    r"M\s*([-\d.]+)[,\s]+([-\d.]+)\s*"
+    r"q\s*([-\d.]+)[,\s]+([-\d.]+)\s+([-\d.]+)[,\s]+([-\d.]+)\s*"
+    r"l\s*([-\d.]+)[,\s]+([-\d.]+)\s*[zZ]",
+)
+
+
+def _split_panel_path(
+    d: str,
+) -> tuple[str | None, tuple[tuple[float, float], tuple[float, float]] | None]:
+    """Parse a Door/Panel path "M x,y q cx,cy ex,ey l dx,dy Z".
+
+    Returns:
+        (wedge_d, leaf_endpoints) where:
+          - wedge_d is the original *d* string, used directly as the door_arc fill geometry
+            (it is already the closed quarter-circle wedge).
+          - leaf_endpoints is ((arc_end_x, arc_end_y), (leaf_end_x, leaf_end_y)) in absolute
+            coordinates, used to build the door_leaf stroke line.
+        Returns (None, None) if *d* does not match the expected swing-door pattern.
+    """
+    match = _PANEL_PATH_RE.search(d)
+    if not match:
+        return None, None
+
+    mx, my, _qcx, _qcy, qex, qey, ldx, ldy = (float(g) for g in match.groups())
+    arc_end = (mx + qex, my + qey)
+    leaf_end = (arc_end[0] + ldx, arc_end[1] + ldy)
+    return d, (arc_end, leaf_end)
+
+
+def _door_leaf_stroke_width(native_size: int) -> float:
+    """Fixed stroke width (native px), identical for every door_leaf in every sample."""
+    del native_size  # width is intentionally constant, not scaled by image resolution
+    return _DOOR_STROKE_WIDTH_PX
+
+
+def _door_origin_stroke_width(native_size: int) -> float:
+    """Fixed stroke width (native px) — always equal to the door_leaf stroke width."""
+    del native_size  # width is intentionally constant, not scaled by image resolution
+    return _DOOR_STROKE_WIDTH_PX
+
+
+# ---------------------------------------------------------------------------
+# Element collection
+# ---------------------------------------------------------------------------
+
+
+def _collect_elements_by_category(
+    svg_root: etree._Element, native_size: int,
+) -> dict[str, list[etree._Element]]:
+    """Return all semantic elements grouped by category.
+
+    "door_origin", "door_arc", and "door_leaf" entries are synthetic <path> elements built
+    from parsed Door/Threshold/Panel geometry (not deep copies of original elements).
+    """
     walls: list[etree._Element] = []
-    rooms: list[etree._Element] = []
-    icons: list[etree._Element] = []
-    openings: list[etree._Element] = []
+    floors: list[etree._Element] = []
+    windows: list[etree._Element] = []
+    door_origins: list[etree._Element] = []
+    door_arcs: list[etree._Element] = []
+    door_leaves: list[etree._Element] = []
+
+    leaf_stroke_width = _door_leaf_stroke_width(native_size)
+    origin_stroke_width = _door_origin_stroke_width(native_size)
+
+    def _process_door(door_el: etree._Element) -> None:
+        for threshold_poly in _find_threshold_polygons(door_el):
+            points = _parse_points(threshold_poly.get("points", ""))
+            if len(points) < 2:
+                continue
+            (ox1, oy1), (ox2, oy2) = _bbox_centerline(points)
+            origin = etree.Element("path")
+            origin.set("d", f"M{ox1},{oy1} L{ox2},{oy2}")
+            origin.set("fill", "none")
+            origin.set("stroke", "#000000")
+            origin.set("stroke-width", str(origin_stroke_width))
+            door_origins.append(origin)
+
+        for path_el in _find_panel_paths(door_el):
+            d = path_el.get("d", "")
+            wedge_d, leaf_endpoints = _split_panel_path(d)
+            if wedge_d is None:
+                logger.debug("Panel path did not match swing pattern, skipping arc/leaf: %s", d)
+                continue
+
+            wedge = etree.Element("path")
+            wedge.set("d", wedge_d)
+            wedge.set("fill", "#000000")
+            wedge.set("stroke", "none")
+            door_arcs.append(wedge)
+
+            (ax, ay), (lx, ly) = leaf_endpoints
+            leaf = etree.Element("path")
+            leaf.set("d", f"M{ax},{ay} L{lx},{ly}")
+            leaf.set("fill", "none")
+            leaf.set("stroke", "#000000")
+            leaf.set("stroke-width", str(leaf_stroke_width))
+            door_leaves.append(leaf)
 
     containers = _find_floor_containers(svg_root)
     if not containers:
@@ -183,21 +367,31 @@ def _collect_elements_by_category(svg_root: etree._Element) -> dict[str, list[et
             category = _classify_floor_child(child)
             if category == "wall":
                 walls.append(child)
-                for dw in _get_door_window_children(child):
-                    openings.append(dw)
-            elif category == "room":
-                rooms.append(child)
-            elif category == "icon":
-                icons.append(child)
-            elif category == "opening":
-                # Top-level Door/Window (test SVGs or non-standard structures)
-                openings.append(child)
+                for win in _get_window_children(child):
+                    windows.append(win)
+                for door in _get_door_children(child):
+                    _process_door(door)
+            elif category == "floor":
+                floors.append(child)
+            elif category == "window":
+                # Top-level Window (test SVGs or non-standard structures)
+                windows.append(child)
+            elif category == "door":
+                # Top-level Door (test SVGs or non-standard structures)
+                _process_door(child)
 
     logger.debug(
-        "Collected: walls=%d  rooms=%d  openings=%d  icons=%d",
-        len(walls), len(rooms), len(openings), len(icons),
+        "Collected: walls=%d  floors=%d  windows=%d  door_origin=%d  door_arc=%d  door_leaf=%d",
+        len(walls), len(floors), len(windows), len(door_origins), len(door_arcs), len(door_leaves),
     )
-    return {"wall": walls, "room": rooms, "opening": openings, "icon": icons}
+    return {
+        "wall": walls,
+        "floor": floors,
+        "window": windows,
+        "door_origin": door_origins,
+        "door_arc": door_arcs,
+        "door_leaf": door_leaves,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -285,8 +479,12 @@ def _render_mask(svg_bytes: bytes, width: int, height: int) -> np.ndarray:
 # Per-sample mask generation
 # ---------------------------------------------------------------------------
 
-# Categories that use white/light fills in the SVG — must be forced black
-_FORCE_BLACK_CATEGORIES = {"room", "opening", "icon"}
+# Categories whose source elements use white/light fills in the SVG — must be forced black.
+# "door_origin"/"door_arc"/"door_leaf" are synthetic elements already styled correctly;
+# not included here.
+_FORCE_BLACK_CATEGORIES = {"floor", "window"}
+
+_ALL_CATEGORIES = ["floor", "wall", "window", "door_origin", "door_arc", "door_leaf"]
 
 
 def generate_masks(
@@ -320,12 +518,12 @@ def generate_masks(
     reference = sample_dir / "model_clean.png"
     width, height = _get_dimensions(svg_root, reference)
 
-    elements_by_cat = _collect_elements_by_category(svg_root)
+    elements_by_cat = _collect_elements_by_category(svg_root, native_size=max(width, height))
 
     category_masks: dict[str, np.ndarray] = {}
     missing_classes: list[str] = []
 
-    for category in ["wall", "opening", "room", "icon"]:
+    for category in _ALL_CATEGORIES:
         elements = elements_by_cat.get(category, [])
 
         if not elements:
@@ -394,9 +592,9 @@ def _debug_overlay(
     else:
         base = np.full((height, width, 3), 255, dtype=np.uint8)
 
-    for cat, color in DEBUG_COLORS.items():
-        if cat in masks:
-            base[masks[cat] > 0] = color
+    for cat in APPLY_ORDER:
+        if cat in masks and cat in DEBUG_COLORS:
+            base[masks[cat] > 0] = DEBUG_COLORS[cat]
 
     Image.fromarray(base).save(masks_dir / "debug_overlay.png")
 

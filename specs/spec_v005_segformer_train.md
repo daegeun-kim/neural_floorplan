@@ -1,1655 +1,512 @@
-# Spec: Segmentation CNN Training for Neural Floorplan
+# Spec v005: SegFormer Training Run3 With Door/Window Subclasses
 
-## 0. Scope of This Spec
+## 0. Purpose
 
-This document defines only the CNN segmentation training design for Neural Floorplan.
+This spec replaces the outdated v005 SegFormer training spec.
 
-This spec covers:
+The previous CNN output classes were:
 
-```text
-raster floorplan image → 5-class semantic segmentation map
+```txt
+0 - background
+1 - wall
+2 - opening
+3 - room
+4 - icon
 ```
 
-This spec does not cover:
+For `segformer_b0_run3`, keep the current SegFormer model structure and training approach, but change the output semantic classes.
 
-```text
-semantic mask → vector geometry
-semantic mask → topology correction
-semantic mask → classified JSON / SVG export
-```
-
-Raster-to-vector conversion, topology validation, CAD cleanup, snapping, room graph construction, and final SVG/JSON export belong to later pipeline stages.
-
-This version keeps the project size fixed. Do not introduce additional labels, auxiliary semantic classes, hinge labels, corner labels, door-swing labels, room-instance labels, or new training datasets in this spec.
-
-The model remains a 5-class semantic segmentation model.
-
----
-
-## 1. Purpose
-
-Train a semantic segmentation model that predicts floorplan component masks from raster floorplan images.
-
-The model should learn:
-
-```text
-floorplan raster image → semantic class map
-```
-
-not:
-
-```text
-floorplan raster image → SVG directly
-```
-
-The predicted semantic masks will later be converted into vector geometry through mask-to-vector post-processing, but that process is outside the scope of this training spec.
-
-The CNN stage is successful when it produces accurate and visually plausible 5-class masks that are suitable for later vectorization.
-
----
-
-## 2. Pipeline Context
-
-The full Neural Floorplan pipeline is:
-
-```text
-1. Dataset loading
-2. SVG/raster preprocessing
-3. Semantic mask generation
-4. Sketch-style augmentation
-5. Segmentation model training
-6. CNN evaluation
-7. Mask-to-vector post-processing
-8. Classified JSON / SVG export
-```
-
-This spec covers only:
-
-```text
-5. Segmentation model training
-6. CNN evaluation
-```
-
-The training script must not generate semantic masks, perform mask-to-vector conversion, create topology graphs, or export final SVG/JSON.
-
----
-
-## 3. Training Objective
-
-Train a model that receives a clean, original, or lightly augmented floorplan raster image and predicts a pixel-level semantic class map.
-
-Example:
-
-```text
-Input X:
-F1_scaled.png        (original CubiCasa5K raster — primary real-world input)
-model_clean.png      (SVG-rendered raster with all floors visible)
-augmented_image.png
-
-Target y:
-semantic_class_map.png
-```
-
-The output should classify every pixel into one of the 5 semantic classes.
-
-Pixel-level accuracy remains important because a clean, well-drawn input plan should produce a clean semantic mask suitable for vectorization.
-
-However, the best model should not be selected by pixel accuracy or mIoU alone. Opening quality, foreground quality, and boundary quality must also be considered because circulation depends strongly on openings.
-
----
-
-## 4. Semantic Classes
-
-Use the same class IDs produced by semantic mask generation.
-
-| Class ID | Class Name |
-|---:|---|
-| 0 | background |
-| 1 | wall |
-| 2 | opening |
-| 3 | room |
-| 4 | icon |
-
-The training script must read class definitions from config or metadata. Do not hard-code class definitions in multiple files.
-
-Strict rule:
-
-```text
-Do not add new semantic classes in v005.
-```
-
-Do not add:
-
-```text
-door hinge
-corner
-junction
-door swing
-door panel
-wall centerline
-room instance
-```
-
-These may be considered in a future project phase, but they are excluded from this spec.
-
----
-
-## 5. Dataset Input Rules
-
-Each training sample should be one raster image paired with one semantic target mask.
-
-Valid input rasters:
-
-```text
-F1_scaled.png        (original CubiCasa5K raster — primary real-world input)
-model_clean.png      (SVG-rendered clean raster)
-augmented_image.png  (optional generated during training or preprocessing)
-```
-
-Ignore:
-
-```text
-F1_original.png
-F2_original.png
-F2_scaled.png
-model_clean01.png
-other unrelated png files
-```
-
-The target for all valid input rasters is:
-
-```text
-masks/semantic_class_map.png
-```
-
-The training script must never silently create new labels. If the target mask does not exist, the sample should be skipped with a warning or the script should raise an error, depending on config.
-
----
-
-## 6. Shared Target Rule
-
-If a sample folder contains both `F1_scaled.png` and `model_clean.png`, treat them as two separate training samples sharing the same semantic mask target.
-
-Example:
-
-```json
-[
-  {
-    "sample_id": "0001_F1_scaled_png",
-    "image": "0001/F1_scaled.png",
-    "target": "0001/masks/semantic_class_map.png",
-    "input_type": "original_raster"
-  },
-  {
-    "sample_id": "0001_model_clean_png",
-    "image": "0001/model_clean.png",
-    "target": "0001/masks/semantic_class_map.png",
-    "input_type": "svg_rendered_clean"
-  }
-]
-```
-
-Do not duplicate the mask file physically. Duplicating the dataset index is enough.
-
-The split files must preserve `input_type` so validation metrics can be reported separately for clean and original rasters.
-
----
-
-## 7. Model Architecture
-
-Use a pretrained SegFormer backbone as the feature extraction encoder.
-
-Recommended first backbone:
-
-```text
-SegFormer-B0
-```
-
-Reason:
-
-```text
-lightweight
-fast iteration
-lower VRAM usage
-sufficient for first CNN pipeline validation
-```
-
-The architecture should consist of:
-
-```text
-1. Pretrained SegFormer-B0 backbone / encoder
-2. Cached backbone feature extraction stage
-3. Custom floorplan segmentation decoder / head
-4. Final 5-class semantic classification layer
-```
-
-The SegFormer backbone extracts hierarchical visual features from floorplan rasters.
-
-The custom decoder/head is responsible for:
+The main goal is to separate windows and doors before vectorization. Door geometry should also be subdivided so the vectorizer can infer the correct number of nearby doors from semantic evidence.
 
-```text
-floorplan-specific feature learning
-semantic component separation
-spatial reconstruction
-pixel-level classification
-```
-
-The decoder/head should use convolutional layers rather than fully connected layers to preserve spatial structure.
-
-### Architecture recommendation after the updated training intention
-
-The architecture recommendation does not change immediately.
+Do not continue development from `segformer_b0_run1` or `segformer_b0_run2`. Those runs are historical comparison runs only.
 
-Keep SegFormer-B0 with the existing custom 2-layer CNN decoder/head for v005 because the project should stay compact and the output remains 5 classes.
+`specs/spec_v003_semantic_mask_generation.md` has been refreshed (task07) to match this 7-class scheme — it is no longer a 5-class document.
 
-If opening quality and clean/original validation results plateau, the next recommended change is not new labels. The next recommended change is:
+## 1. Run Name
 
-```text
-partial fine-tuning of later SegFormer stages
-```
-
-not:
+Use this run identity:
 
-```text
-new semantic classes
-new datasets
-larger model first
+```txt
+segformer_b0_run3
 ```
-
----
-
-## 8. Frozen Backbone Feature Cache Mode
-
-For the initial frozen-backbone training phase, the SegFormer backbone should not run during every training batch.
 
-Use a feature-caching workflow:
+Required output paths:
 
-```text
-1. Load pretrained SegFormer-B0 backbone
-2. Freeze backbone parameters
-3. Run each training image through the backbone once
-4. Save extracted feature tensors to disk
-5. Train only the custom decoder/head using cached features
-6. Do not call SegFormer forward pass during head-only training
+```txt
+checkpoints/segformer_b0_run3
+runs/segformer_b0_run3
+features/segformer_b0_run3
 ```
 
-This avoids repeatedly running expensive backbone computation during every epoch.
+`run3` must have its own feature cache. Do not reuse old cached feature `.pt` files from:
 
-### Cached Feature Storage
-
-Create:
-
-```text
-features/
-  sample_id.pt
-```
-
-Each cached feature file should contain:
-
-```text
-SegFormer feature tensors
-sample_id
-image_path
-target_mask_path
-input_type
-feature_shape
-backbone_name
-preprocessing_config_hash
+```txt
+features/segformer_b0
 ```
 
-Cached features must be regenerated only if:
-
-```text
-image preprocessing changes
-backbone architecture changes
-input resolution changes
-normalization changes
-feature extraction code changes
-```
+The old cache files are safe to remove because the previous runs are no longer being developed and the output class count is changing.
 
----
+Keep old checkpoint folders for `run1` and `run2` so they can still be loaded later for comparison.
 
-## 9. Head-Only Training Mode
+## 2. Model Scope
 
-During frozen-backbone training:
+Keep the existing CNN architecture and training workflow.
 
-```text
-Input:
-cached SegFormer features
+Allowed:
 
-Target:
-semantic_class_map.png
+```txt
+- change output class count
+- update semantic mask generation
+- update class colors
+- update configs for run3
+- rebuild feature cache
+- train a new decoder/output head for run3
 ```
-
-The SegFormer backbone should not execute forward propagation during this stage.
 
-Acceptance criteria:
+Not allowed:
 
-```text
-SegFormer forward pass is not called during head-only training
-only decoder/head parameters require gradients
-training speed is significantly faster than full forward training
-GPU memory usage is reduced compared to end-to-end training
+```txt
+- redesign the SegFormer backbone
+- switch to instance segmentation
+- continue training from run1 or run2 checkpoints
+- use latest.pt instead of best.pt for comparison workflows
 ```
 
----
+## 3. New Output Classes
 
-## 10. Decoder / Head Architecture
+The new output class order must be exactly:
 
-The custom decoder/head should consist of:
-
-### Hidden Layer 1
-
-```text
-Conv 3×3
-256 channels
-BatchNorm2d
-GELU activation
-Dropout2d(0.1)
-```
+| ID | Class | Meaning |
+|---:|---|---|
+| 0 | background | ignored / non-floorplan pixels |
+| 1 | floor | room or floor surface evidence |
+| 2 | wall | wall polygons and structural wall evidence |
+| 3 | window | all window geometry collapsed into one class |
+| 4 | door_arc | door swing quarter-circle region / arc evidence |
+| 5 | door_leaf | opened door panel / leaf segment evidence |
+| 6 | door_origin | wall-aligned threshold/origin segment evidence |
 
-### Hidden Layer 2
-
-```text
-Conv 3×3
-128 channels
-BatchNorm2d
-GELU activation
-Dropout2d(0.1)
-```
+Remove the previous `icon` / furniture class from run3.
 
-### Final Classification Layer
+Do not use:
 
-```text
-1×1 Conv
-outputs 5 semantic classes
+```txt
+opening
+room
+icon
+furniture
+fixture
 ```
 
-Output logits shape:
+as final run3 CNN output classes.
 
-```text
-[B, 5, H, W]
-```
+## 4. Class Color Palette
 
-Do not add auxiliary heads in v005.
+Use a fixed seven-class color palette for saved prediction previews and semantic masks.
 
----
+Recommended palette:
 
-## 11. Model Output
+| ID | Class | RGB |
+|---:|---|---|
+| 0 | background | `(200, 200, 200)` |
+| 1 | floor | `(245, 240, 232)` |
+| 2 | wall | `(30, 30, 30)` |
+| 3 | window | `(60, 120, 220)` |
+| 4 | door_arc | `(220, 90, 90)` |
+| 5 | door_leaf | `(235, 140, 80)` |
+| 6 | door_origin | `(160, 70, 180)` |
 
-For an input image:
+The exact palette can be adjusted only if all related code and tests are updated consistently.
 
-```text
-X shape: [B, C, H, W]
-```
+## 5. Original SVG Structure Observed
 
-The model should output logits:
+A sample source file was inspected:
 
-```text
-logits shape: [B, num_classes, H, W]
+```txt
+docs/original_vector/cubicasa5k/cubicasa5k/high_quality_architectural/2/model.svg
 ```
 
-The target mask should be:
+Relevant observed structure:
 
-```text
-y shape: [B, H, W]
+```xml
+<g id="Wall" class="Wall External">
+  <polygon .../>
+  <g id="Window" class="Window Regular">
+    <polygon .../>
+    <g id="Glass">...</g>
+    <g id="Panel">...</g>
+  </g>
+  <g id="Door" class="Door Swing Beside">
+    <polygon .../>
+    <g id="Threshold">...</g>
+    <g id="Panel" class="Panel Left Positive">
+      <g id="PanelArea">...</g>
+      <path d="M... q... l...Z"/>
+    </g>
+  </g>
+</g>
 ```
-
-where each pixel value is the class ID.
-
-The model itself should be saved as PyTorch checkpoints. Do not save probability maps for every validation sample during training.
-
-For visual inspection, save only a small fixed set of 3–4 preview samples at the configured preview interval.
-
----
-
-## 12. Image Size
-
-Start with:
 
-```text
-512 × 512
-```
+Doors and windows can be nested inside wall groups.
 
-Reason:
+For doors:
 
-```text
-manageable GPU memory
-fast iteration
-sufficient for first segmentation experiment
-compatible with RTX 5080 Laptop GPU training
+```txt
+Door/Threshold polygon -> door_origin
+Door/Panel path curve  -> door_arc and door_leaf evidence
+Door/PanelArea polygon -> do not use directly unless needed to support arc/leaf labeling
 ```
 
-Later test:
+For windows:
 
-```text
-768 × 768
-1024 × 1024
+```txt
+Window group geometry -> window
+Glass and Panel subgeometry -> window
 ```
-
-Do not start with full-resolution floorplans.
 
----
+## 6. Door Labeling Rules
 
-## 13. Device Requirement
+Train three separate semantic classes for door evidence:
 
-Training should use the laptop GPU, not CPU.
-
-Required device:
-
-```text
-NVIDIA RTX 5080 Laptop GPU
+```txt
+door_arc
+door_leaf
+door_origin
 ```
-
-The script must check CUDA availability before training.
 
-Required behavior:
+These are semantic classes, not instance IDs.
 
-```python
-torch.cuda.is_available() must be True
-```
+The purpose is to let vectorization count separate doors by finding separate arc/leaf/origin components after segmentation.
 
-If CUDA is unavailable, the script should stop with a clear error unless config explicitly allows CPU debugging.
+### door_origin
 
-Recommended config:
+`door_origin` should label the wall-aligned threshold/origin segment of a door.
 
-```yaml
-device:
-  require_cuda: true
-  preferred_name_contains: "NVIDIA"
-  allow_cpu_debug: false
-```
+Use SVG evidence from:
 
-The script should log:
-
-```text
-selected device
-CUDA version
-GPU name
-total GPU memory
-mixed precision status
+```txt
+Door > Threshold
 ```
 
-CPU training is allowed only for tiny smoke tests if explicitly enabled.
+and equivalent door threshold geometry.
 
----
+The origin is the segment that replaces the trimmed wall opening in vectorization.
 
-## 14. Loss Function
-
-Use a combined loss:
-
-```text
-loss = weighted_cross_entropy + dice_weight * dice_loss
-```
+`door_origin` is rendered as a **stroked centerline**, not a filled polygon: the Threshold
+polygon's bounding box long axis (the door-width direction, running along the wall) becomes
+a single line segment through its midpoint, stroked at the same fixed width as `door_leaf`
+(see §6's `door_leaf` rendering and the shared stroke-width constant in
+`src/generate_semantic_masks.py`). This keeps the rendered width identical across every
+door regardless of wall thickness, matching `door_leaf`'s width exactly.
 
-Recommended first setting:
+### door_leaf
 
-```text
-loss = weighted_CE + 0.5 * DiceLoss
-```
+`door_leaf` should label the opened door panel line/segment.
 
-Reason:
+Use SVG evidence from the straight line portion of:
 
-```text
-CrossEntropyLoss supports stable pixel-level classification.
-DiceLoss improves global foreground shape and overlap.
-Together they balance pixel accuracy and global semantic region quality.
+```txt
+Door > Panel > path
 ```
 
-DiceLoss should be multiclass Dice computed from softmax probabilities.
+and equivalent door panel geometry.
 
-Recommended Dice behavior:
+For SVG paths such as:
 
-```text
-include wall, opening, room, icon
-exclude background from Dice average by default
+```txt
+M ... q ... l ... Z
 ```
-
-Background should still be included in CrossEntropyLoss because background classification affects clean mask quality.
-
----
-
-## 15. Class Imbalance and Class Weights
 
-Floorplan segmentation has class imbalance.
+the straight `l` segment corresponds to door leaf evidence.
 
-Expected imbalance:
+`door_leaf` is rendered as a **stroked line** (not filled) along that `l` segment, using a
+configurable minimum raster stroke width so it remains a learnable, separable class even after
+the line is overlaid on the `door_arc` wedge fill. `door_leaf` must be rasterized **after**
+`door_arc` so that wherever the leaf stroke and the arc wedge overlap, the pixels are labeled
+`door_leaf`, not `door_arc` (see §11 priority order).
 
-```text
-background is dominant
-room may be large
-walls are thin but visually important
-openings are small but architecturally important
-icons vary by sample
-```
-
-Because the appropriate weights are uncertain, do not hard-code fixed weights as the only behavior.
+### door_arc
 
-Use automatic class weights computed from the training split.
+`door_arc` should label the quarter-circle swing arc region/evidence.
 
-Recommended method:
+`door_arc` is rendered as a **filled wedge**: the full closed Panel path (`M ... q ... l ... Z`)
+is filled and labeled `door_arc`. This gives the CNN a large, easily-learnable swing-region
+area rather than a thin curve.
 
-```text
-1. Count pixels per class over the training masks.
-2. Compute frequency per class.
-3. Use inverse square-root frequency weighting.
-4. Normalize weights so the mean foreground weight is near 1.
-5. Clip extreme weights to avoid unstable training.
-6. Apply an opening-priority multiplier.
-```
+Use SVG evidence from the closed:
 
-Recommended formula:
-
-```text
-base_weight[c] = 1 / sqrt(freq[c] + epsilon)
-normalized_weight = base_weight / mean(base_weight[foreground_classes])
-final_weight = normalized_weight * priority_multiplier[c]
-final_weight = clip(final_weight, min_weight, max_weight)
+```txt
+Door > Panel > path
 ```
 
-Recommended priority multipliers:
+and equivalent swing arc geometry.
 
-| Class | Multiplier | Reason |
-|---|---:|---|
-| background | 0.50 | prevent background dominance |
-| wall | 0.80 | wall pixel perfection is less important than overall CAD intention |
-| opening | 1.80 | circulation and door/window placement are high priority |
-| room | 1.00 | room area matters for spatial layout |
-| icon | 1.00 | useful but secondary |
+The straight `l` segment of that same path is part of the wedge's boundary, but it is labeled
+`door_leaf` instead (see below) — `door_leaf` is rendered after `door_arc` so the leaf stroke
+is never swallowed by the wedge fill.
 
-Recommended clipping:
+## 7. Window Labeling Rules
 
-```text
-min_weight: 0.10
-max_weight: 5.00
-```
+Keep windows simple.
 
-The computed weights must be saved into:
+All window subtypes and internal window parts should collapse into one class:
 
-```text
-training_summary.json
-checkpoint metadata
+```txt
+window
 ```
 
-Config should allow either:
+Use SVG evidence from:
 
-```yaml
-class_weights:
-  mode: "auto"
+```txt
+Window
+Window Regular
+Glass
+Panel
 ```
 
-or:
+and equivalent window geometry.
 
-```yaml
-class_weights:
-  mode: "manual"
-  values: [0.5, 0.8, 1.8, 1.0, 1.0]
-```
+Do not create separate classes for glass, sill, panel, or window subtype in run3.
 
-Default should be:
+## 8. Wall Labeling Rules
 
-```text
-auto
-```
+Keep walls simple.
 
----
-
-## 16. Metrics
-
-Log the following core metrics:
-
-```text
-train_loss
-val_loss
-mean IoU
-foreground_mIoU
-per-class IoU
-pixel accuracy
-foreground pixel accuracy
-learning rate
-epoch time
-```
+All wall types should collapse into one class:
 
-Required per-class IoU:
-
-```text
-background_IoU
-wall_IoU
-opening_IoU
-room_IoU
-icon_IoU
+```txt
+wall
 ```
 
-Required boundary metrics:
+Use SVG evidence from:
 
-```text
-wall_boundary_F1
-opening_boundary_F1
+```txt
+Wall
+Wall External
+Column
+Railing
 ```
-
-Boundary metrics must be implemented immediately in v005.
 
-Boundary F1 should be computed from the existing 5-class masks. It must not require new labels.
+only if those elements are intended to participate in structural wall/edge prediction. If uncertain, prioritize `Wall` and `Wall External`.
 
-Recommended boundary extraction:
+Do not split exterior and interior walls in run3.
 
-```text
-binary_mask → boundary = mask XOR erode(mask)
-```
-
-Recommended tolerance:
+## 9. Floor Labeling Rules
 
-```text
-2 pixels at 512 × 512
-```
+Use class:
 
-Boundary precision/recall:
-
-```text
-precision = predicted boundary pixels within tolerance of target boundary / predicted boundary pixels
-recall    = target boundary pixels within tolerance of predicted boundary / target boundary pixels
-F1        = 2 * precision * recall / (precision + recall)
+```txt
+floor
 ```
-
-If boundary computation significantly slows training, compute it only during validation, not during every training batch.
 
----
+instead of the previous `room` class name.
 
-## 17. Input-Type Metrics
+Because semantic segmentation cannot assign overlapping classes to one pixel, floor should be labeled as the visible room/floor surface area behind walls, windows, doors, and other foreground classes.
 
-Validation metrics must be reported both overall and separated by input type.
+Rules:
 
-Required groups:
-
-```text
-overall validation
-svg_rendered_clean validation
-original_raster validation
-```
-
-For each group, log:
-
-```text
-pixel_accuracy
-foreground_pixel_accuracy
-foreground_mIoU
-background_IoU
-wall_IoU
-opening_IoU
-room_IoU
-icon_IoU
-wall_boundary_F1
-opening_boundary_F1
-vector_ready_score
+```txt
+1. Floor is the far-back semantic surface.
+2. Wall, window, door_arc, door_leaf, and door_origin override floor where they overlap.
+3. Furniture/icon/fixture elements are not separate run3 classes.
+4. Do not let removed furniture/icon classes block floor unless they are intentionally rendered as background/noise.
 ```
 
-This allows the model to be evaluated for both:
+Use SVG `Space` polygons as floor evidence where appropriate:
 
-```text
-clean well-drawn plan accuracy
-messy/original raster generalization
+```txt
+Space
+Space Kitchen
+Space Bath
+Space Entry Lobby
+Space Outdoor
 ```
-
-If grouped metrics significantly slow validation, keep overall metrics mandatory and grouped metrics configurable. The default should still enable grouped metrics.
 
----
+Outdoor spaces may be included only if the existing dataset workflow already treats them as valid floor/space evidence. Do not introduce inconsistent outdoor handling without tests.
 
-## 18. Primary Model Selection Metric
+## 10. Furniture / Icon Removal
 
-Do not select `best.pt` using only `val_mIoU`.
+Remove the previous icon class from run3.
 
-Primary checkpoint metric:
+Do not train a separate furniture or fixture class in run3.
 
-```text
-val_vector_ready_score
-```
-
-The score should emphasize openings more than walls because openings strongly affect circulation.
-
-Recommended formula:
-
-```text
-val_vector_ready_score =
-    0.25 * pixel_accuracy
-  + 0.25 * opening_IoU
-  + 0.15 * opening_boundary_F1
-  + 0.15 * foreground_mIoU
-  + 0.10 * room_IoU
-  + 0.05 * wall_IoU
-  + 0.05 * icon_IoU
-```
-
-Rationale:
-
-```text
-pixel_accuracy remains important for clean vector output
-opening_IoU receives high weight because circulation depends on openings
-opening_boundary_F1 checks whether openings are spatially usable
-foreground_mIoU checks global semantic quality excluding background dominance
-room_IoU checks spatial area layout
-wall_IoU is included but not over-weighted because slight wall dimension shifts may not change CAD intention
-icon_IoU is included but secondary
-```
+Furniture and fixture SVG elements should not become target classes:
 
-If `opening_boundary_F1` is unavailable due to early debugging, use fallback:
-
-```text
-val_vector_ready_score_fallback =
-    0.30 * pixel_accuracy
-  + 0.30 * opening_IoU
-  + 0.15 * foreground_mIoU
-  + 0.10 * room_IoU
-  + 0.10 * wall_IoU
-  + 0.05 * icon_IoU
+```txt
+FixedFurniture
+FixedFurnitureSet
+ElectricalAppliance
+Sink
+Toilet
+Closet
+Cabinet
+Shower
+Stove
+Refrigerator
 ```
 
-The checkpoint metadata must record which metric was used.
+Recommended handling:
 
----
-
-## 19. Dataset Split
-
-Create explicit split files:
-
-```text
-splits/train.json
-splits/val.json
-splits/test.json
+```txt
+- ignore furniture/fixture geometry as a target class
+- let underlying floor remain floor where possible
+- if furniture is visible in input raster, treat it as input noise/context, not a supervised output class
 ```
-
-Do not randomly split differently every run unless using a fixed seed and saving the split.
-
-Recommended split:
 
-```text
-train: 80%
-val: 10%
-test: 10%
-```
+## 11. Mask Generation Priority
 
-For early debugging, create:
+When rasterizing class masks, overlapping semantic layers must use this priority from back to front:
 
-```text
-splits/debug_train.json
-splits/debug_val.json
+```txt
+background
+floor
+wall
+window
+door_origin
+door_arc
+door_leaf
 ```
-
-with a very small subset.
 
-The test set should not be used for checkpoint selection.
+Door classes should remain visible where they overlap walls/openings.
 
----
+`door_leaf` is the highest-priority door subclass: it is rasterized last so that the leaf
+stroke remains visible on top of the `door_arc` wedge fill wherever they overlap (see §6).
 
-## 20. Config File
-
-Create or update:
-
-```text
-configs/train_segformer_b0.yaml
-```
+## 12. Training Configuration
 
-Recommended config:
+Create or update the run3 training config with:
 
 ```yaml
 run:
-  version: "v005"
-  run_name: "segformer_b0_v005_opening_weighted"
-
-paths:
-  dataset_root: "path/to/high_quality_architectural"
-  train_index: "splits/train.json"
-  val_index: "splits/val.json"
-  test_index: "splits/test.json"
+  version: "run3"
+  run_name: "segformer_b0_run3"
 
 image:
   image_size: 512
-  num_classes: 5
-
-model:
-  name: "segformer_b0"
-  pretrained: true
-  frozen_backbone: true
-  use_cached_features: true
-  decoder_version: "v005_head_256_128"
-
-training:
-  epochs: 50
-  batch_size: 4
-  learning_rate: 0.00006
-  weight_decay: 0.01
-  num_workers: 4
-  mixed_precision: true
-  seed: 42
-
-loss:
-  name: "weighted_ce_plus_dice"
-  ce_weight: 1.0
-  dice_weight: 0.5
-  dice_exclude_background: true
-
-class_weights:
-  mode: "auto"
-  method: "inverse_sqrt_frequency"
-  priority_multipliers:
-    background: 0.50
-    wall: 0.80
-    opening: 1.80
-    room: 1.00
-    icon: 1.00
-  min_weight: 0.10
-  max_weight: 5.00
-
-metrics:
-  compute_boundary_f1: true
-  boundary_tolerance_px: 2
-  compute_grouped_by_input_type: true
-  primary_metric: "val_vector_ready_score"
-  vector_ready_score:
-    pixel_accuracy: 0.25
-    opening_IoU: 0.25
-    opening_boundary_F1: 0.15
-    foreground_mIoU: 0.15
-    room_IoU: 0.10
-    wall_IoU: 0.05
-    icon_IoU: 0.05
+  num_classes: 7
 
 checkpoint:
-  output_dir: "checkpoints/segformer_b0_v005"
-  save_best: true
-  save_latest: true
-  save_epoch_archives: false
-  keep_last_n_archives: 0
-  monitor: "val_vector_ready_score"
-  mode: "max"
-  resume_from: "auto"
-
-device:
-  require_cuda: true
-  preferred_name_contains: "NVIDIA"
-  allow_cpu_debug: false
+  output_dir: "checkpoints/segformer_b0_run3"
 
 logging:
-  log_dir: "runs/segformer_b0_v005"
-  save_preview_every_n_epochs: 5
-  preview_sample_count: 4
-  save_probability_maps_for_previews: false
+  log_dir: "runs/segformer_b0_run3"
+
+feature_cache:
+  cache_dir: "features/segformer_b0_run3"
+  force_rebuild: true
 ```
 
----
+Do not resume run3 from run1 or run2 checkpoints because the output head class count changed.
 
-## 21. Required Scripts
+## 13. Cache Handling
 
-Create or update:
+Old cache files in:
 
-```text
-src/train_segmentation.py
+```txt
+features/segformer_b0
 ```
 
-Recommended helper files:
+are safe to remove.
 
-```text
-src/dataset.py
-src/models.py
-src/losses.py
-src/metrics.py
-src/checkpointing.py
-src/config.py
+Run3 must use:
+
+```txt
+features/segformer_b0_run3
 ```
 
-The PyTorch model file should be organized with version naming. Do not overwrite previous model definitions silently.
+Keep run3 cache files for future modification and debugging.
 
-Recommended model file organization:
+The cache must be rebuilt for run3.
 
-```text
-src/models/
-  __init__.py
-  segformer_b0_v004.py
-  segformer_b0_v005.py
+## 14. Checkpoint Rules
+
+Run3 checkpoints must be saved under:
+
+```txt
+checkpoints/segformer_b0_run3
 ```
 
-or:
+Required checkpoint files:
 
-```text
-src/models.py
-```
-
-with explicit class names:
-
-```python
-SegFormerB0HeadV004
-SegFormerB0HeadV005
-```
-
-The v005 model class should keep the same 5-class output but use the updated training objective, loss, metrics, and checkpoint naming.
-
-Do not overwrite old checkpoints or old model files. Use a new checkpoint directory:
-
-```text
-checkpoints/segformer_b0_v005/
-```
-
----
-
-## 22. Data Loading
-
-The PyTorch Dataset should return:
-
-```python
-{
-    "image": image_tensor,
-    "mask": mask_tensor,
-    "sample_id": sample_id,
-    "image_path": image_path,
-    "mask_path": mask_path,
-    "input_type": input_type,
-}
-```
-
-Image tensor:
-
-```text
-float32
-shape [3, H, W]
-normalized
-```
-
-Mask tensor:
-
-```text
-long
-shape [H, W]
-values are class IDs
-```
-
-Important:
-
-```text
-image resize uses bilinear interpolation
-mask resize uses nearest-neighbor interpolation
-```
-
-Never use bilinear interpolation for class masks.
-
----
-
-## 23. Normalization
-
-For pretrained SegFormer, use ImageNet normalization unless the selected library specifies otherwise.
-
-Typical:
-
-```text
-mean = [0.485, 0.456, 0.406]
-std  = [0.229, 0.224, 0.225]
-```
-
-If using grayscale floorplans, convert to 3-channel RGB before feeding into the pretrained backbone.
-
----
-
-## 24. Augmentation During Training
-
-For v005, keep augmentation controlled.
-
-Allowed training-time augmentation:
-
-```text
-horizontal flip
-vertical flip
-90-degree rotation
-small brightness/contrast change
-very mild blur
-minor line darkness variation
-```
-
-Avoid for v005:
-
-```text
-heavy line jitter
-large broken-edge augmentation
-large arbitrary rotations
-elastic deformation
-perspective transform
-random erasing that destroys openings
-```
-
-Reason:
-
-```text
-The model must still perform strongly on clean, well-drawn floorplans.
-```
-
-Generalization is important, but not at the cost of losing clean-plan precision.
-
----
-
-## 25. Small-Subset Smoke Test
-
-Before full training, the script must run on a small subset.
-
-Example:
-
-```text
-20 training samples
-5 validation samples
-2 epochs
-```
-
-Command:
-
-```powershell
-python -m src.train_segmentation --config configs/train_segformer_b0.yaml --debug
-```
-
-Acceptance for smoke test:
-
-```text
-script starts
-CUDA device is detected unless CPU debug is explicitly enabled
-dataset loads correctly
-model forward pass works
-loss computes
-backward pass works
-checkpoint saves
-validation runs
-boundary metrics compute
-preview prediction saves
-```
-
-This must pass before full training.
-
----
-
-## 26. Overfit Test
-
-Before a full run, train on 5 samples.
-
-Goal:
-
-```text
-model should overfit and produce plausible masks
-```
-
-Command:
-
-```powershell
-python -m src.train_segmentation --config configs/train_segformer_b0.yaml --overfit 5
-```
-
-If it cannot overfit 5 samples, there is likely a bug in:
-
-```text
-mask generation
-class IDs
-model output size
-loss function
-image/mask alignment
-feature cache alignment
-```
-
----
-
-## 27. Checkpointing Requirements
-
-Training may take a long time, so checkpointing is mandatory.
-
-The script must save:
-
-```text
-checkpoints/segformer_b0_v005/latest.pt
-```
-
-for resume support.
-
-The script must save:
-
-```text
-checkpoints/segformer_b0_v005/best.pt
-```
-
-whenever validation metric improves.
-
-Do not save a permanent checkpoint archive for every epoch by default.
-
-Default behavior:
-
-```text
-latest.pt is overwritten after each epoch
-best.pt is overwritten only when val_vector_ready_score improves
-epoch_XXX.pt archives are disabled by default
-```
-
-Optional archive behavior:
-
-```yaml
-save_epoch_archives: false
-keep_last_n_archives: 0
-```
-
-If epoch archives are enabled, keep only the most recent N archive files.
-
----
-
-## 28. Best Model Definition
-
-Primary best model rule:
-
-```text
-best.pt = checkpoint with highest val_vector_ready_score
-```
-
-Fallback rule:
-
-```text
-if val_vector_ready_score is unavailable:
-    best.pt = checkpoint with highest fallback vector-ready score
-```
-
-Debug-only fallback:
-
-```text
-if no IoU or boundary metrics are available:
-    best.pt = checkpoint with lowest val_loss
-```
-
-The checkpoint metadata must clearly record which metric was used.
-
-Example:
-
-```json
-{
-  "best_metric_name": "val_vector_ready_score",
-  "best_metric_value": 0.7421,
-  "best_epoch": 17
-}
-```
-
----
-
-## 29. Checkpoint Contents
-
-Each checkpoint file must contain:
-
-```text
-model_state_dict
-optimizer_state_dict
-scheduler_state_dict
-epoch
-global_step
-best_metric_value
-best_metric_name
-config
-class_mapping
-class_weights
-random_seed
-training_history
-model_version
-run_name
-```
-
-Minimum PyTorch checkpoint structure:
-
-```python
-{
-    "model_state_dict": model.state_dict(),
-    "optimizer_state_dict": optimizer.state_dict(),
-    "scheduler_state_dict": scheduler.state_dict() if scheduler else None,
-    "epoch": epoch,
-    "global_step": global_step,
-    "best_metric_value": best_metric_value,
-    "best_metric_name": best_metric_name,
-    "config": config,
-    "class_mapping": class_mapping,
-    "class_weights": class_weights,
-    "random_seed": seed,
-    "history": history,
-    "model_version": "v005",
-    "run_name": run_name,
-}
-```
-
----
-
-## 30. Resume Training Rule
-
-The training script must support resuming.
-
-Config:
-
-```yaml
-checkpoint:
-  resume_from: "auto"
-```
-
-Behavior:
-
-```text
-If resume_from == "auto":
-    if checkpoints/segformer_b0_v005/latest.pt exists:
-        load latest.pt and continue training
-    else:
-        start from pretrained SegFormer / cached features
-```
-
-Manual resume:
-
-```powershell
-python -m src.train_segmentation --config configs/train_segformer_b0.yaml --resume checkpoints/segformer_b0_v005/latest.pt
-```
-
-or:
-
-```powershell
-python -m src.train_segmentation --config configs/train_segformer_b0.yaml --resume checkpoints/segformer_b0_v005/best.pt
-```
-
-For continued training, use:
-
-```text
+```txt
+best.pt
 latest.pt
 ```
 
-For evaluation or inference, use:
+`best.pt` is the checkpoint used for later evaluation, prediction preview, and vectorization comparison.
 
-```text
-best.pt
+Do not overwrite run1 or run2 checkpoints.
+
+## 15. Preview Outputs
+
+Prediction previews should show the new seven-class palette.
+
+Preview output path:
+
+```txt
+runs/segformer_b0_run3/previews
 ```
 
-unless explicitly testing a different checkpoint.
+Each preview sample should include at least:
 
----
-
-## 31. Latest vs Best
-
-Use different files for different purposes:
-
-| File | Purpose |
-|---|---|
-| `latest.pt` | continue interrupted training |
-| `best.pt` | evaluation, inference, deployment |
-| `epoch_XXX.pt` | optional historical backup only if enabled |
-
-Important:
-
-```text
-latest.pt is not always the best model.
-best.pt is not always the most recent model.
+```txt
+sample_000_input.png
+sample_000_target.png
+sample_000_prediction.png
+sample_000_overlay.png
 ```
 
----
+The target and prediction preview images must use the seven-class run3 palette.
 
-## 32. Training History
+## 16. Metrics
 
-Save training history continuously.
+Update class-aware metrics to report per-class IoU for:
 
-Required file:
-
-```text
-checkpoints/segformer_b0_v005/training_history.csv
+```txt
+background
+floor
+wall
+window
+door_arc
+door_leaf
+door_origin
 ```
 
-Required columns:
+The vector-ready score should prioritize classes useful for vectorization:
 
-```text
-epoch
-train_loss
-val_loss
-val_vector_ready_score
-val_mIoU
-val_foreground_mIoU
-pixel_accuracy
-foreground_pixel_accuracy
-background_IoU
-wall_IoU
-opening_IoU
-room_IoU
-icon_IoU
-wall_boundary_F1
-opening_boundary_F1
-clean_pixel_accuracy
-clean_foreground_mIoU
-clean_wall_IoU
-clean_opening_IoU
-clean_opening_boundary_F1
-original_pixel_accuracy
-original_foreground_mIoU
-original_wall_IoU
-original_opening_IoU
-original_opening_boundary_F1
-learning_rate
-checkpoint_saved
-best_updated
+```txt
+wall
+window
+door_arc
+door_leaf
+door_origin
+floor
 ```
 
-Also save:
+Door subclasses should receive meaningful weight because they are needed to count and reconstruct individual doors.
 
-```text
-checkpoints/segformer_b0_v005/training_summary.json
+## 17. Acceptance Criteria
+
+Run3 is complete when:
+
+1. The project has an active `specs/spec_v005_segformer_train.md` for run3.
+2. The old outdated v005 spec remains separate and is not used for run3 implementation.
+3. Semantic mask generation supports exactly seven classes.
+4. The output class order is exactly:
+
+```txt
+background, floor, wall, window, door_arc, door_leaf, door_origin
 ```
 
-with the latest training state.
-
----
-
-## 33. Preview Predictions
-
-Save visual prediction previews every configured interval.
-
-Default:
-
-```yaml
-save_preview_every_n_epochs: 5
-preview_sample_count: 4
-```
-
-Preview outputs:
-
-```text
-runs/segformer_b0_v005/previews/epoch_005/
-  sample_001_input.png
-  sample_001_target.png
-  sample_001_prediction.png
-  sample_001_overlay.png
-  sample_002_input.png
-  sample_002_target.png
-  sample_002_prediction.png
-  sample_002_overlay.png
-  sample_003_input.png
-  sample_003_target.png
-  sample_003_prediction.png
-  sample_003_overlay.png
-  sample_004_input.png
-  sample_004_target.png
-  sample_004_prediction.png
-  sample_004_overlay.png
-```
-
-Purpose:
-
-```text
-verify that model is learning
-catch label alignment bugs
-catch class-color mapping bugs
-inspect wall/opening/room quality
-compare clean vs original raster behavior
-```
-
-The preview set should be fixed across epochs so improvements are visually comparable.
-
-Do not save predictions for the full validation set during training.
-
----
-
-## 34. Logging
-
-Required:
-
-```text
-console logs
-training_history.csv
-training_summary.json
-preview images
-```
-
-Optional:
-
-```text
-TensorBoard
-Weights & Biases
-```
-
-Console log example:
-
-```text
-Epoch 07/50
-train_loss=0.7421
-val_loss=0.6812
-val_vector_ready_score=0.6234
-val_foreground_mIoU=0.5841
-pixel_accuracy=0.9412
-opening_IoU=0.4128
-opening_boundary_F1=0.5069
-best_val_vector_ready_score=0.6234
-saved latest.pt
-updated best.pt
-```
-
----
-
-## 35. Evaluation During Training
-
-At the end of each epoch:
-
-```text
-1. Run validation.
-2. Compute val_loss.
-3. Compute pixel accuracy and foreground pixel accuracy.
-4. Compute per-class IoU.
-5. Compute foreground_mIoU.
-6. Compute wall_boundary_F1 and opening_boundary_F1.
-7. Compute val_vector_ready_score.
-8. Compute grouped metrics by input_type if enabled.
-9. Save latest.pt by overwriting the previous latest.pt.
-10. Update best.pt if val_vector_ready_score improves.
-11. Save 3–4 preview predictions if scheduled.
-12. Update training_history.csv.
-13. Update training_summary.json.
-```
-
----
-
-## 36. Inference Script
-
-Create later:
-
-```text
-src/predict_segmentation.py
-```
-
-Expected command:
-
-```powershell
-python -m src.predict_segmentation `
---checkpoint checkpoints/segformer_b0_v005/best.pt `
---input path/to/floorplan.png `
---output outputs/predictions/
-```
-
-For inference, default to:
-
-```text
-best.pt
-```
-
-not:
-
-```text
-latest.pt
-```
-
-The inference output may save the hard 5-class prediction mask and visual preview. Full raster-to-vector output is not part of this spec.
-
----
-
-## 37. Evaluation Script
-
-Create later:
-
-```text
-src/evaluate_segmentation.py
-```
-
-Expected command:
-
-```powershell
-python -m src.evaluate_segmentation `
---checkpoint checkpoints/segformer_b0_v005/best.pt `
---split splits/test.json
-```
-
-The test set should not be used for checkpoint selection.
-
----
-
-## 38. Output Directory Structure
-
-Expected structure:
-
-```text
-neural_floorplan/
-  configs/
-    train_segformer_b0.yaml
-
-  splits/
-    train.json
-    val.json
-    test.json
-    debug_train.json
-    debug_val.json
-
-  checkpoints/
-    segformer_b0_v005/
-      latest.pt
-      best.pt
-      training_history.csv
-      training_summary.json
-
-  runs/
-    segformer_b0_v005/
-      previews/
-        epoch_001/
-        epoch_005/
-        epoch_010/
-
-  features/
-    sample_id.pt
-
-  src/
-    train_segmentation.py
-    dataset.py
-    losses.py
-    metrics.py
-    checkpointing.py
-    config.py
-    models/
-      __init__.py
-      segformer_b0_v005.py
-```
-
----
-
-## 39. Acceptance Criteria
-
-The v005 training stage is complete when:
-
-```text
-1. Training script runs on a small subset.
-2. CUDA GPU is detected and used by default.
-3. Model forward/backward pass works.
-4. Weighted CrossEntropyLoss computes correctly.
-5. DiceLoss computes correctly.
-6. Combined loss computes correctly.
-7. Validation loop computes loss, IoU, pixel accuracy, foreground_mIoU, and boundary F1.
-8. val_vector_ready_score is computed.
-9. latest.pt is saved by overwriting the previous latest checkpoint.
-10. best.pt is updated when val_vector_ready_score improves.
-11. Per-epoch archive checkpoints are not saved by default.
-12. Training can resume from latest.pt.
-13. Training history is saved to CSV.
-14. Training summary is saved to JSON.
-15. 3–4 preview predictions are saved at the configured interval.
-16. The model can overfit 5 samples.
-```
-
----
-
-## 40. Non-Goals
-
-This training spec should not:
-
-```text
-generate semantic masks
-create SVG output
-perform mask-to-vector conversion
-perform topology correction
-build room adjacency graphs
-infer door swing direction
-create new semantic classes
-create new labels
-modify original dataset files
-save full validation predictions every epoch
-save permanent epoch checkpoints by default
-```
-
-Those belong to other project stages or future specs.
-
----
-
-## 41. Practical First Milestone
-
-First v005 implementation should support:
-
-```text
-SegFormer-B0
-5 semantic classes
-512 × 512 images
-cached frozen-backbone feature mode
-custom 2-layer CNN decoder/head
-weighted CrossEntropyLoss + DiceLoss
-automatic class weights
-opening-weighted vector-ready score
-wall/opening boundary F1
-clean vs original raster validation metrics
-latest.pt checkpoint
-best.pt checkpoint
-training_history.csv
-training_summary.json
-3–4 preview outputs
-CUDA GPU requirement
-```
-
-After this works, possible later improvements are:
-
-```text
-partial SegFormer fine-tuning
-larger image size
-larger SegFormer backbone
-stronger but controlled augmentation
-improved raster-to-vector post-processing
-```
-
-Do not add new classes or new labels until the 5-class CNN reaches a satisfactory level.
-
----
-
-## 42. Final Principle
-
-The CNN training stage is successful if the model can produce accurate and plausible 5-class semantic masks.
-
-Pixel accuracy remains important because clean, well-drawn plans must convert into clean vector output.
-
-Opening quality receives extra emphasis because openings control circulation and affect whether a later vectorized plan makes architectural sense.
-
-The best model should therefore balance:
-
-```text
-pixel accuracy
-opening quality
-foreground segmentation quality
-room area quality
-wall quality
-icon quality
-boundary usability
-```
-
-The full project remains:
-
-```text
-raster image
-→ 5-class semantic segmentation
-→ mask-to-vector conversion
-→ topology validation/correction
-→ classified JSON / SVG export
-```
-
-This spec covers only the CNN segmentation stage.
+5. The previous icon/furniture class is removed.
+6. Windows are one semantic class.
+7. Walls are one semantic class.
+8. Doors are split into `door_arc`, `door_leaf`, and `door_origin`.
+9. Door labels are derived from SVG `Door`, `Threshold`, and `Panel` structure where available.
+10. Run3 uses `checkpoints/segformer_b0_run3`.
+11. Run3 uses `runs/segformer_b0_run3`.
+12. Run3 uses `features/segformer_b0_run3`.
+13. Old `features/segformer_b0` cache files are not reused.
+14. Prediction preview images use the new seven-class palette.
+15. Per-class metrics include all seven run3 classes.
+16. The CNN architecture remains otherwise unchanged.

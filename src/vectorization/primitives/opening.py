@@ -1,4 +1,12 @@
-"""OpeningPrimitive: a generic wall-hosted opening (gap in a wall)."""
+"""OpeningPrimitive: a debug-only marker for unhosted/unresolved evidence.
+
+Per spec_v007 SS6: the active 7-class CNN already separates window and door
+evidence directly, so a generic OpeningPrimitive is no longer the primary
+candidate representation. It survives only to mark window/door mask
+components that could not be hosted on a wall, so they remain visible in the
+SVG debug layer instead of silently being dropped or forced into a final
+window/door group.
+"""
 
 from __future__ import annotations
 
@@ -7,11 +15,11 @@ from typing import Literal, Optional
 
 from .base import BasePrimitive, ScaleInfo
 
-OpeningType = Literal["generic", "door_candidate", "window_candidate"]
+OpeningType = Literal["unresolved_window", "unresolved_door_origin", "generic"]
 
 
 class OpeningPrimitive(BasePrimitive):
-    """A generic interruption hosted on a wall segment."""
+    """Debug-only marker for window/door evidence that could not be wall-hosted."""
 
     def __init__(
         self,
@@ -23,8 +31,9 @@ class OpeningPrimitive(BasePrimitive):
         opening_type: OpeningType = "generic",
         confidence: float = 1.0,
         scale_info: Optional[ScaleInfo] = None,
+        **base_kwargs,
     ) -> None:
-        super().__init__(primitive_id, confidence, scale_info)
+        super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
         self.center = center
         self.width = width
         self.orientation_angle = orientation_angle

@@ -227,10 +227,15 @@ def compute_vector_ready_score(metrics: dict[str, float], weights: dict[str, flo
 # ---------------------------------------------------------------------------
 
 
+_DEFAULT_CLASS_NAMES = [
+    "background", "floor", "wall", "window", "door_arc", "door_leaf", "door_origin",
+]
+
+
 def compute_class_weights_auto(
     train_index: Path | str,
     dataset_root: Path | str,
-    num_classes: int = 5,
+    num_classes: int = 7,
     priority_multipliers: list[float] | None = None,
     min_weight: float = 0.1,
     max_weight: float = 5.0,
@@ -247,7 +252,8 @@ def compute_class_weights_auto(
         dataset_root:         Dataset root (mask paths are relative to this).
         num_classes:          Number of semantic classes.
         priority_multipliers: Per-class multiplier list (index = class ID).
-                              Default: [0.50, 0.80, 1.80, 1.00, 1.00]
+                              Default (background, floor, wall, window, door_arc,
+                              door_leaf, door_origin): [0.50, 0.80, 0.80, 1.20, 1.80, 1.80, 1.80]
         min_weight, max_weight: Clip bounds.
 
     Returns:
@@ -256,7 +262,7 @@ def compute_class_weights_auto(
     from PIL import Image
 
     if priority_multipliers is None:
-        priority_multipliers = [0.50, 0.80, 1.80, 1.00, 1.00]
+        priority_multipliers = [0.50, 0.80, 0.80, 1.20, 1.80, 1.80, 1.80]
 
     dataset_root = Path(dataset_root)
 
@@ -297,8 +303,11 @@ def compute_class_weights_auto(
 
     clipped = np.clip(normalized, min_weight, max_weight)
 
+    names = _DEFAULT_CLASS_NAMES[:num_classes] + [
+        f"class_{i}" for i in range(len(_DEFAULT_CLASS_NAMES), num_classes)
+    ]
     logger.info(
-        "Class weights (bg=%.3f wall=%.3f opening=%.3f room=%.3f icon=%.3f)",
-        *clipped[:5],
+        "Class weights (%s)",
+        " ".join(f"{name}={w:.3f}" for name, w in zip(names, clipped)),
     )
     return torch.tensor(clipped, dtype=torch.float32)

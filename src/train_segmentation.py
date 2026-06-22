@@ -7,10 +7,10 @@ Phase-1 workflow:
   4. Backbone is NOT called during training epochs → fast iteration.
 
 Usage:
-    python -m src.train_segmentation --config configs/train_segformer_b0.yaml
-    python -m src.train_segmentation --config configs/train_segformer_b0.yaml --debug
-    python -m src.train_segmentation --config configs/train_segformer_b0.yaml --overfit 5
-    python -m src.train_segmentation --config configs/train_segformer_b0.yaml --resume checkpoints/segformer_b0_v005/latest.pt
+    python -m src.train_segmentation --config configs/train_segformer_b0_run3.yaml
+    python -m src.train_segmentation --config configs/train_segformer_b0_run3.yaml --debug
+    python -m src.train_segmentation --config configs/train_segformer_b0_run3.yaml --overfit 5
+    python -m src.train_segmentation --config configs/train_segformer_b0_run3.yaml --resume checkpoints/segformer_b0_run3/latest.pt
 """
 
 from __future__ import annotations
@@ -60,13 +60,15 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_CLASS_MAPPING: dict[int, str] = {
     0: "background",
-    1: "wall",
-    2: "opening",
-    3: "room",
-    4: "icon",
+    1: "floor",
+    2: "wall",
+    3: "window",
+    4: "door_arc",
+    5: "door_leaf",
+    6: "door_origin",
 }
 
-ARCH_VERSION = "v3_weighted_ce_dice"
+ARCH_VERSION = "v4_seven_class_doors"
 
 
 # ---------------------------------------------------------------------------
@@ -402,14 +404,12 @@ def validate(
     all_targets: list[torch.Tensor] = []
     all_input_types: list[str]      = []
 
-    wall_bf1_acc    = BoundaryF1Accumulator(class_id=1, tolerance_px=boundary_tol)
-    opening_bf1_acc = BoundaryF1Accumulator(class_id=2, tolerance_px=boundary_tol)
+    wall_bf1_acc = BoundaryF1Accumulator(class_id=2, tolerance_px=boundary_tol)
 
     # Per-input-type accumulators
     group_preds:   dict[str, list[torch.Tensor]] = {}
     group_targets: dict[str, list[torch.Tensor]] = {}
-    group_wall_bf1:    dict[str, BoundaryF1Accumulator] = {}
-    group_opening_bf1: dict[str, BoundaryF1Accumulator] = {}
+    group_wall_bf1: dict[str, BoundaryF1Accumulator] = {}
 
     for batch in loader:
         hidden_states = tuple(hs.to(device, non_blocking=True) for hs in batch["hidden_states"])
@@ -434,15 +434,12 @@ def validate(
                 p_np = preds[i].numpy()
                 t_np = masks_c[i].numpy()
                 wall_bf1_acc.update(p_np, t_np)
-                opening_bf1_acc.update(p_np, t_np)
 
                 if compute_grouped:
                     itype = input_types[i] if i < len(input_types) else "unknown"
                     if itype not in group_wall_bf1:
-                        group_wall_bf1[itype]    = BoundaryF1Accumulator(1, boundary_tol)
-                        group_opening_bf1[itype] = BoundaryF1Accumulator(2, boundary_tol)
+                        group_wall_bf1[itype] = BoundaryF1Accumulator(2, boundary_tol)
                     group_wall_bf1[itype].update(p_np, t_np)
-                    group_opening_bf1[itype].update(p_np, t_np)
 
         if compute_grouped:
             for i in range(preds.shape[0]):
@@ -466,7 +463,6 @@ def validate(
         "pixel_accuracy":          pixel_acc,
         "foreground_pixel_accuracy": fg_pixel_acc,
         "wall_boundary_F1":        wall_bf1_acc.compute() if compute_boundary else float("nan"),
-        "opening_boundary_F1":     opening_bf1_acc.compute() if compute_boundary else float("nan"),
     }
     for cls_id, iou in enumerate(per_class_iou):
         name = DEFAULT_CLASS_MAPPING.get(cls_id, f"class_{cls_id}")
@@ -487,8 +483,7 @@ def validate(
                 name = DEFAULT_CLASS_MAPPING.get(cls_id, f"class_{cls_id}")
                 metrics[f"{prefix}_{name}_IoU"] = iou
             if compute_boundary and itype in group_wall_bf1:
-                metrics[f"{prefix}_wall_boundary_F1"]    = group_wall_bf1[itype].compute()
-                metrics[f"{prefix}_opening_boundary_F1"] = group_opening_bf1[itype].compute()
+                metrics[f"{prefix}_wall_boundary_F1"] = group_wall_bf1[itype].compute()
 
     return metrics
 
@@ -500,10 +495,12 @@ def validate(
 
 _CLASS_COLORS: dict[int, tuple[int, int, int]] = {
     0: (200, 200, 200),
-    1: (30,  30,  30),
-    2: (200, 80,  80),
-    3: (80,  160, 220),
-    4: (80,  200, 100),
+    1: (245, 240, 232),
+    2: (30,  30,  30),
+    3: (60,  120, 220),
+    4: (220, 90,  90),
+    5: (235, 140, 80),
+    6: (160, 70,  180),
 }
 
 
@@ -615,8 +612,9 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
     boundary_tol     = metrics_cfg.get("boundary_tolerance_px", 2)
     compute_grouped  = metrics_cfg.get("compute_grouped_by_input_type", True)
     vrs_weights      = metrics_cfg.get("vector_ready_score", {
-        "pixel_accuracy": 0.25, "opening_IoU": 0.25, "opening_boundary_F1": 0.15,
-        "foreground_mIoU": 0.15, "room_IoU": 0.10, "wall_IoU": 0.05, "icon_IoU": 0.05,
+        "pixel_accuracy": 0.15, "foreground_mIoU": 0.15, "wall_IoU": 0.10,
+        "window_IoU": 0.15, "door_arc_IoU": 0.15, "door_leaf_IoU": 0.10,
+        "door_origin_IoU": 0.10, "floor_IoU": 0.10,
     })
 
     run_cfg   = cfg.get("run", {})
@@ -775,43 +773,36 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
             "foreground_mIoU":           _fmt(val_metrics.get("foreground_mIoU", float("nan"))),
             "pixel_accuracy":            _fmt(val_metrics.get("pixel_accuracy", float("nan"))),
             "foreground_pixel_accuracy": _fmt(val_metrics.get("foreground_pixel_accuracy", float("nan"))),
-            "background_IoU":            _fmt(val_metrics.get("background_IoU", float("nan"))),
-            "wall_IoU":                  _fmt(val_metrics.get("wall_IoU", float("nan"))),
-            "opening_IoU":               _fmt(val_metrics.get("opening_IoU", float("nan"))),
-            "room_IoU":                  _fmt(val_metrics.get("room_IoU", float("nan"))),
-            "icon_IoU":                  _fmt(val_metrics.get("icon_IoU", float("nan"))),
             "wall_boundary_F1":          _fmt(val_metrics.get("wall_boundary_F1", float("nan"))),
-            "opening_boundary_F1":       _fmt(val_metrics.get("opening_boundary_F1", float("nan"))),
-            "clean_pixel_accuracy":      _fmt(val_metrics.get("clean_pixel_accuracy", float("nan"))),
-            "clean_foreground_mIoU":     _fmt(val_metrics.get("clean_foreground_mIoU", float("nan"))),
-            "clean_wall_IoU":            _fmt(val_metrics.get("clean_wall_IoU", float("nan"))),
-            "clean_opening_IoU":         _fmt(val_metrics.get("clean_opening_IoU", float("nan"))),
-            "clean_opening_boundary_F1": _fmt(val_metrics.get("clean_opening_boundary_F1", float("nan"))),
-            "original_pixel_accuracy":      _fmt(val_metrics.get("original_pixel_accuracy", float("nan"))),
-            "original_foreground_mIoU":     _fmt(val_metrics.get("original_foreground_mIoU", float("nan"))),
-            "original_wall_IoU":            _fmt(val_metrics.get("original_wall_IoU", float("nan"))),
-            "original_opening_IoU":         _fmt(val_metrics.get("original_opening_IoU", float("nan"))),
-            "original_opening_boundary_F1": _fmt(val_metrics.get("original_opening_boundary_F1", float("nan"))),
-            "learning_rate":             round(current_lr, 8),
-            "checkpoint_saved":          True,
-            "best_updated":              best_updated,
         }
+        for cls_name in class_mapping.values():
+            row[f"{cls_name}_IoU"] = _fmt(val_metrics.get(f"{cls_name}_IoU", float("nan")))
+        for prefix in ("clean", "original"):
+            row[f"{prefix}_pixel_accuracy"]  = _fmt(val_metrics.get(f"{prefix}_pixel_accuracy", float("nan")))
+            row[f"{prefix}_foreground_mIoU"] = _fmt(val_metrics.get(f"{prefix}_foreground_mIoU", float("nan")))
+            row[f"{prefix}_wall_boundary_F1"] = _fmt(val_metrics.get(f"{prefix}_wall_boundary_F1", float("nan")))
+            for cls_name in class_mapping.values():
+                row[f"{prefix}_{cls_name}_IoU"] = _fmt(val_metrics.get(f"{prefix}_{cls_name}_IoU", float("nan")))
+        row["learning_rate"]    = round(current_lr, 8)
+        row["checkpoint_saved"] = True
+        row["best_updated"]     = best_updated
+
         _write_history_row(history_csv, row)
         history.append(row)
 
         # Console log
         vrs = val_metrics.get("val_vector_ready_score", float("nan"))
+        door_arc_iou = val_metrics.get("door_arc_IoU", float("nan"))
+        door_leaf_iou = val_metrics.get("door_leaf_IoU", float("nan"))
         logger.info(
             "Epoch %02d/%02d | train_loss=%.4f | val_loss=%.4f | vrs=%s | "
-            "opening_IoU=%s | opening_bF1=%s | lr=%.2e%s",
+            "door_arc_IoU=%s | door_leaf_IoU=%s | lr=%.2e%s",
             epoch + 1, epochs,
             train_loss,
             val_metrics.get("val_loss", float("nan")),
-            f"{vrs:.4f}"   if vrs == vrs   else "nan",
-            f"{val_metrics.get('opening_IoU', float('nan')):.4f}"
-                if val_metrics.get('opening_IoU', float('nan')) == val_metrics.get('opening_IoU', float('nan')) else "nan",
-            f"{val_metrics.get('opening_boundary_F1', float('nan')):.4f}"
-                if val_metrics.get('opening_boundary_F1', float('nan')) == val_metrics.get('opening_boundary_F1', float('nan')) else "nan",
+            f"{vrs:.4f}" if vrs == vrs else "nan",
+            f"{door_arc_iou:.4f}" if door_arc_iou == door_arc_iou else "nan",
+            f"{door_leaf_iou:.4f}" if door_leaf_iou == door_leaf_iou else "nan",
             current_lr,
             " [BEST]" if best_updated else "",
         )
@@ -832,8 +823,10 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
             "val_loss":          val_metrics.get("val_loss"),
             "val_vector_ready_score": vrs if vrs == vrs else None,
             "val_mIoU":          val_metrics.get("val_mIoU"),
-            "opening_IoU":       val_metrics.get("opening_IoU"),
-            "opening_boundary_F1": val_metrics.get("opening_boundary_F1"),
+            "door_arc_IoU":      val_metrics.get("door_arc_IoU"),
+            "door_leaf_IoU":     val_metrics.get("door_leaf_IoU"),
+            "door_origin_IoU":   val_metrics.get("door_origin_IoU"),
+            "wall_boundary_F1":  val_metrics.get("wall_boundary_F1"),
             "arch_version":      ARCH_VERSION,
             "run_name":          run_name,
             "class_weights":     class_weights_list,

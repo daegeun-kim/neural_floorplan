@@ -24,9 +24,11 @@ AUGMENTED_DIR = "augmented"
 # Mask files that must receive the same spatial transform as the image.
 SPATIAL_MASK_NAMES = [
     "wall_mask.png",
-    "opening_mask.png",
-    "room_mask.png",
-    "icon_mask.png",
+    "floor_mask.png",
+    "window_mask.png",
+    "door_origin_mask.png",
+    "door_arc_mask.png",
+    "door_leaf_mask.png",
     "semantic_class_map.png",
 ]
 

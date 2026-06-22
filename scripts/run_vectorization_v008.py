@@ -1,16 +1,19 @@
 """Runner script for the v008 vectorization workflow.
 
-Equivalent to executing notebooks/run_vectorization_v008_run1.ipynb.
 Imports from src/ — does not duplicate pipeline logic.
 
+run3 is the active 7-class model (strict mask-to-vector reconstruction).
+run1/run2 are retired 5-class models kept only for historical comparison -
+running them against the current pipeline is expected to raise a clear
+IncompatibleMaskError (spec_v008 SS2), since the pipeline now requires
+7-class evidence.
+
 Output layout:
-    outputs/vectorization/v008/run1/sample_NNN/{input.png, prediction.png, vector.svg}
-    outputs/vectorization/v008/run2/sample_NNN/{input.png, prediction.png, vector.svg}
+    outputs/vectorization/v008/run3/sample_NNN/{input.png, prediction.png, vector.svg, metrics.json, debug_overlay.png}
 
 Usage:
-    python scripts/run_vectorization_v008.py --run run1
-    python scripts/run_vectorization_v008.py --run run2
-    python scripts/run_vectorization_v008.py --run run2 --output-name iteration3_run2
+    python scripts/run_vectorization_v008.py --run run3
+    python scripts/run_vectorization_v008.py --run run3 --output-name iteration1_run3
 """
 
 from __future__ import annotations
@@ -34,18 +37,29 @@ from src.vectorization.run_mask_to_vector import (
     process_single,
 )
 
-SUPPORTED_RUNS = {"run1", "run2"}
+SUPPORTED_RUNS = {"run1", "run2", "run3"}
 IMAGE_SIZE  = 512
-NUM_CLASSES = 5
 N_SAMPLES   = 4
+
+# run1/run2 are the retired 5-class models; run3 is the active 7-class model.
+# Running --run run1/run2 against this pipeline is expected to fail with a
+# clear IncompatibleMaskError from decode_prediction - that is correct,
+# spec-mandated behavior (spec_v008 SS2), not a bug to work around.
+_NUM_CLASSES_BY_RUN = {"run1": 5, "run2": 5, "run3": 7}
+_TRAIN_CONFIG_BY_RUN = {
+    "run1": "configs/train_segformer_b0.yaml",
+    "run2": "configs/train_segformer_b0.yaml",
+    "run3": "configs/train_segformer_b0_run3.yaml",
+}
 
 
 def main(model_run: str, output_name: str | None = None) -> None:
     assert model_run in SUPPORTED_RUNS, f"Unsupported run: {model_run!r}. Choose from {SUPPORTED_RUNS}"
 
+    num_classes = _NUM_CLASSES_BY_RUN[model_run]
     checkpoint_path = PROJECT_ROOT / f"checkpoints/segformer_b0_{model_run}/best.pt"
     output_dir      = PROJECT_ROOT / "outputs/vectorization/v008" / (output_name or model_run)
-    train_config    = PROJECT_ROOT / "configs/train_segformer_b0.yaml"
+    train_config    = PROJECT_ROOT / _TRAIN_CONFIG_BY_RUN[model_run]
     vectz_config    = PROJECT_ROOT / "configs/vectorization_v008.yaml"
 
     assert checkpoint_path.exists(), f"Checkpoint not found: {checkpoint_path}"
@@ -64,7 +78,7 @@ def main(model_run: str, output_name: str | None = None) -> None:
     print(f"Device     : {device}")
 
     backbone = build_backbone(variant="segformer_b0", pretrained=True)
-    decoder  = build_decoder(variant="segformer_b0", num_classes=NUM_CLASSES, output_size=IMAGE_SIZE)
+    decoder  = build_decoder(variant="segformer_b0", num_classes=num_classes, output_size=IMAGE_SIZE)
 
     payload = load_checkpoint(checkpoint_path, decoder, device=device)
     print(f"arch_version : {payload.get('arch_version')}")
@@ -97,7 +111,7 @@ def main(model_run: str, output_name: str | None = None) -> None:
 
     # --- Verify ---
     print("\nOutput structure:")
-    expected = ["input.png", "prediction.png", "vector.svg"]
+    expected = ["input.png", "prediction.png", "vector.svg", "metrics.json", "debug_overlay.png"]
     all_ok = True
     for i in range(N_SAMPLES):
         sample_dir = output_dir / f"sample_{i:03d}"
@@ -118,8 +132,8 @@ def main(model_run: str, output_name: str | None = None) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run v008 vectorization pipeline")
-    parser.add_argument("--run", default="run1", choices=list(SUPPORTED_RUNS),
-                        help="Model run to use (default: run1)")
+    parser.add_argument("--run", default="run3", choices=list(SUPPORTED_RUNS),
+                        help="Model run to use (default: run3, the active 7-class model)")
     parser.add_argument("--output-name", default=None,
                         help="Output subfolder name under outputs/vectorization/v008/ "
                              "(default: same as --run)")

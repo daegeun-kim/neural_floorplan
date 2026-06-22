@@ -1,0 +1,25 @@
+{
+  "image": "prediction.png",
+  "walls": {
+    "outer": 14,
+    "inner": 2,
+    "final": 19
+  },
+  "windows": {
+    "resolved": 5,
+    "unresolved": 0
+  },
+  "doors": {
+    "resolved": 2,
+    "unresolved": 6
+  },
+  "floor_present": true,
+  "outer_loop_closed": true,
+  "scale": {
+    "unit": "px",
+    "px_to_mm": null,
+    "scale_status": "unknown",
+    "scale_source": "scale_conflict_door_vs_wall",
+    "confidence": 0.0
+  }
+}

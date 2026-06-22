@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" data-unit="px" data-scale-status="unknown" data-px-to-mm="" data-scale-source="scale_conflict_door_vs_wall">
+  <g id="floor">
+    <polygon id="floor_0" class="floor" points="511.0,29.0 42.0,29.0 42.0,486.0 275.0,486.0 275.0,511.0 343.0,511.0 343.0,425.0 343.0,180.0 511.0,180.0" fill="#ffffff" stroke="none" />
+  </g>
+  <g id="wall">
+    <path d="M 51.00,278.00 51.00,199.00 33.00,199.00 33.00,278.00 51.00,278.00 Z M 266.00,520.00 352.00,520.00 352.00,189.00 520.00,189.00 520.00,20.00 33.00,20.00 33.00,145.00 51.00,145.00 51.00,38.00 502.00,38.00 502.00,171.00 334.00,171.00 334.00,502.00 284.00,502.00 284.00,477.00 51.00,477.00 51.00,420.00 33.00,420.00 33.00,495.00 266.00,495.00 266.00,520.00 Z M 51.00,300.00 33.00,300.00 33.00,378.00 51.00,378.00 51.00,300.00 Z" fill="#000000" fill-rule="evenodd" stroke="none" id="wall_polygon" />
+  </g>
+  <g id="window">
+    <path d="M 37.50,199.00 46.50,199.00 46.50,145.00 37.50,145.00 37.50,199.00 Z" fill="#3c78dc" fill-rule="evenodd" stroke="none" id="window_0001" data-type="window" />
+    <path d="M 37.50,300.00 46.50,300.00 46.50,278.00 37.50,278.00 37.50,300.00 Z" fill="#3c78dc" fill-rule="evenodd" stroke="none" id="window_0002" data-type="window" />
+    <path d="M 37.50,420.00 46.50,420.00 46.50,378.00 37.50,378.00 37.50,420.00 Z" fill="#3c78dc" fill-rule="evenodd" stroke="none" id="window_0003" data-type="window" />
+  </g>
+  <g id="door">
+    <g id="door_0007" data-type="door"><line id="door_origin_0007" data-type="door_origin" x1="86.00" y1="444.00" x2="116.00" y2="444.00" stroke="#a046b4" stroke-width="2" stroke-linecap="square" /><line id="door_leaf_0007" data-type="door_leaf" x1="86.00" y1="444.00" x2="86.00" y2="414.00" stroke="#eb8c50" stroke-width="1.5" /><path id="door_arc_0007" data-type="door_arc" d="M 116.00 444.00 A 30.00 30.00 0 0 0 86.00 414.00" fill="none" stroke="#dc5a5a" stroke-width="1.5" /></g>
+  </g>
+</svg>

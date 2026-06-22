@@ -1,4 +1,4 @@
-"""Tests for src/generate_semantic_masks.py (spec_v003)."""
+"""Tests for src/generate_semantic_masks.py (spec_v005 run3 — seven-class door subclasses)."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from src.generate_semantic_masks import (
     MASKS_DIR,
     SVG_NAME,
     _classify_floor_child,
+    _split_panel_path,
     generate_masks,
     process_dataset,
 )
@@ -32,26 +33,38 @@ def _make_g(elem_id: str = "", cls: str = "") -> etree._Element:
 # Synthetic SVGs
 # ---------------------------------------------------------------------------
 
-# Simple 100x100 SVG with wall, opening, room, and icon groups.
+# 100x100 canvas: a Wall strip (y=0..10) containing a Window and a swing Door
+# (with Threshold + Panel>path evidence), plus a floor Space below the wall.
 FULL_SVG = """\
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
-  <g id="Wall">
-    <rect x="0" y="0" width="100" height="10" fill="black"/>
+  <g id="Wall" fill="#000000" stroke="#000000">
+    <polygon points="0,0 100,0 100,10 0,10"/>
+    <g id="Window" fill="#f0f0ff" stroke="#000000" class="Window Regular">
+      <polygon points="10,0 10,10 20,10 20,0"/>
+      <g id="Glass" class="Glass"><polygon points="10,0 10,10 20,10 20,0"/></g>
+      <g id="Panel" class="Panel"><line x1="15" x2="15" y1="0" y2="10"/></g>
+    </g>
+    <g id="Door" fill="#ffffff" stroke="#000000" class="Door Swing Beside">
+      <polygon points="40,0 40,10 60,10 60,0"/>
+      <g id="Threshold" class="Threshold">
+        <polygon points="40,0 40,10 60,10 60,0"/>
+      </g>
+      <g id="Panel" fill="none" class="Panel Left Positive">
+        <g id="PanelArea" fill="none" stroke="none" class="PanelArea">
+          <polygon points="40,0 40,10 60,10 60,0"/>
+        </g>
+        <path d="M60,10 q10,0 10,-10 l-10,0 Z"/>
+      </g>
+    </g>
   </g>
-  <g id="Door">
-    <rect x="40" y="0" width="20" height="10" fill="gray"/>
-  </g>
-  <g id="Space">
-    <rect x="5" y="15" width="90" height="80" fill="lightblue"/>
-  </g>
-  <g id="FixedFurniture">
-    <rect x="10" y="20" width="15" height="15" fill="green"/>
+  <g id="space-uuid" fill="#ffffff" stroke="#ffffff" class="Space Kitchen">
+    <polygon points="5,15 95,15 95,95 5,95"/>
   </g>
 </svg>
 """
 
-# SVG with only a wall — no room, so suspicious
+# SVG with only a wall — no floor, so suspicious
 WALL_ONLY_SVG = """\
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
@@ -80,6 +93,12 @@ def _masks_dir(sample_dir: Path) -> Path:
     return sample_dir / MASKS_DIR
 
 
+_MASK_FILENAMES = (
+    "floor_mask.png", "wall_mask.png", "window_mask.png",
+    "door_origin_mask.png", "door_arc_mask.png", "door_leaf_mask.png",
+)
+
+
 # ---------------------------------------------------------------------------
 # _classify_floor_child unit tests
 # ---------------------------------------------------------------------------
@@ -93,28 +112,20 @@ def test_classify_wall_by_class():
     assert _classify_floor_child(_make_g(cls="Wall External")) == "wall"
 
 
-def test_classify_room_by_class():
-    assert _classify_floor_child(_make_g(cls="Space Kitchen")) == "room"
+def test_classify_floor_by_class():
+    assert _classify_floor_child(_make_g(cls="Space Kitchen")) == "floor"
 
 
-def test_classify_room_by_id():
-    assert _classify_floor_child(_make_g(elem_id="Space")) == "room"
+def test_classify_floor_by_id():
+    assert _classify_floor_child(_make_g(elem_id="Space")) == "floor"
 
 
-def test_classify_opening_door():
-    assert _classify_floor_child(_make_g(elem_id="Door")) == "opening"
+def test_classify_window_top_level():
+    assert _classify_floor_child(_make_g(elem_id="Window")) == "window"
 
 
-def test_classify_opening_window():
-    assert _classify_floor_child(_make_g(elem_id="Window")) == "opening"
-
-
-def test_classify_icon_fixed_furniture_set():
-    assert _classify_floor_child(_make_g(elem_id="FixedFurnitureSet")) == "icon"
-
-
-def test_classify_icon_by_class():
-    assert _classify_floor_child(_make_g(cls="FixedFurnitureSet")) == "icon"
+def test_classify_door_top_level():
+    assert _classify_floor_child(_make_g(elem_id="Door")) == "door"
 
 
 def test_classify_unknown_returns_none():
@@ -128,6 +139,25 @@ def test_classify_hidden_element_returns_none():
 
 
 # ---------------------------------------------------------------------------
+# _split_panel_path unit tests
+# ---------------------------------------------------------------------------
+
+
+def test_split_panel_path_arc_and_leaf_endpoints():
+    wedge_d, endpoints = _split_panel_path("M60,10 q10,0 10,-10 l-10,0 Z")
+    assert wedge_d == "M60,10 q10,0 10,-10 l-10,0 Z"
+    arc_end, leaf_end = endpoints
+    assert arc_end == pytest.approx((70.0, 0.0))
+    assert leaf_end == pytest.approx((60.0, 0.0))
+
+
+def test_split_panel_path_no_match_returns_none():
+    wedge_d, endpoints = _split_panel_path("M0,0 L10,10")
+    assert wedge_d is None
+    assert endpoints is None
+
+
+# ---------------------------------------------------------------------------
 # generate_masks — happy path
 # ---------------------------------------------------------------------------
 
@@ -137,8 +167,7 @@ def test_creates_all_mask_files(tmp_path):
     generate_masks(tmp_path, debug_overlays=False)
 
     md = _masks_dir(tmp_path)
-    for fname in ("wall_mask.png", "opening_mask.png", "room_mask.png", "icon_mask.png",
-                  "semantic_class_map.png", "mask_metadata.json"):
+    for fname in (*_MASK_FILENAMES, "semantic_class_map.png", "mask_metadata.json"):
         assert (md / fname).exists(), f"Missing: {fname}"
 
 
@@ -155,7 +184,7 @@ def test_masks_are_binary(tmp_path):
     _write_svg(tmp_path, FULL_SVG)
     generate_masks(tmp_path)
 
-    for fname in ("wall_mask.png", "opening_mask.png", "room_mask.png", "icon_mask.png"):
+    for fname in _MASK_FILENAMES:
         arr = np.array(Image.open(_masks_dir(tmp_path) / fname))
         unique = set(np.unique(arr))
         assert unique.issubset({0, 255}), f"{fname} is not binary: found values {unique}"
@@ -167,8 +196,7 @@ def test_all_masks_same_dimensions(tmp_path):
 
     md = _masks_dir(tmp_path)
     sizes = {}
-    for fname in ("wall_mask.png", "opening_mask.png", "room_mask.png",
-                  "icon_mask.png", "semantic_class_map.png"):
+    for fname in (*_MASK_FILENAMES, "semantic_class_map.png"):
         with Image.open(md / fname) as img:
             sizes[fname] = img.size
 
@@ -184,12 +212,24 @@ def test_wall_pixels_present(tmp_path):
     assert np.any(wall_mask > 0), "Wall mask is empty"
 
 
-def test_class_map_contains_room_class(tmp_path):
+def test_class_map_contains_floor_class(tmp_path):
     _write_svg(tmp_path, FULL_SVG)
     generate_masks(tmp_path)
 
     class_map = np.array(Image.open(_masks_dir(tmp_path) / "semantic_class_map.png"))
-    assert CLASS_IDS["room"] in np.unique(class_map)
+    assert CLASS_IDS["floor"] in np.unique(class_map)
+
+
+def test_door_subclasses_present(tmp_path):
+    """door_origin, door_arc, and door_leaf should all have nonzero evidence."""
+    _write_svg(tmp_path, FULL_SVG)
+    generate_masks(tmp_path)
+
+    class_map = np.array(Image.open(_masks_dir(tmp_path) / "semantic_class_map.png"))
+    unique = set(np.unique(class_map).tolist())
+    assert CLASS_IDS["door_origin"] in unique
+    assert CLASS_IDS["door_arc"] in unique
+    assert CLASS_IDS["door_leaf"] in unique
 
 
 def test_metadata_json_created(tmp_path):
@@ -220,20 +260,30 @@ def test_metadata_correct_dimensions(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_wall_wins_over_opening_in_overlap_region(tmp_path):
-    """The wall group and door group share the same row (y=0..10).
-    After priority merge, those pixels should be class 'wall' (id=1), not 'opening' (id=2).
-    """
+def test_window_excluded_from_wall_class(tmp_path):
+    """The Window footprint must not be labeled wall in the final semantic map."""
     _write_svg(tmp_path, FULL_SVG)
     generate_masks(tmp_path)
 
     class_map = np.array(Image.open(_masks_dir(tmp_path) / "semantic_class_map.png"))
-    # Wall region is the top 10 rows; opening pixels are a subset of that row.
-    top_row = class_map[0, :]
-    # All non-background pixels in the top row should be wall (id=1).
-    non_bg = top_row[top_row != CLASS_IDS["background"]]
-    assert np.all(non_bg == CLASS_IDS["wall"]), (
-        f"Expected wall class in top row but found: {np.unique(top_row)}"
+    window_col = class_map[5, 15]  # inside the 10..20 window span, mid-wall row
+    assert window_col != CLASS_IDS["wall"]
+
+
+def test_door_leaf_wins_over_door_arc_in_overlap_region(tmp_path):
+    """door_leaf is rasterized after door_arc — at their shared boundary pixels,
+    the semantic map must show door_leaf, not door_arc (spec_v005 run3 §6/§11)."""
+    _write_svg(tmp_path, FULL_SVG)
+    generate_masks(tmp_path)
+
+    door_arc_mask = np.array(Image.open(_masks_dir(tmp_path) / "door_arc_mask.png"))
+    door_leaf_mask = np.array(Image.open(_masks_dir(tmp_path) / "door_leaf_mask.png"))
+    class_map = np.array(Image.open(_masks_dir(tmp_path) / "semantic_class_map.png"))
+
+    overlap = (door_arc_mask > 0) & (door_leaf_mask > 0)
+    assert np.any(overlap), "Expected door_arc and door_leaf to overlap in this fixture"
+    assert np.all(class_map[overlap] == CLASS_IDS["door_leaf"]), (
+        "Overlapping door_arc/door_leaf pixels must resolve to door_leaf"
     )
 
 

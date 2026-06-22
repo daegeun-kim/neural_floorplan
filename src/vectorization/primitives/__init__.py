@@ -1,22 +1,24 @@
-"""Component primitive library for neural floorplan vectorization (v007/v008)."""
+"""Component primitive library for neural floorplan vectorization (v007/v008, run3)."""
 
 from .base import BasePrimitive, ScaleInfo
-from .door import DoorPrimitive
+from .door import DoorArcPrimitive, DoorLeafPrimitive, DoorOriginPrimitive
 from .floor import FloorPrimitive
-from .icon import IconPrimitive
 from .opening import OpeningPrimitive
-from .room import RoomPrimitive
-from .wall import WallPrimitive
+from .scale import resolve_scale, snap_to_module_mm
+from .wall import OuterWallLoopPrimitive, WallPrimitive
 from .window import WindowPrimitive
 
 __all__ = [
     "BasePrimitive",
     "ScaleInfo",
+    "resolve_scale",
+    "snap_to_module_mm",
     "FloorPrimitive",
     "WallPrimitive",
+    "OuterWallLoopPrimitive",
     "OpeningPrimitive",
-    "DoorPrimitive",
+    "DoorOriginPrimitive",
+    "DoorLeafPrimitive",
+    "DoorArcPrimitive",
     "WindowPrimitive",
-    "IconPrimitive",
-    "RoomPrimitive",
 ]

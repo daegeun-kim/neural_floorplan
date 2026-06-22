@@ -1,0 +1,89 @@
+run:
+  version: "run3"
+  run_name: "segformer_b0_run3"
+
+paths:
+  dataset_root: "docs/original_vector/cubicasa5k/cubicasa5k/high_quality_architectural"
+  train_index: "splits/train.json"
+  val_index: "splits/val.json"
+  debug_train_index: "splits/debug_train.json"
+  debug_val_index: "splits/debug_val.json"
+
+image:
+  image_size: 512
+  num_classes: 7
+
+model:
+  name: "segformer_b0"
+  pretrained: true
+  frozen_backbone: true
+  use_cached_features: true
+
+feature_cache:
+  cache_dir: "features/segformer_b0_run3"
+  force_rebuild: true
+
+training:
+  epochs: 50
+  batch_size: 4
+  learning_rate: 0.00006
+  weight_decay: 0.01
+  num_workers: 0
+  mixed_precision: true
+  seed: 42
+
+loss:
+  name: "weighted_ce_plus_dice"
+  ce_weight: 1.0
+  dice_weight: 0.5
+  dice_exclude_background: true
+
+class_weights:
+  mode: "auto"
+  method: "inverse_sqrt_frequency"
+  priority_multipliers:
+    background: 0.50
+    floor: 0.80
+    wall: 0.80
+    window: 1.20
+    door_arc: 1.80
+    door_leaf: 1.80
+    door_origin: 1.80
+  min_weight: 0.10
+  max_weight: 5.00
+
+metrics:
+  compute_boundary_f1: true
+  boundary_tolerance_px: 2
+  compute_grouped_by_input_type: true
+  primary_metric: "val_vector_ready_score"
+  vector_ready_score:
+    pixel_accuracy: 0.15
+    foreground_mIoU: 0.15
+    wall_IoU: 0.10
+    window_IoU: 0.15
+    door_arc_IoU: 0.15
+    door_leaf_IoU: 0.10
+    door_origin_IoU: 0.10
+    floor_IoU: 0.10
+
+checkpoint:
+  output_dir: "checkpoints/segformer_b0_run3"
+  save_best: true
+  save_latest: true
+  save_epoch_archives: false
+  keep_last_n_archives: 0
+  monitor: "val_vector_ready_score"
+  mode: "max"
+  resume_from: "auto"
+
+device:
+  require_cuda: true
+  preferred_name_contains: "NVIDIA"
+  allow_cpu_debug: false
+
+logging:
+  log_dir: "runs/segformer_b0_run3"
+  save_preview_every_n_epochs: 5
+  preview_sample_count: 4
+  save_probability_maps_for_previews: false

@@ -1,0 +1,36 @@
+{
+  "image": "image_prediction.png",
+  "walls": {
+    "outer": 19,
+    "inner": 39,
+    "inner_attached_to_outer": 0,
+    "final": 58
+  },
+  "windows": {
+    "resolved": 0,
+    "unresolved": 5
+  },
+  "doors": {
+    "resolved": 0,
+    "unresolved": 13,
+    "unresolved_by_type": {
+      "unresolved_door_scale_blocked": 2,
+      "unresolved_door_too_narrow": 1,
+      "unresolved_door_origin": 10
+    }
+  },
+  "floor_present": true,
+  "outer_loop_closed": true,
+  "scale_blocked": [
+    "inner_wall_outer_attach_mm",
+    "window_min_width_mm",
+    "door_module_snap_mm"
+  ],
+  "scale": {
+    "unit": "px",
+    "px_to_mm": null,
+    "scale_status": "unknown",
+    "scale_source": "scale_conflict_door_vs_wall",
+    "confidence": 0.0
+  }
+}

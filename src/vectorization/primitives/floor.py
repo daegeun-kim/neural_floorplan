@@ -10,7 +10,9 @@ from .base import BasePrimitive, ScaleInfo
 class FloorPrimitive(BasePrimitive):
     """Filled rectilinear footprint polygon — rendered behind all linework."""
 
-    FILL_COLOR = "#f5f0e8"
+    # task08: floor must render pure white, not the CNN debug palette's
+    # off-white, to read as a clean architectural drawing.
+    FILL_COLOR = "#ffffff"
 
     def __init__(
         self,
@@ -18,8 +20,9 @@ class FloorPrimitive(BasePrimitive):
         polygon: list[tuple[float, float]],
         confidence: float = 1.0,
         scale_info: Optional[ScaleInfo] = None,
+        **base_kwargs,
     ) -> None:
-        super().__init__(primitive_id, confidence, scale_info)
+        super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
         self.polygon = polygon
 
     @property
