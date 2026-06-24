@@ -33,7 +33,7 @@ The rules are written so they can be checked from `vector.svg`, `debug_overlay.p
 13. Wall thickness must be either `100 mm` or `200 mm`.
 14. Window width must be at least `300 mm`.
 15. Window total thickness must be `100 mm`.
-16. Default point merge and axis-alignment tolerance must be `500 mm`.
+16. Default point merge and axis-alignment tolerance must be `500 mm` (task17: reverted from the `1000 mm` task15 experiment - door-derived axes are the trusted anchors now, so the goal is no longer to over-merge distant geometry by raw distance alone).
 17. Door hinge and door end points must each be within `200 mm` of the associated red `door_arc` bounding box.
 18. Door-origin and wall-thickness evidence may be used only as checks/debug evidence for scale; they must not override red-bbox scale inference.
 19. If no usable red `door_arc` cluster exists, metric scale must be reported as unresolved or scale-blocked rather than invented from other evidence.
@@ -81,7 +81,7 @@ The rules are written so they can be checked from `vector.svg`, `debug_overlay.p
 48. A red cluster must not be rejected because orange evidence is fragmented, missing, or noisy.
 49. A red cluster must not be rejected because the snapped `700 mm` or `900 mm` endpoint differs from noisy purple pixels.
 50. Weak or missing purple/orange evidence must lower confidence and appear in debug/metrics, not delete the door.
-51. A red cluster may be rejected only if it is below the minimum component area or no plausible nearby wall/door geometry can be inferred after fallback.
+51. A red cluster may be rejected only if it is below the minimum component area, its bounding box aspect ratio exceeds `2:1`, or no plausible nearby wall/door geometry can be inferred after fallback.
 52. Purple `door_origin` evidence without a red arc must not create a final door.
 53. Orange `door_leaf` evidence without a red arc must not create a final door.
 54. If no red `door_arc` evidence exists, no final door may be created.
@@ -164,22 +164,21 @@ The rules are written so they can be checked from `vector.svg`, `debug_overlay.p
 
 ## Debug Overlay And Metrics Rules
 
-107. Rejected evidence must appear only in debug overlay and metrics, never in final SVG.
+107. Rejected evidence must appear only in metrics, never in the debug overlay image or final SVG (task19: dropped from the overlay - it cluttered the render without being needed to read the final graph; still fully reported in `metrics.json`).
 108. Low-confidence or force-inferred door candidates must appear only in debug overlay and metrics, never as debug markers in final SVG.
 109. Debug overlay must show searched points by type.
 110. Debug overlay must show wall/window/door-origin graph edges.
-111. Debug overlay must show rejected evidence.
-112. Debug overlay must show every red `door_arc` candidate bbox.
-113. Debug overlay must show each red candidate's inferred `wall_door_hinge_point` and `wall_door_end_point`.
-114. Debug overlay must visually distinguish low-confidence inferred door points from high-confidence ones.
-115. Metrics must include scale diagnostics:
+111. Debug overlay must show every red `door_arc` candidate bbox.
+112. Debug overlay must show each red candidate's inferred `wall_door_hinge_point` and `wall_door_end_point`, each in its own final point-type color (orange hinge / purple end - task19: not the candidate's confidence color, so they read the same way every other final point type does).
+113. Debug overlay must visually distinguish low-confidence inferred door candidate bboxes from high-confidence ones.
+114. Metrics must include scale diagnostics:
    - `red_arc_bbox_long_edges_px`
    - `red_arc_px_to_mm_candidates`
    - `red_arc_selected_modules_mm`
    - `selected_px_to_mm`
    - `scale_source`
    - `scale_rejected_outliers`
-116. Metrics must include one door-candidate record per red cluster:
+115. Metrics must include one door-candidate record per red cluster:
    - `red_component_id`
    - `red_bbox`
    - `red_bbox_long_edge_px`
@@ -194,11 +193,11 @@ The rules are written so they can be checked from `vector.svg`, `debug_overlay.p
 
 ## Observable Failure Rules
 
-117. The output fails if it traces raw pixel contours as final geometry.
-118. The output fails if it exports diagonal or 45-degree wall geometry.
-119. The output fails if it creates doors without red arc evidence.
-120. The output fails if an accepted red arc cluster does not become a door object.
-121. The output fails if final windows or doors are not hosted on wall topology.
-122. The output fails if debug or unidentified visible groups appear in `vector.svg`.
-123. The output fails if wall thickness is not `100 mm` or `200 mm` when scale is resolved.
-124. The output fails if door width is not `700 mm` or `900 mm` when scale is resolved.
+116. The output fails if it traces raw pixel contours as final geometry.
+117. The output fails if it exports diagonal or 45-degree wall geometry.
+118. The output fails if it creates doors without red arc evidence.
+119. The output fails if an accepted red arc cluster does not become a door object.
+120. The output fails if final windows or doors are not hosted on wall topology.
+121. The output fails if debug or unidentified visible groups appear in `vector.svg`.
+122. The output fails if wall thickness is not `100 mm` or `200 mm` when scale is resolved.
+123. The output fails if door width is not `700 mm` or `900 mm` when scale is resolved.

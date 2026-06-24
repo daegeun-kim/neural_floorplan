@@ -16,7 +16,7 @@ from src.vectorization.components import extract_components
 from src.vectorization.decode_prediction import CLASS_PALETTE, IncompatibleMaskError, decode_class_id_mask, decode_color_mask
 from src.vectorization.door_geometry import generate_door_geometry
 from src.vectorization.export_svg import build_svg, save_svg
-from src.vectorization.graph_types import Attachment, GraphEdge, GraphPoint, ValidationIssue
+from src.vectorization.graph_types import Attachment, ComponentRecord, GraphEdge, GraphPoint, ValidationIssue
 from src.vectorization.masks import split_class_masks
 from src.vectorization.point_alignment import align_points
 from src.vectorization.point_connection import connect_points, validate_graph
@@ -90,29 +90,37 @@ def _window_mask(h: int = 40, w: int = 140) -> np.ndarray:
     return mask
 
 
-def _wall_with_door_gap_mask(h: int = 100, w: int = 40) -> np.ndarray:
-    """Vertical wall with a real gap where a door sits."""
+def _wall_with_door_gap_mask(h: int = 320, w: int = 40) -> np.ndarray:
+    """Vertical wall with a real gap where a door sits. The gap is exactly
+    70px (700mm at RESOLVED_SCALE's 10mm/px) so that task15's unconditional
+    door-width snapping (problem 3) lands the end point right where the
+    fixture's own origin evidence already is, instead of snapping far
+    outside it. The arc mask below spans the same 70px range - a real
+    door_arc's bounding box spans roughly the door's own width (the arc
+    curves from the hinge to the far/latch point), so both the hinge and end
+    point legitimately land within must-rule 17's 200mm-of-bbox floor."""
     mask = np.zeros((h, w), dtype=np.uint8)
-    mask[10:30, 10:14] = 255
-    mask[44:90, 10:14] = 255
+    mask[10:110, 10:14] = 255
+    mask[180:300, 10:14] = 255
     return mask
 
 
-def _door_origin_mask(h: int = 100, w: int = 40) -> np.ndarray:
+def _door_origin_mask(h: int = 320, w: int = 40) -> np.ndarray:
     mask = np.zeros((h, w), dtype=np.uint8)
-    mask[30:44, 9:15] = 255
+    mask[110:180, 9:15] = 255
     return mask
 
 
-def _door_leaf_mask(h: int = 100, w: int = 40) -> np.ndarray:
+def _door_leaf_mask(h: int = 320, w: int = 40) -> np.ndarray:
     mask = np.zeros((h, w), dtype=np.uint8)
-    mask[44:48, 9:15] = 255
+    mask[180:184, 9:15] = 255
     return mask
 
 
-def _door_arc_mask(h: int = 100, w: int = 40) -> np.ndarray:
+def _door_arc_mask(h: int = 320, w: int = 50) -> np.ndarray:
     mask = np.zeros((h, w), dtype=np.uint8)
-    mask[48:60, 9:30] = 255
+    # task18: bbox aspect ratio must be at most 2:1 (74 tall : 37 wide here).
+    mask[110:184, 9:46] = 255
     return mask
 
 
@@ -295,44 +303,42 @@ class TestScaleResolution:
 
 
 class TestWallSkeletonGraph:
-    def test_l_corner_produces_one_clean_2_wall_point(self):
+    def test_l_corner_produces_one_clean_wall_point_with_two_attachments(self):
+        # task15: 1/2/3/4_wall_point collapse into one generic "wall_point" -
+        # corner-ness is verified by attachment count/direction, not a
+        # pre-baked type label.
         mask = _l_corner_mask()
         components, _ = extract_components(mask, "wall", min_area_px=4)
         points, rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
-        corners = [p for p in points if p.point_type == "2_wall_point"]
+        corners = [p for p in points if p.point_type == "wall_point" and len(p.attachments) == 2]
         assert len(corners) == 1
-        assert len(corners[0].attachments) == 2
         dirs = {a.direction for a in corners[0].attachments}
         assert dirs == {"right", "down"} or dirs == {"left", "up"} or len(dirs) == 2
 
-    def test_free_segment_produces_two_1_wall_points(self):
-        # SS17 item 11: a 1_wall_point is a legitimate free end and must not
-        # be force-extended just because it exists in isolation.
+    def test_free_segment_produces_two_free_wall_points(self):
+        # SS17 item 11: a free end is a legitimate generic wall_point and
+        # must not be force-extended just because it exists in isolation.
         mask = _free_segment_mask()
         components, _ = extract_components(mask, "wall", min_area_px=4)
         points, rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
-        free_ends = [p for p in points if p.point_type == "1_wall_point"]
+        free_ends = [p for p in points if p.point_type == "wall_point" and len(p.attachments) == 1]
         assert len(free_ends) == 2
-        for p in free_ends:
-            assert len(p.attachments) == 1
 
-    def test_t_junction_produces_3_wall_point_not_forced_free_ends(self):
-        # SS17 item 12: branch evidence must produce a 3_wall_point, not a
-        # forced 1_wall_point extension.
+    def test_t_junction_produces_one_wall_point_with_three_attachments(self):
+        # SS17 item 12: branch evidence must produce a 3-attachment
+        # wall_point, not a forced 1-attachment free-end extension.
         mask = _t_junction_mask()
         components, _ = extract_components(mask, "wall", min_area_px=4)
         points, rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
-        t_points = [p for p in points if p.point_type == "3_wall_point"]
+        t_points = [p for p in points if p.point_type == "wall_point" and len(p.attachments) == 3]
         assert len(t_points) == 1
-        assert len(t_points[0].attachments) == 3
 
-    def test_cross_produces_4_wall_point(self):
+    def test_cross_produces_one_wall_point_with_four_attachments(self):
         mask = _cross_mask()
         components, _ = extract_components(mask, "wall", min_area_px=4)
         points, rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
-        cross_points = [p for p in points if p.point_type == "4_wall_point"]
+        cross_points = [p for p in points if p.point_type == "wall_point" and len(p.attachments) == 4]
         assert len(cross_points) == 1
-        assert len(cross_points[0].attachments) == 4
 
     def test_diagonal_evidence_rejected_not_snapped(self):
         # SS17 item 8: 45-degree evidence must be rejected to debug, never
@@ -342,8 +348,12 @@ class TestWallSkeletonGraph:
         node_edges, rejected = build_wall_skeleton_graph(components, cardinal_tolerance_deg=20.0)
         assert any(r.kind == "diagonal_wall_edge" for r in rejected)
 
-    def test_every_point_is_one_of_seven_allowed_types(self):
-        # SS17 item 9/10: direct search, no unresolved category.
+    def test_every_point_is_one_of_the_allowed_types(self):
+        # SS17 item 9/10: direct search, no unresolved category. task15
+        # collapsed 1/2/3/4_wall_point into one generic "wall_point" - this
+        # is a deliberate, explicit deviation from must-rule 22's literal
+        # seven-type enumeration (now four types), documented in
+        # spec_v008_mask_to_vector.md's task15 notes.
         mask = _cross_mask()
         components, _ = extract_components(mask, "wall", min_area_px=4)
         points, _rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
@@ -387,6 +397,34 @@ class TestWindowPointDetection:
         from src.vectorization.graph_types import OPPOSITE_DIRECTION
 
         assert OPPOSITE_DIRECTION[d0] == d1
+
+    def test_tall_window_hosts_on_wall_split_far_from_its_centroid(self):
+        # Bug regression: select_host_wall_for_opening used to measure
+        # distance from the opening's centroid only. A tall window whose
+        # host wall is split into two short chains (one ending just above
+        # the window's real pixel gap, one starting just below it) has a
+        # centroid far from either chain even though the window's own top/
+        # bottom extremity sits right next to one of them (rule 75).
+        from src.vectorization.point_detection import WallSkeletonEdge, select_host_wall_for_opening
+
+        # Window pixels span rows 54-145 (centroid ~row 100); the two host
+        # wall chains end/start at rows 50 and 150 - 50px from the centroid
+        # (outside a typical 40px max_dist) but only ~4px from the window's
+        # own nearest row.
+        ys, xs = np.meshgrid(np.arange(54, 146), np.arange(10, 14), indexing="ij")
+        pixel_coords = np.column_stack([xs.ravel().astype(np.float64), ys.ravel().astype(np.float64)])
+
+        top_wall = WallSkeletonEdge(
+            id="top", start=(12.0, 10.0), end=(12.0, 50.0), thickness=4.0,
+            component_id=1, dir_from_start="down", dir_from_end="up",
+        )
+        bottom_wall = WallSkeletonEdge(
+            id="bottom", start=(12.0, 150.0), end=(12.0, 190.0), thickness=4.0,
+            component_id=1, dir_from_start="down", dir_from_end="up",
+        )
+        host = select_host_wall_for_opening(pixel_coords, [top_wall, bottom_wall], max_dist=40.0)
+        assert host is not None
+        assert host.id in ("top", "bottom")
 
     def test_window_below_300mm_minimum_is_rejected(self):
         # SS17 item 15: window length must be >= 300mm when scale is known.
@@ -446,7 +484,7 @@ class TestDoorPointDetection:
 
     def test_door_with_red_arc_produces_hinge_and_end_points(self):
         components = self._components()
-        points, rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        points, rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
         hinge = [p for p in points if p.point_type == "wall_door_hinge_point"]
         end = [p for p in points if p.point_type == "wall_door_end_point"]
         assert len(hinge) == 1
@@ -465,12 +503,12 @@ class TestDoorPointDetection:
     def test_hinge_prefers_orange_purple_intersection(self):
         # SS17 item 20: hinge lands at the origin/leaf-evidence end, not the far end.
         components = self._components()
-        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
         hinge = next(p for p in points if p.point_type == "wall_door_hinge_point")
         end = next(p for p in points if p.point_type == "wall_door_end_point")
-        # The leaf/arc evidence sits near y=44 (origin's near end); the far
+        # The leaf/arc evidence sits near y=180 (origin's near end); the far
         # end should land further away along the wall axis.
-        assert abs(hinge.coordinate[1] - 44.0) < abs(end.coordinate[1] - 44.0)
+        assert abs(hinge.coordinate[1] - 180.0) < abs(end.coordinate[1] - 180.0)
 
     def test_hinge_falls_back_to_arc_geometry_without_intersection(self):
         # SS17 item 19/21: missing/no leaf evidence still resolves a door via
@@ -481,16 +519,16 @@ class TestDoorPointDetection:
         # pairing with the door_origin evidence still succeeds regardless of
         # which of the two (equidistant) corners is chosen.
         components = self._components()
-        masks = {"door_leaf": np.zeros((100, 40), dtype=np.uint8), "door_origin": _door_origin_mask()}
+        masks = {"door_leaf": np.zeros((320, 40), dtype=np.uint8), "door_origin": _door_origin_mask()}
         points, rejected, _edges = detect_points(
-            components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 30.0}
+            components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 40.0}
         )
         assert any(p.point_type == "wall_door_hinge_point" for p in points)
 
     def test_door_width_snaps_to_700_or_900mm(self):
         # SS17 item 22.
         components = self._components()
-        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
         hinge = next(p for p in points if p.point_type == "wall_door_hinge_point")
         width_px = hinge.attachment_of("door_origin").evidence_length_px
         assert width_px * RESOLVED_SCALE.px_to_mm in (700.0, 900.0)
@@ -506,9 +544,126 @@ class TestDoorPointDetection:
         # not block door creation once scale is resolved/estimated.
         low_confidence_scale = ScaleInfo(unit="mm", px_to_mm=10.0, scale_status="estimated", confidence=0.2)
         components = self._components()
-        points, rejected, _edges = detect_points(components, self._masks(), low_confidence_scale)
+        points, rejected, _edges = detect_points(components, self._masks(), low_confidence_scale, {"hinge_probe_radius": 40.0})
         assert any(p.point_type == "wall_door_hinge_point" for p in points)
         assert not any(r.kind == "unresolved_door_scale_blocked" for r in rejected)
+
+
+# ---------------------------------------------------------------------------
+# task17: door-first vectorization - red door_arc bbox vertices are trusted
+# anchors; hinge/end are 2 *adjacent* vertices of that bbox, never searched
+# from mask intersections or arc geometry.
+# ---------------------------------------------------------------------------
+
+
+class TestDoorBboxVertexSelection:
+    def test_all_four_bbox_vertices_extracted(self):
+        from src.vectorization.point_detection import select_door_hinge_end_from_bbox
+
+        bbox = (10, 20, 30, 60)
+        selection = select_door_hinge_end_from_bbox(bbox, None, None, None, 14.0)
+        assert selection.all_vertices == {
+            "top_left": (10.0, 20.0), "top_right": (30.0, 20.0),
+            "bottom_left": (10.0, 60.0), "bottom_right": (30.0, 60.0),
+        }
+
+    def test_selected_pair_is_adjacent_not_opposite(self):
+        from src.vectorization.point_detection import select_door_hinge_end_from_bbox
+
+        bbox = (10, 20, 30, 60)
+        wall_mask = np.zeros((100, 100), dtype=np.uint8)
+        wall_mask[20:60, 0:10] = 255  # wall flanks the left edge
+        selection = select_door_hinge_end_from_bbox(bbox, None, wall_mask, None, 14.0)
+        hinge_vertices = set(selection.all_vertices.values())
+        assert selection.hinge in hinge_vertices and selection.end in hinge_vertices
+        # adjacent vertices share exactly one coordinate, opposite vertices share none
+        assert selection.hinge[0] == selection.end[0] or selection.hinge[1] == selection.end[1]
+        assert selection.hinge != selection.end
+
+    def test_black_wall_evidence_scores_the_correct_edge(self):
+        from src.vectorization.point_detection import select_door_hinge_end_from_bbox
+
+        bbox = (10, 20, 30, 60)
+        wall_mask = np.zeros((100, 100), dtype=np.uint8)
+        wall_mask[20:60, 0:10] = 255  # continuous wall flush against the left edge
+        selection = select_door_hinge_end_from_bbox(bbox, None, wall_mask, None, 14.0)
+        assert selection.edge_name == "left"
+        assert selection.edge_score > 0
+        assert {selection.hinge, selection.end} == {(10.0, 20.0), (10.0, 60.0)}
+
+    def test_purple_door_origin_evidence_scores_the_correct_edge(self):
+        from src.vectorization.point_detection import select_door_hinge_end_from_bbox
+
+        bbox = (10, 20, 30, 60)
+        purple_mask = np.zeros((100, 100), dtype=np.uint8)
+        purple_mask[20:60, 26:30] = 255  # purple stroke flush against the right edge
+        selection = select_door_hinge_end_from_bbox(bbox, purple_mask, None, None, 14.0)
+        assert selection.edge_name == "right"
+        assert {selection.hinge, selection.end} == {(30.0, 20.0), (30.0, 60.0)}
+
+    def test_orange_evidence_disambiguates_hinge_from_end(self):
+        from src.vectorization.point_detection import select_door_hinge_end_from_bbox
+
+        bbox = (10, 20, 30, 60)
+        wall_mask = np.zeros((100, 100), dtype=np.uint8)
+        wall_mask[20:60, 0:10] = 255
+        orange_mask = np.zeros((100, 100), dtype=np.uint8)
+        orange_mask[18:24, 8:14] = 255  # leaf evidence near the top-left vertex
+        selection = select_door_hinge_end_from_bbox(bbox, None, wall_mask, orange_mask, 14.0)
+        assert selection.hinge == (10.0, 20.0)
+        assert selection.end == (10.0, 60.0)
+
+    def test_zero_evidence_still_selects_a_pair_never_returns_none(self):
+        # task17 "Red Bbox Assumption": the bbox is trusted unconditionally -
+        # a vertex pair is always picked, even with no evidence at all.
+        from src.vectorization.point_detection import select_door_hinge_end_from_bbox
+
+        bbox = (10, 20, 30, 60)
+        selection = select_door_hinge_end_from_bbox(bbox, None, None, None, 14.0)
+        assert selection is not None
+        assert selection.edge_score == 0
+        assert selection.hinge != selection.end
+
+    def test_hinge_and_end_points_are_literal_bbox_vertices_in_detect_points(self):
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[10:290, 10:14] = 255
+        arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        arc_mask[100:170, 9:46] = 255
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
+        components = {"wall": wall_components, "window": [], "door_arc": door_arc_components, "door_origin": []}
+        masks = {"door_leaf": np.zeros((300, 60), dtype=np.uint8), "door_origin": np.zeros((300, 60), dtype=np.uint8), "wall": wall_mask}
+        points, _rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        hinge = next(p for p in points if p.point_type == "wall_door_hinge_point")
+        end = next(p for p in points if p.point_type == "wall_door_end_point")
+        bbox = door_arc_components[0].bbox
+        bbox_vertices = {
+            (float(bbox[0]), float(bbox[1])), (float(bbox[2]), float(bbox[1])),
+            (float(bbox[0]), float(bbox[3])), (float(bbox[2]), float(bbox[3])),
+        }
+        assert hinge.coordinate in bbox_vertices
+        # end may have been extended past its raw vertex by the 700/900mm
+        # width snap (task15/16 behavior, unchanged) - its *raw* selection
+        # (before snapping) is what must be a bbox vertex.
+        from src.vectorization.point_detection import select_door_hinge_end_from_bbox
+
+        selection = select_door_hinge_end_from_bbox(bbox, masks["door_origin"], wall_mask, masks["door_leaf"], 14.0)
+        assert selection.end in bbox_vertices
+
+    def test_red_bbox_always_accepted_even_with_zero_surrounding_evidence(self):
+        # task17: never reject for missing evidence once past min-area -
+        # only true geometric impossibilities (200mm floor, no host wall at
+        # all) may still reject.
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[280:284, 10:14] = 255  # a wall, but far from the arc
+        arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        arc_mask[100:170, 9:46] = 255
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
+        components = {"wall": wall_components, "window": [], "door_arc": door_arc_components, "door_origin": []}
+        masks = {"door_leaf": np.zeros((300, 60), dtype=np.uint8), "door_origin": np.zeros((300, 60), dtype=np.uint8), "wall": wall_mask}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        assert not any(r.kind == "unresolved_door_arc" for r in rejected)
 
 
 # ---------------------------------------------------------------------------
@@ -532,26 +687,37 @@ class TestForcefulDoorInference:
         return {"door_leaf": _door_leaf_mask(), "door_origin": _door_origin_mask()}
 
     def test_missing_purple_evidence_does_not_delete_the_door(self):
-        # task13 required test 4/10: no door_origin component or mask at all
-        # near the red cluster - the door must still be created by forcing
-        # both the hinge (arc-geometry fallback) and the end point
-        # (red-cluster-geometry fallback) from red+wall evidence alone.
-        components = self._components(door_origin_components=[])
-        masks = {"door_leaf": _door_leaf_mask(), "door_origin": np.zeros((100, 40), dtype=np.uint8)}
-        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 30.0})
+        # task16: hinge/end now come from 2 of the door_arc bbox's own 4
+        # vertices, picked by purple+black evidence along its edges - with
+        # no door_origin mask/component at all, black wall evidence flanking
+        # the bbox is enough on its own to pick the correct (wall-facing)
+        # edge and still produce the door.
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[10:290, 10:14] = 255  # one continuous wall, no door-gap gap
+        arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        arc_mask[100:170, 9:46] = 255  # bbox's left edge sits flush against the wall
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
+        components = {"wall": wall_components, "window": [], "door_arc": door_arc_components, "door_origin": []}
+        masks = {
+            "door_leaf": np.zeros((300, 60), dtype=np.uint8),
+            "door_origin": np.zeros((300, 60), dtype=np.uint8),
+            "wall": wall_mask,
+        }
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
         hinge = [p for p in points if p.point_type == "wall_door_hinge_point"]
         end = [p for p in points if p.point_type == "wall_door_end_point"]
         assert len(hinge) == 1
         assert len(end) == 1
-        assert not any(r.kind == "unresolved_door_hinge" for r in rejected)
+        assert not any(r.kind == "unresolved_door_arc" for r in rejected)
 
     def test_missing_orange_evidence_does_not_delete_the_door(self):
         # task13 required test 5: door_leaf is entirely absent, but
         # door_origin evidence still lets the door resolve.
         door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
         components = self._components(door_origin_components=door_origin_components)
-        masks = {"door_leaf": np.zeros((100, 40), dtype=np.uint8), "door_origin": _door_origin_mask()}
-        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 30.0})
+        masks = {"door_leaf": np.zeros((320, 40), dtype=np.uint8), "door_origin": _door_origin_mask()}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
         assert sum(1 for p in points if p.point_type == "wall_door_hinge_point") == 1
         assert sum(1 for p in points if p.point_type == "wall_door_end_point") == 1
 
@@ -559,7 +725,7 @@ class TestForcefulDoorInference:
         # task13 acceptance criterion: door count == accepted red cluster count.
         door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
         components = self._components(door_origin_components=door_origin_components)
-        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
         issues = validate_points(points, accepted_door_arc_count=len(components["door_arc"]))
         assert not any(i.rule == "door_count_mismatch" for i in issues)
 
@@ -571,7 +737,7 @@ class TestForcefulDoorInference:
         door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
         components = self._components(door_origin_components=door_origin_components)
         masks = self._masks()
-        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
         records = build_door_candidate_records(
             components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
         )
@@ -588,7 +754,7 @@ class TestForcefulDoorInference:
         door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
         components = self._components(door_origin_components=door_origin_components)
         masks = self._masks()
-        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
         records = build_door_candidate_records(
             components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
         )
@@ -598,13 +764,26 @@ class TestForcefulDoorInference:
         assert rec.door_confidence > 0.0
 
     def test_forced_inference_lowers_confidence_but_keeps_the_door(self):
-        # task13 "Forceful Inference Rule": weak/missing evidence lowers
-        # door_confidence but never removes the record.
+        # task16: a weak/fragmented purple stroke (no orange, no black wall
+        # mask passed at all) still resolves the door via the bbox-edge
+        # scoring it does have evidence for - must-rule 41's "every
+        # surviving red cluster becomes a door" still holds, just at lower
+        # confidence than a fully-evidenced one (rule 52's "purple alone
+        # never creates a door" refers to purple with no red arc at all,
+        # not to a real arc with only-purple supporting evidence).
         from src.vectorization.point_detection import build_door_candidate_records
 
-        components = self._components(door_origin_components=[])
-        masks = {"door_leaf": np.zeros((100, 40), dtype=np.uint8), "door_origin": np.zeros((100, 40), dtype=np.uint8)}
-        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 30.0})
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[10:290, 10:14] = 255
+        arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        arc_mask[100:170, 9:46] = 255
+        tiny_purple = np.zeros((300, 60), dtype=np.uint8)
+        tiny_purple[100:140, 9:11] = 255  # fragmented purple stroke along the wall's own axis
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
+        components = {"wall": wall_components, "window": [], "door_arc": door_arc_components, "door_origin": []}
+        masks = {"door_leaf": np.zeros((300, 60), dtype=np.uint8), "door_origin": tiny_purple, "wall": None}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
         records = build_door_candidate_records(
             components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
         )
@@ -613,30 +792,34 @@ class TestForcefulDoorInference:
         assert records[0].door_confidence < 1.0
 
     def test_fragmented_paired_door_origin_falls_back_to_arc_geometry(self):
-        # Bug D regression (rules 47/50/51): the nearest door_origin
-        # component within probe radius of the hinge is a tiny fragment
-        # (segmentation broke the purple stroke into pieces, same pattern as
-        # the red-arc fragmentation in sample_003) - its own projected width
-        # is implausibly small. The door must still resolve via the
-        # arc-geometry fallback rather than being rejected outright.
-        wall_components, _ = extract_components(_wall_with_door_gap_mask(), "wall", min_area_px=4)
-        door_arc_components, _ = extract_components(_door_arc_mask(), "door_arc", min_area_px=4)
-        tiny_origin_mask = np.zeros((100, 40), dtype=np.uint8)
-        tiny_origin_mask[30:33, 9:12] = 255  # 3x3 fragment, not the full origin stroke
+        # task16: hinge/end come from the bbox's own vertices, not from
+        # projecting door_origin's own width - so a tiny, fragmented purple
+        # stub (segmentation broke the stroke into pieces) only needs to
+        # contribute *some* evidence to the correct edge's score; the actual
+        # hinge-to-end width comes from the bbox edge itself (then snapped
+        # to a 700/900mm module), never from the fragment's own tiny span.
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[10:290, 10:14] = 255
+        arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        arc_mask[100:170, 9:46] = 255
+        tiny_origin_mask = np.zeros((300, 60), dtype=np.uint8)
+        tiny_origin_mask[100:102, 9:11] = 255  # 2x2 fragment, not the full origin stroke
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
         door_origin_components, _ = extract_components(tiny_origin_mask, "door_origin", min_area_px=2)
         components = {
             "wall": wall_components, "window": [],
             "door_arc": door_arc_components, "door_origin": door_origin_components,
         }
-        masks = {"door_leaf": tiny_origin_mask.copy(), "door_origin": tiny_origin_mask}
+        masks = {"door_leaf": np.zeros((300, 60), dtype=np.uint8), "door_origin": tiny_origin_mask, "wall": wall_mask}
 
         points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
         hinge = [p for p in points if p.point_type == "wall_door_hinge_point"]
         end = [p for p in points if p.point_type == "wall_door_end_point"]
         assert len(hinge) == 1
         assert len(end) == 1
-        assert not any(r.kind == "unresolved_door_too_narrow" for r in rejected)
-        # The fallback width must come from the arc, not the 3px fragment.
+        # The width must come from the bbox edge (snapped to a real module),
+        # not the 2px purple fragment.
         width_px = math.hypot(end[0].coordinate[0] - hinge[0].coordinate[0], end[0].coordinate[1] - hinge[0].coordinate[1])
         assert width_px > 10.0
 
@@ -659,6 +842,33 @@ class TestForcefulDoorInference:
         assert records[0].created_door_candidate is False
         assert records[0].door_inference_notes == "scale not resolved"
 
+    def test_tiny_weak_red_cluster_still_becomes_a_low_confidence_door(self):
+        # task15 problem 4 / must-rule 41/51: a red door_arc cluster that
+        # survives cleanup but is noticeably smaller/weaker than a real door
+        # arc (no orange/purple support at all) must still become a door,
+        # just at lower confidence - not be filtered by a stricter
+        # plausibility floor than rule 51's literal "min-area or zero
+        # plausible geometry."
+        from src.vectorization.point_detection import build_door_candidate_records
+
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[10:290, 10:14] = 255
+        weak_arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        # task18: bbox aspect ratio must stay within 2:1 - small AREA (not
+        # extreme elongation) is what makes this cluster "weak" here.
+        weak_arc_mask[100:168, 9:43] = 255  # 68 tall x 34 wide - much smaller area than a real arc
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(weak_arc_mask, "door_arc", min_area_px=4)
+        components = {"wall": wall_components, "window": [], "door_arc": door_arc_components, "door_origin": []}
+        masks = {"door_leaf": np.zeros((300, 60), dtype=np.uint8), "door_origin": np.zeros((300, 60), dtype=np.uint8), "wall": wall_mask}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        records = build_door_candidate_records(
+            components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
+        )
+        assert len(records) == 1
+        assert records[0].created_door_candidate is True
+        assert records[0].door_confidence < 0.5
+
     def test_debug_overlay_renders_door_candidate_bbox(self):
         # task13 "Debug Overlay Requirements": each red cluster is drawn as
         # a door candidate, with its bbox outline color set by confidence.
@@ -668,15 +878,92 @@ class TestForcefulDoorInference:
         door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
         components = self._components(door_origin_components=door_origin_components)
         masks = self._masks()
-        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
         records = build_door_candidate_records(
             components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
         )
-        rgb = np.zeros((100, 40, 3), dtype=np.uint8)
+        rgb = np.zeros((320, 40, 3), dtype=np.uint8)
         overlay = build_debug_overlay(rgb, points, [], rejected, RESOLVED_SCALE, records)
         x0, y0, x1, y1 = records[0].red_bbox
         pixels = np.array(overlay)[max(0, y0 - 1):y1 + 1, max(0, x0 - 1):x1 + 1]
         assert pixels.any()
+
+    def test_unconditional_snap_always_lands_on_a_door_module(self):
+        # task15 problem 3: the door-width snap must always apply once scale
+        # is resolved - even when the bbox edge's own raw span (here a 70px
+        # = 700mm edge, already close to a module) gets paired with a short,
+        # weak purple span - instead of the old conditional skip that could
+        # silently ship a non-700/900mm width.
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[10:290, 10:14] = 255
+        arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        arc_mask[100:170, 9:46] = 255  # bbox left edge spans 70px = 700mm
+        short_origin_mask = np.zeros((300, 60), dtype=np.uint8)
+        short_origin_mask[100:120, 9:11] = 255  # 20px raw purple span, far from 700/900mm
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
+        door_origin_components, _ = extract_components(short_origin_mask, "door_origin", min_area_px=2)
+        components = {
+            "wall": wall_components, "window": [],
+            "door_arc": door_arc_components, "door_origin": door_origin_components,
+        }
+        masks = {"door_leaf": np.zeros((300, 60), dtype=np.uint8), "door_origin": short_origin_mask, "wall": wall_mask}
+        points, _rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        hinge = next(p for p in points if p.point_type == "wall_door_hinge_point")
+        end = next(p for p in points if p.point_type == "wall_door_end_point")
+        width_px = math.hypot(end.coordinate[0] - hinge.coordinate[0], end.coordinate[1] - hinge.coordinate[1])
+        assert width_px * RESOLVED_SCALE.px_to_mm == pytest.approx(700.0)
+
+    def test_door_rejected_when_even_snapped_point_exceeds_200mm_floor(self):
+        # task15 problem 3: must-rule 17's 200mm-from-arc-bbox floor is a
+        # fixed, unchanged check - a red cluster whose plausible door span
+        # simply cannot land within it (here the arc is small and localized
+        # right at the hinge, far from the real far/end point) is correctly
+        # rejected (rule 51) rather than silently kept with a non-compliant
+        # width.
+        wall_mask = np.zeros((200, 40), dtype=np.uint8)
+        wall_mask[10:50, 10:14] = 255
+        wall_mask[120:160, 10:14] = 255
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        arc_mask = np.zeros((200, 40), dtype=np.uint8)
+        arc_mask[50:58, 9:13] = 255  # localized right at the hinge end only (8x4, within the 2:1 aspect floor)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
+        origin_mask = np.zeros((200, 40), dtype=np.uint8)
+        origin_mask[50:120, 9:15] = 255  # 70px = 700mm raw paired span
+        door_origin_components, _ = extract_components(origin_mask, "door_origin", min_area_px=2)
+        components = {
+            "wall": wall_components, "window": [],
+            "door_arc": door_arc_components, "door_origin": door_origin_components,
+        }
+        masks = {"door_leaf": origin_mask, "door_origin": origin_mask}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 40.0})
+        assert not any(p.point_type == "wall_door_hinge_point" for p in points)
+        assert any(r.kind == "unresolved_door_too_far_from_arc" for r in rejected)
+
+    def test_door_arc_far_beyond_old_40px_cap_still_finds_a_host_wall(self):
+        # task15 problem 4: door recognition must not depend on point-search
+        # precision - the host-wall *hosting* search (nearest_wall, snapping
+        # an already-resolved hinge/end onto its nearest real wall edge) is
+        # not capped at the old 40px (not a must-rule number). task16 makes
+        # this a 2-stage concern: hinge/end are first resolved from the bbox
+        # vertex evidence (here, a purple stroke along the left edge, so the
+        # nearby-wall gap doesn't block that step at all), and only *then*
+        # does the unbounded nearest_wall hosting search apply - the nearest
+        # live wall pixel is 50px away, well beyond the old 40px cap.
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[10:50, 10:14] = 255
+        wall_mask[230:270, 10:14] = 255  # two wall stubs, ~50px from the arc on either side
+        arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        arc_mask[100:170, 9:46] = 255
+        purple_mask = np.zeros((300, 60), dtype=np.uint8)
+        purple_mask[100:170, 9:11] = 255  # purple along the left edge resolves hinge/end on its own
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
+        components = {"wall": wall_components, "window": [], "door_arc": door_arc_components, "door_origin": []}
+        masks = {"door_leaf": np.zeros((300, 60), dtype=np.uint8), "door_origin": purple_mask, "wall": wall_mask}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        assert any(p.point_type == "wall_door_hinge_point" for p in points)
+        assert not any(r.kind == "unresolved_door_hinge" for r in rejected)
 
 
 # ---------------------------------------------------------------------------
@@ -730,7 +1017,15 @@ class TestPointAlignmentAndConnection:
         points, _rejected, wall_edges = detect_points(
             components_dict, {}, RESOLVED_SCALE, {"min_hosted_width_px": 5.0}
         )
-        aligned, _issues = align_points(points, wall_components, RESOLVED_SCALE, {}, wall_edges)
+        # task16's axis-alignment tolerance is a generous 1000mm (100px at
+        # this fixture's 10mm/px) - this tiny synthetic plan is smaller than
+        # that span, so it needs a tight override here or every point in it
+        # (wall and window alike) collapses onto one shared axis. This test
+        # is about window/wall edge non-overlap, not alignment range - that
+        # range itself is covered separately by TestAxisAlignmentTolerance.
+        aligned, _issues = align_points(
+            points, wall_components, RESOLVED_SCALE, {"axis_alignment_tolerance_mm": 10.0}, wall_edges
+        )
         edges, _graph_issues = connect_points(aligned, wall_edges, RESOLVED_SCALE)
 
         window_edges = [e for e in edges if e.edge_type == "window"]
@@ -753,7 +1048,7 @@ class TestPointAlignmentAndConnection:
         # BOTH its window edge and the adjacent host wall edge - that is
         # exactly 2 edges total and must not be flagged as a conflict.
         win = GraphPoint("w", "wall_window_point", (0.0, 0.0), [], source_component_ids=[1])
-        wall_pt = GraphPoint("n", "2_wall_point", (10.0, 0.0), [])
+        wall_pt = GraphPoint("n", "wall_point", (10.0, 0.0), [])
         edges = [
             GraphEdge("win_e", "window", "w", "w2", (0.0, 0.0), (5.0, 0.0)),
             GraphEdge("wall_e", "wall", "w", "n", (0.0, 0.0), (10.0, 0.0)),
@@ -779,6 +1074,130 @@ class TestPointAlignmentAndConnection:
         ]
         issues = validate_graph([win], edges)
         assert any(i.rule == "opening_point_multiple_edges" for i in issues)
+
+    def test_axis_bridging_connects_collinear_points_with_corridor_evidence(self):
+        # task15 problem 1: build_wall_edges only ever connects two points
+        # that are the two ends of one already-discovered WallSkeletonEdge
+        # chain - two free ends from genuinely separate components (a real
+        # mask gap) but exactly collinear, with real wall pixel evidence in
+        # the corridor between them, must still be bridged.
+        from src.vectorization.point_connection import _connect_axis_aligned_points
+
+        a = GraphPoint("a", "wall_point", (10.0, 40.0), [Attachment(type="wall", direction="up", source="wall")])
+        b = GraphPoint("b", "wall_point", (10.0, 50.0), [Attachment(type="wall", direction="down", source="wall")])
+        wall_component = ComponentRecord(
+            class_name="wall", component_id=1, area_px=100.0, bbox=(8, 10, 14, 80), centroid=(11.0, 45.0)
+        )
+        new_edges = _connect_axis_aligned_points([a, b], [], [wall_component], corridor_slack_px=5.0)
+        assert len(new_edges) == 1
+        assert {new_edges[0].point_a_id, new_edges[0].point_b_id} == {"a", "b"}
+
+    def test_axis_bridging_requires_corridor_wall_evidence(self):
+        # Without any wall component bridging the gap, two merely-collinear
+        # points must not be connected (requirement 2: only connect points
+        # that are actually aligned *and* evidence-backed).
+        from src.vectorization.point_connection import _connect_axis_aligned_points
+
+        a = GraphPoint("a", "wall_point", (10.0, 40.0), [])
+        b = GraphPoint("b", "wall_point", (10.0, 50.0), [])
+        new_edges = _connect_axis_aligned_points([a, b], [], [], corridor_slack_px=5.0)
+        assert new_edges == []
+
+    def test_axis_bridging_skips_a_point_already_connected_in_that_direction(self):
+        # A point that already has a wall edge leaving it in the bridging
+        # direction must not get a second, conflicting one.
+        from src.vectorization.point_connection import _connect_axis_aligned_points
+
+        a = GraphPoint("a", "wall_point", (10.0, 40.0), [])
+        b = GraphPoint("b", "wall_point", (10.0, 50.0), [])
+        c = GraphPoint("c", "wall_point", (10.0, 30.0), [])
+        existing = [GraphEdge("e1", "wall", "a", "c", (10.0, 40.0), (10.0, 30.0))]
+        wall_component = ComponentRecord(
+            class_name="wall", component_id=1, area_px=100.0, bbox=(8, 10, 14, 80), centroid=(11.0, 45.0)
+        )
+        new_edges = _connect_axis_aligned_points([a, b, c], existing, [wall_component], corridor_slack_px=5.0)
+        # a already has a wall edge going "up" (to c) - bridging a-b would
+        # need a "down" edge from a, which is fine, but a-c going "up" must
+        # not be duplicated/contradicted.
+        assert all(e.point_a_id != "c" and e.point_b_id != "c" for e in new_edges)
+
+
+class TestDoorAnchoredAlignment:
+    """task17: red door_arc bbox vertices are trusted alignment anchors -
+    nearby wall_point/wall_window_point instances snap onto a door anchor's
+    exact axis, but the door anchor itself is never moved."""
+
+    def test_nearby_wall_point_snaps_onto_door_anchor_axis(self):
+        hinge = GraphPoint(
+            "hinge", "wall_door_hinge_point", (100.0, 50.0),
+            [Attachment("wall", "down", "wall"), Attachment("door_origin", "up", "door_origin")],
+            source_component_ids=[1],
+        )
+        end = GraphPoint(
+            "end", "wall_door_end_point", (100.0, 120.0),
+            [Attachment("wall", "up", "wall"), Attachment("door_origin", "down", "door_origin")],
+            source_component_ids=[1],
+        )
+        # within RESOLVED_SCALE's 500mm tolerance (50px at 10mm/px) of the
+        # door anchor's x=100, but not exactly equal to it.
+        wall_pt = GraphPoint("w", "wall_point", (108.0, 300.0), [])
+        points = [hinge, end, wall_pt]
+        aligned, _issues = align_points(points, [], RESOLVED_SCALE, {})
+        assert aligned[2].coordinate[0] == 100.0
+        # the door anchor itself must never move
+        assert aligned[0].coordinate == (100.0, 50.0)
+        assert aligned[1].coordinate == (100.0, 120.0)
+
+    def test_wall_point_too_far_from_door_anchor_does_not_snap(self):
+        hinge = GraphPoint(
+            "hinge", "wall_door_hinge_point", (100.0, 50.0),
+            [Attachment("wall", "down", "wall"), Attachment("door_origin", "up", "door_origin")],
+            source_component_ids=[1],
+        )
+        end = GraphPoint(
+            "end", "wall_door_end_point", (100.0, 120.0),
+            [Attachment("wall", "up", "wall"), Attachment("door_origin", "down", "door_origin")],
+            source_component_ids=[1],
+        )
+        # 60px = 600mm away - beyond the 500mm default tolerance.
+        wall_pt = GraphPoint("w", "wall_point", (160.0, 300.0), [])
+        points = [hinge, end, wall_pt]
+        aligned, _issues = align_points(points, [], RESOLVED_SCALE, {})
+        assert aligned[2].coordinate[0] == 160.0
+
+    def test_door_anchor_never_moved_by_follower_clustering(self):
+        # Even when a nearby follower would otherwise average with another
+        # follower, a door anchor must never be pulled into that average.
+        hinge = GraphPoint(
+            "hinge", "wall_door_hinge_point", (100.0, 50.0),
+            [Attachment("wall", "down", "wall"), Attachment("door_origin", "up", "door_origin")],
+            source_component_ids=[1],
+        )
+        end = GraphPoint(
+            "end", "wall_door_end_point", (100.0, 120.0),
+            [Attachment("wall", "up", "wall"), Attachment("door_origin", "down", "door_origin")],
+            source_component_ids=[1],
+        )
+        wall_a = GraphPoint("a", "wall_point", (105.0, 300.0), [])
+        wall_b = GraphPoint("b", "wall_point", (95.0, 310.0), [])
+        points = [hinge, end, wall_a, wall_b]
+        aligned, _issues = align_points(points, [], RESOLVED_SCALE, {})
+        assert aligned[0].coordinate == (100.0, 50.0)
+        assert aligned[1].coordinate == (100.0, 120.0)
+        # both followers snap to the door anchor's exact x, not to each
+        # other's average.
+        assert aligned[2].coordinate[0] == 100.0
+        assert aligned[3].coordinate[0] == 100.0
+
+
+class TestAxisAlignmentTolerance:
+    def test_default_axis_alignment_tolerance_is_500mm(self):
+        # task17: returned to 500mm - door-derived axes are now the trusted
+        # anchors, so the goal is no longer to over-merge distant geometry
+        # by raw distance alone (task15's 1000mm experiment).
+        from src.vectorization.point_alignment import DEFAULT_AXIS_ALIGNMENT_TOLERANCE_MM
+
+        assert DEFAULT_AXIS_ALIGNMENT_TOLERANCE_MM == 500.0
 
 
 # ---------------------------------------------------------------------------
@@ -948,15 +1367,48 @@ class TestDebugAndMetrics:
         assert metrics["rejected_evidence"]["wall_component_too_small"] == 1
         assert metrics["validation_issues"][0]["rule"] == "odd_window_point_count"
 
-    def test_debug_overlay_includes_rejected_evidence(self):
+    def test_debug_overlay_does_not_render_rejected_evidence(self):
+        # task19: rejected/unresolved evidence stays in metrics.json only -
+        # it no longer clutters the overlay image itself.
         from src.vectorization.debug import build_debug_overlay
         from src.vectorization.graph_types import RejectedEvidence
 
         rgb = np.zeros((32, 32, 3), dtype=np.uint8)
         rejected = [RejectedEvidence(kind="window_too_narrow", reason="x", bbox=(5, 5, 10, 10))]
-        overlay = build_debug_overlay(rgb, [], [], rejected, RESOLVED_SCALE)
-        assert overlay.size[0] > 32
-        assert overlay.size[1] >= 32
+        with_rejected = build_debug_overlay(rgb, [], [], rejected, RESOLVED_SCALE)
+        without_rejected = build_debug_overlay(rgb, [], [], [], RESOLVED_SCALE)
+        # rejected evidence has zero effect on the rendered image now.
+        assert np.array(with_rejected).tobytes() == np.array(without_rejected).tobytes()
+
+    def test_door_candidate_record_reports_bbox_vertices_and_scores(self):
+        # task17 "Required Metrics": red_component_id, red_bbox,
+        # all_four_bbox_vertices, selected_hinge_vertex, selected_end_vertex,
+        # hinge_vertex_score, end_vertex_score, selected_bbox_edge,
+        # host_wall_alignment_score, door_width_mm must all be reported.
+        from src.vectorization.point_detection import build_door_candidate_records
+
+        wall_mask = np.zeros((300, 60), dtype=np.uint8)
+        wall_mask[10:290, 10:14] = 255
+        arc_mask = np.zeros((300, 60), dtype=np.uint8)
+        arc_mask[100:170, 9:46] = 255
+        wall_components, _ = extract_components(wall_mask, "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(arc_mask, "door_arc", min_area_px=4)
+        components = {"wall": wall_components, "window": [], "door_arc": door_arc_components, "door_origin": []}
+        masks = {"door_leaf": np.zeros((300, 60), dtype=np.uint8), "door_origin": np.zeros((300, 60), dtype=np.uint8), "wall": wall_mask}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        records = build_door_candidate_records(door_arc_components, points, rejected, masks, wall_components, RESOLVED_SCALE)
+
+        assert len(records) == 1
+        rec = records[0]
+        assert rec.created_door_candidate is True
+        assert len(rec.all_four_bbox_vertices) == 4
+        assert rec.selected_hinge_vertex is not None
+        assert rec.selected_end_vertex is not None
+        assert rec.hinge_vertex_score is not None and rec.hinge_vertex_score > 0
+        assert rec.end_vertex_score == rec.hinge_vertex_score
+        assert rec.selected_bbox_edge == "left"
+        assert rec.host_wall_alignment_score == rec.hinge_vertex_score
+        assert rec.door_width_mm in (700.0, 900.0)
 
 
 # ---------------------------------------------------------------------------
@@ -1003,7 +1455,12 @@ class TestProcessSingleIntegration:
         rgb[10:60, 10:14] = CLASS_PALETTE[2]
         image_path = self._write_image(tmp_path, rgb)
 
-        config = {"scale": {"explicit_px_to_mm": 10.0}}
+        # task16's 1000mm axis-alignment tolerance is 100px at this 10mm/px
+        # scale - larger than this whole 80x80 fixture - so it needs a tight
+        # override here or the wall collapses to a single point. This test
+        # is about SVG group structure, not alignment range (covered by
+        # TestAxisAlignmentTolerance).
+        config = {"scale": {"explicit_px_to_mm": 10.0}, "geometry": {"axis_alignment_tolerance_mm": 10.0}}
         scale_info = _scale_info_from_config(config)
         out_dir = tmp_path / "out"
         process_single(image_path, config, scale_info, out_dir, output_filename="vector.svg")

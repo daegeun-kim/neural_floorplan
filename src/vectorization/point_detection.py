@@ -1,18 +1,25 @@
-"""Search directly for the seven allowed point types (spec_v008 SS9).
+"""Search directly for the four allowed point types (spec_v008 SS9, as
+revised by task15 - see module note below).
 
 Wall points come from walking each wall component's skeleton as a graph:
-degree-1 pixels are candidate free ends, degree>=3 pixels are junctions
-(2/3/4_wall_point by incident cardinal-direction count). Window and door
+degree-1 pixels are candidate free ends, degree>=2 pixels are junctions -
+all finalize as the single generic ``wall_point`` type (task15: wall graph
+construction must not depend on accurate pre-classification of a point's
+eventual degree; the actual attachment directions are still recorded on
+each point, just not pre-baked into four separate type labels). Window
 points are located by projecting their own component evidence onto the
 nearest wall skeleton edge - reusing the same projection/hosting math the
-old (retired) window_extraction.py/door_extraction.py/geometry_rules.py
-already implemented correctly, ported here as private helpers operating on
-the new skeleton-graph edges instead of pre-built WallPrimitive objects.
+old (retired) window_extraction.py/geometry_rules.py already implemented
+correctly, ported here as private helpers operating on the new
+skeleton-graph edges instead of pre-built WallPrimitive objects. Door hinge
+and end points are simpler (task16): they are 2 of the red door_arc
+bounding box's 4 vertices, chosen directly from purple/black/orange
+evidence around the bbox - see ``select_door_hinge_end_from_bbox``.
 
 A wall free end whose coordinate coincides with a window/door point (the
 common case: an opening sits where the wall mask itself has a real gap) is
 superseded by that window/door point rather than also being emitted as a
-redundant ``1_wall_point`` - spec_v008 SS10 requires every location to
+redundant ``wall_point`` - spec_v008 SS10 requires every location to
 resolve to exactly one final point type.
 """
 
@@ -39,14 +46,19 @@ from .graph_types import (
 
 DEFAULTS: dict = {
     "cardinal_tolerance_deg": 25.0,
-    "max_wall_dist": 40.0,
-    "min_hosted_width_px": 10.0,
+    # task15 problem 4: door recognition (is there a host wall at all) must
+    # not be gated by a tight search radius - only must-rule 17's 200mm
+    # arc-bbox-proximity floor (door_point_max_dist_from_arc_mm below) is a
+    # fixed, must-rule-mandated number.
+    "max_wall_dist": 100000.0,
+    "min_hosted_width_px": 3.0,
     "corner_ambiguity_px": 25.0,
     "min_remainder_px": 3.0,
+    # task16: probe band (px) around each door_arc bbox edge/corner used to
+    # score purple/black/orange evidence when picking the hinge/end vertex
+    # pair - no longer a mask-intersection search radius.
     "hinge_probe_radius": 14.0,
-    "hinge_intersection_tolerance_px": 6.0,
-    "hinge_snap_to_wall_max_dist_px": 40.0,
-    "hinge_arc_inference_enabled": True,
+    "hinge_snap_to_wall_max_dist_px": 100000.0,
     "door_width_modules_mm": (700.0, 900.0),
     "free_end_merge_tol_px": 8.0,
     "min_window_width_mm": 300.0,
@@ -268,9 +280,11 @@ def build_wall_skeleton_graph(
 def _classify_wall_nodes(
     node_edges: dict[tuple[int, int], list[WallSkeletonEdge]],
 ) -> tuple[list[GraphPoint], dict[tuple[int, int], WallSkeletonEdge]]:
-    """Junctions (>=2 incident edges) finalize immediately as 2/3/4_wall_point;
-    degree-1 nodes are returned separately as free-end candidates, since
-    window/door search must get a chance to reclassify them first."""
+    """Junctions (>=2 incident edges) finalize immediately as the generic
+    ``wall_point`` type (task15: wall graph construction must not depend on
+    accurate pre-classification of a point's eventual degree); degree-1 nodes
+    are returned separately as free-end candidates, since window/door search
+    must get a chance to reclassify them first."""
     points: list[GraphPoint] = []
     free_ends: dict[tuple[int, int], WallSkeletonEdge] = {}
     counter = 0
@@ -286,12 +300,10 @@ def _classify_wall_nodes(
         for e in edges:
             d = e.dir_from_start if e.start == (float(node[0]), float(node[1])) else e.dir_from_end
             attachments.append(Attachment(type="wall", direction=d, source="wall", evidence_length_px=e.length))
-        n = len(edges)
-        point_type = "2_wall_point" if n == 2 else "3_wall_point" if n == 3 else "4_wall_point"
         points.append(
             GraphPoint(
                 id=f"wallpt_{counter}",
-                point_type=point_type,
+                point_type="wall_point",
                 coordinate=(float(node[0]), float(node[1])),
                 attachments=attachments,
                 source_component_ids=[e.component_id for e in edges],
@@ -353,7 +365,7 @@ def _finalize_free_ends(
         points.append(
             GraphPoint(
                 id=f"wallpt_free_{counter}",
-                point_type="1_wall_point",
+                point_type="wall_point",
                 coordinate=(nx, ny),
                 attachments=[Attachment(type="wall", direction=d, source="wall", evidence_length_px=edge.length)],
                 source_component_ids=[edge.component_id],
@@ -398,6 +410,28 @@ def _point_to_wall_distance(point: tuple[float, float], wall) -> float:
     return math.hypot(cx - proj_x, cy - proj_y)
 
 
+def _min_pixel_distance_to_wall(pixel_coords: np.ndarray, wall) -> float:
+    """Minimum distance from any of the opening's own pixels to ``wall``,
+    not the opening's centroid.
+
+    A long/tall opening's centroid can sit far from its real host wall
+    whenever that wall is itself split into two short chains (one above and
+    one below the opening's real pixel gap) - the centroid-distance check
+    then sees neither chain as "near" even though the opening's own
+    extremity is right next to one of them (rule 75: every final window
+    must be hosted by wall topology).
+    """
+    x1, y1 = wall.start
+    x2, y2 = wall.end
+    dx, dy = x2 - x1, y2 - y1
+    seg_len_sq = dx * dx + dy * dy
+    if seg_len_sq < 1e-9:
+        return float(np.min(np.hypot(pixel_coords[:, 0] - x1, pixel_coords[:, 1] - y1)))
+    t = np.clip(((pixel_coords[:, 0] - x1) * dx + (pixel_coords[:, 1] - y1) * dy) / seg_len_sq, 0.0, 1.0)
+    proj_x, proj_y = x1 + t * dx, y1 + t * dy
+    return float(np.min(np.hypot(pixel_coords[:, 0] - proj_x, pixel_coords[:, 1] - proj_y)))
+
+
 def nearest_wall(center: tuple[float, float], walls: list, max_dist: float = 40.0):
     if not walls:
         return None
@@ -409,6 +443,22 @@ def nearest_wall(center: tuple[float, float], walls: list, max_dist: float = 40.
             best_dist = dist
             best_wall = wall
     return best_wall
+
+
+def _nearest_wall_matching_orientation(center: tuple[float, float], walls: list, orientation: str, max_dist: float):
+    """Prefer the nearest wall edge whose own running ``orientation``
+    (``"horizontal"`` = ``dir_from_start`` in left/right, ``"vertical"`` =
+    up/down) matches; fall back to plain nearest-by-distance only when no
+    matching-orientation wall exists within ``max_dist`` (task17 - see
+    ``_detect_door_points``'s hosting call for why this matters)."""
+    matching = [
+        w for w in walls
+        if ("horizontal" if w.dir_from_start in ("left", "right") else "vertical") == orientation
+    ]
+    host = nearest_wall(center, matching, max_dist=max_dist)
+    if host is not None:
+        return host
+    return nearest_wall(center, walls, max_dist=max_dist)
 
 
 def _dominant_axis_angle_deg(pixel_coords: np.ndarray) -> float:
@@ -464,8 +514,7 @@ def select_host_wall_for_opening(
 ):
     if not walls or pixel_coords is None or len(pixel_coords) == 0:
         return None
-    center = (float(pixel_coords[:, 0].mean()), float(pixel_coords[:, 1].mean()))
-    scored = [(dist, wall) for wall in walls if (dist := _point_to_wall_distance(center, wall)) <= max_dist]
+    scored = [(dist, wall) for wall in walls if (dist := _min_pixel_distance_to_wall(pixel_coords, wall)) <= max_dist]
     if not scored:
         return None
     scored.sort(key=lambda item: item[0])
@@ -580,6 +629,7 @@ def _detect_window_points(
                                host_thickness_px=host_edge.thickness),
                 ],
                 source_component_ids=[comp.component_id],
+                host_wall_edge_id=host_edge.id,
             )
         )
         counter += 1
@@ -591,6 +641,7 @@ def _detect_window_points(
                     Attachment(type="window", direction=dir_max_to_min, source="window", evidence_length_px=width_px,
                                host_thickness_px=host_edge.thickness),
                 ],
+                host_wall_edge_id=host_edge.id,
                 source_component_ids=[comp.component_id],
             )
         )
@@ -599,8 +650,10 @@ def _detect_window_points(
 
 
 # ---------------------------------------------------------------------------
-# Door point search (spec_v008 SS9.3) - ported from the retired
-# door_extraction.py, unchanged math.
+# Door point search (spec_v008 SS9.3). task16: hinge/end are 2 of the red
+# door_arc bbox's 4 vertices, picked by purple/black/orange evidence along
+# its edges (select_door_hinge_end_from_bbox) - not searched from mask
+# intersections or arc geometry.
 # ---------------------------------------------------------------------------
 
 
@@ -626,74 +679,6 @@ def _extend_point(origin: tuple[float, float], through: tuple[float, float], new
     return (ox + ux * new_distance, oy + uy * new_distance)
 
 
-def _orange_purple_intersection(
-    leaf_mask: Optional[np.ndarray],
-    origin_mask: Optional[np.ndarray],
-    near_point: tuple[float, float],
-    search_radius: float,
-    tolerance_px: float,
-) -> Optional[tuple[float, float]]:
-    if leaf_mask is None or origin_mask is None:
-        return None
-    h, w = leaf_mask.shape
-    nx, ny = near_point
-    x0, x1 = max(0, int(nx - search_radius)), min(w, int(nx + search_radius) + 1)
-    y0, y1 = max(0, int(ny - search_radius)), min(h, int(ny + search_radius) + 1)
-    if x1 <= x0 or y1 <= y0:
-        return None
-    leaf_roi = leaf_mask[y0:y1, x0:x1]
-    origin_roi = origin_mask[y0:y1, x0:x1]
-    if not leaf_roi.any() or not origin_roi.any():
-        return None
-
-    tol = max(int(round(tolerance_px)), 0)
-    if tol > 0:
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * tol + 1, 2 * tol + 1))
-        leaf_dilated = cv2.dilate(leaf_roi, kernel)
-    else:
-        leaf_dilated = leaf_roi
-
-    overlap = cv2.bitwise_and(leaf_dilated, origin_roi)
-    ys, xs = np.nonzero(overlap)
-    if len(xs) == 0:
-        return None
-    return (float(xs.mean()) + x0, float(ys.mean()) + y0)
-
-
-def _infer_hinge_from_arc_geometry(arc_pixel_coords: np.ndarray, host_wall) -> tuple[float, float]:
-    rect = cv2.minAreaRect(arc_pixel_coords.astype(np.float32))
-    corners = cv2.boxPoints(rect)
-    best_point = (float(corners[0][0]), float(corners[0][1]))
-    best_dist = math.inf
-    for cx, cy in corners:
-        _, dist, _ = _project_point_onto_line((float(cx), float(cy)), host_wall.start, host_wall.end)
-        if dist < best_dist:
-            best_dist = dist
-            best_point = (float(cx), float(cy))
-    return best_point
-
-
-def _infer_far_point_from_arc_geometry(
-    arc_pixel_coords: np.ndarray, hinge_point: tuple[float, float], host_wall
-) -> tuple[float, float]:
-    """Forced ``wall_door_end_point`` fallback (task13 "Forceful Inference
-    Rule"): when no door_origin evidence pairs with the hinge, the red
-    door_arc cluster must still produce an end point - project the arc
-    bbox's corner that is farthest from the hinge along the host wall axis
-    onto the wall line itself."""
-    rect = cv2.minAreaRect(arc_pixel_coords.astype(np.float32))
-    corners = cv2.boxPoints(rect)
-    best_point = (float(corners[0][0]), float(corners[0][1]))
-    best_dist = -math.inf
-    for cx, cy in corners:
-        proj, _dist, _t = _project_point_onto_line((float(cx), float(cy)), host_wall.start, host_wall.end)
-        dist_from_hinge = math.hypot(proj[0] - hinge_point[0], proj[1] - hinge_point[1])
-        if dist_from_hinge > best_dist:
-            best_dist = dist_from_hinge
-            best_point = proj
-    return best_point
-
-
 def _point_to_bbox_distance(point: tuple[float, float], bbox: tuple[int, int, int, int]) -> float:
     """Euclidean distance from ``point`` to the nearest edge/corner of
     ``bbox`` (0.0 when the point lies inside it)."""
@@ -704,73 +689,129 @@ def _point_to_bbox_distance(point: tuple[float, float], bbox: tuple[int, int, in
     return math.hypot(dx, dy)
 
 
-def _hinge_snap_to_wall(
-    hinge_candidate: tuple[float, float],
-    walls: list,
-    max_dist_px: float,
-    arc_pixel_coords: Optional[np.ndarray] = None,
-    corner_ambiguity_px: float = 25.0,
-    min_remainder_px: float = 3.0,
-):
-    """Pick the host wall for a door hinge and project the candidate onto it.
+def _band_pixel_count(mask: Optional[np.ndarray], x0: float, y0: float, x1: float, y1: float) -> int:
+    """Count of nonzero ``mask`` pixels in the (clipped) box ``[x0,x1)x[y0,y1)``."""
+    if mask is None:
+        return 0
+    h, w = mask.shape
+    ix0, iy0 = max(0, int(round(x0))), max(0, int(round(y0)))
+    ix1, iy1 = min(w, int(round(x1))), min(h, int(round(y1)))
+    if ix1 <= ix0 or iy1 <= iy0:
+        return 0
+    return int(np.count_nonzero(mask[iy0:iy1, ix0:ix1]))
 
-    Uses the same orientation/overlap/remainder-scored selection as window
-    hosting (``select_host_wall_for_opening``) when the door_arc's own pixel
-    evidence is available, instead of plain nearest-distance - a naive
-    nearest-wall pick is unreliable right at corners/junctions where several
-    walls meet near the hinge candidate but only one is actually aligned with
-    the door's real evidence (rules 82/83: door origin hosted on wall
-    topology, not an arbitrary nearby wall).
+
+def _bbox_edges(bbox: tuple[int, int, int, int]) -> dict[str, tuple[tuple[float, float], tuple[float, float]]]:
+    """The 4 edges of ``bbox``, each as its 2 endpoint vertices."""
+    x0, y0, x1, y1 = bbox
+    return {
+        "top": ((float(x0), float(y0)), (float(x1), float(y0))),
+        "bottom": ((float(x0), float(y1)), (float(x1), float(y1))),
+        "left": ((float(x0), float(y0)), (float(x0), float(y1))),
+        "right": ((float(x1), float(y0)), (float(x1), float(y1))),
+    }
+
+
+def _edge_band_score(
+    p1: tuple[float, float], p2: tuple[float, float],
+    purple_mask: Optional[np.ndarray], wall_mask: Optional[np.ndarray], probe_px: float,
+) -> int:
+    """Combined purple (``door_origin``) + black (``wall``) pixel count in a
+    band straddling the bbox edge ``p1``-``p2`` (task16: a door's hinge and
+    end sit on whichever bbox edge the wall and door-origin evidence
+    actually runs along). The band is only widened *perpendicular* to the
+    edge by ``probe_px`` - along the edge it stays exactly the edge's own
+    span - so a short, real evidence run near one corner of, say, the left
+    edge cannot also bleed into and tie with the top/bottom edges' bands.
     """
-    if arc_pixel_coords is not None and len(arc_pixel_coords) > 0:
-        host_wall = select_host_wall_for_opening(
-            arc_pixel_coords, walls, max_dist=max_dist_px,
-            corner_ambiguity_px=corner_ambiguity_px, min_remainder_px=min_remainder_px,
-        )
+    x0, y0, x1, y1 = _edge_perpendicular_band(p1, p2, probe_px)
+    return _band_pixel_count(purple_mask, x0, y0, x1, y1) + _band_pixel_count(wall_mask, x0, y0, x1, y1)
+
+
+def _corner_orange_score(corner: tuple[float, float], orange_mask: Optional[np.ndarray], probe_px: float) -> int:
+    x, y = corner
+    return _band_pixel_count(orange_mask, x - probe_px, y - probe_px, x + probe_px, y + probe_px)
+
+
+@dataclass
+class DoorVertexSelection:
+    """Result of scoring a red ``door_arc`` bbox's 4 vertices (task17 ## "Door
+    Point Selection" / "Required Metrics"). ``hinge``/``end`` are 2 *adjacent*
+    vertices of ``all_vertices`` - the edge between them is ``edge_name``,
+    scored ``edge_score`` (the edge's score is attributed to both of its
+    vertices: per-vertex scoring and edge-based scoring are the same
+    selection, just two ways of describing it)."""
+
+    hinge: tuple[float, float]
+    end: tuple[float, float]
+    edge_name: str
+    edge_score: int
+    all_vertices: dict[str, tuple[float, float]]
+    host_wall_alignment_score: int = 0
+
+
+def select_door_hinge_end_from_bbox(
+    bbox: tuple[int, int, int, int],
+    purple_mask: Optional[np.ndarray],
+    wall_mask: Optional[np.ndarray],
+    orange_mask: Optional[np.ndarray],
+    probe_px: float,
+) -> DoorVertexSelection:
+    """task16/task17: hinge and end are 2 *adjacent* vertices of the red
+    ``door_arc`` bbox, not points searched from raw mask intersections/arc
+    geometry. The red bbox is trusted unconditionally (task17 "Red Bbox
+    Assumption") - this always returns a selection, never ``None``, even
+    when every edge scores 0 (no plausible host-wall geometry is grounds for
+    rejecting the resulting *door*, later, via the 200mm-from-bbox floor -
+    not for refusing to pick 2 adjacent vertices at all).
+
+    The 2 adjacent vertices chosen are the endpoints of whichever bbox edge
+    has the strongest combined purple (``door_origin``) + black (``wall``)
+    evidence running along it - the wall-facing edge, since both the hinge
+    and the end sit on the wall. Of those 2 endpoints, the one with more
+    nearby orange (``door_leaf``) evidence is the hinge (the leaf pivots
+    open from the hinge, not from the end). Real wall evidence concentrated
+    on one edge already *is* "the bbox edge aligned with the host wall"
+    (task17 ## "Door Point Selection" item 6) - a separate skeleton-edge
+    lookup turned out to be the wrong place to enforce that: the nearest
+    skeleton chain by raw centroid distance is frequently a short, unrelated
+    noise fragment, so restricting candidates to *its* orientation overrode
+    correct, well-evidenced selections more often than it fixed bad ones
+    (see ## 20 "Task17 Debugging Notes").
+    """
+    x0, y0, x1, y1 = bbox
+    all_vertices = {
+        "top_left": (float(x0), float(y0)), "top_right": (float(x1), float(y0)),
+        "bottom_left": (float(x0), float(y1)), "bottom_right": (float(x1), float(y1)),
+    }
+    edges = _bbox_edges(bbox)
+    scored = [
+        (_edge_band_score(p1, p2, purple_mask, wall_mask, probe_px), name, p1, p2)
+        for name, (p1, p2) in edges.items()
+    ]
+    scored.sort(key=lambda item: item[0], reverse=True)
+    best_score, edge_name, p1, p2 = scored[0]
+    if _corner_orange_score(p1, orange_mask, probe_px) >= _corner_orange_score(p2, orange_mask, probe_px):
+        hinge, end = p1, p2
     else:
-        host_wall = nearest_wall(hinge_candidate, walls, max_dist=max_dist_px)
-    if host_wall is None:
-        return None
-    proj, _dist, _t = _project_point_onto_line(hinge_candidate, host_wall.start, host_wall.end)
-    return proj, host_wall
+        hinge, end = p2, p1
+    host_wall_alignment_score = _band_pixel_count(
+        wall_mask, *_edge_perpendicular_band(p1, p2, probe_px)
+    )
+    return DoorVertexSelection(
+        hinge=hinge, end=end, edge_name=edge_name, edge_score=best_score, all_vertices=all_vertices,
+        host_wall_alignment_score=host_wall_alignment_score,
+    )
 
 
-def _find_paired_far_point(
-    door_origin_components: list[ComponentRecord],
-    claimed_ids: set[int],
-    hinge_point: tuple[float, float],
-    host_edge,
-    probe_radius: float,
-) -> Optional[tuple[tuple[float, float], int]]:
-    hx, hy = hinge_point
-    candidates = []
-    for comp in door_origin_components:
-        if comp.component_id in claimed_ids or comp.mask is None:
-            continue
-        ys, xs = np.nonzero(comp.mask)
-        if len(xs) == 0:
-            continue
-        dist2 = (xs.astype(np.float64) - hx) ** 2 + (ys.astype(np.float64) - hy) ** 2
-        min_dist2 = float(dist2.min())
-        if min_dist2 > probe_radius * probe_radius:
-            continue
-        candidates.append((min_dist2, comp))
-    if not candidates:
-        return None
-    candidates.sort(key=lambda t: t[0])
-    comp = candidates[0][1]
-    ys, xs = np.nonzero(comp.mask)
-    pixel_coords = np.column_stack([xs.astype(np.float64), ys.astype(np.float64)])
-    _center, _width, t_min, t_max = project_pixels_onto_wall(pixel_coords, host_edge)
-    seg_len = host_edge.length
-    ux = (host_edge.end[0] - host_edge.start[0]) / seg_len
-    uy = (host_edge.end[1] - host_edge.start[1]) / seg_len
-    p_min = (host_edge.start[0] + ux * t_min * seg_len, host_edge.start[1] + uy * t_min * seg_len)
-    p_max = (host_edge.start[0] + ux * t_max * seg_len, host_edge.start[1] + uy * t_max * seg_len)
-    dist_min = math.hypot(p_min[0] - hx, p_min[1] - hy)
-    dist_max = math.hypot(p_max[0] - hx, p_max[1] - hy)
-    far_point = p_max if dist_max >= dist_min else p_min
-    return far_point, comp.component_id
+def _edge_perpendicular_band(
+    p1: tuple[float, float], p2: tuple[float, float], probe_px: float
+) -> tuple[float, float, float, float]:
+    x0, x1 = sorted((p1[0], p2[0]))
+    y0, y1 = sorted((p1[1], p2[1]))
+    if x0 == x1:
+        return x0 - probe_px, y0, x1 + probe_px, y1
+    return x0, y0 - probe_px, x1, y1 + probe_px
 
 
 def _detect_door_points(
@@ -778,86 +819,47 @@ def _detect_door_points(
     door_origin_components: list[ComponentRecord],
     door_leaf_mask: Optional[np.ndarray],
     door_origin_mask: Optional[np.ndarray],
+    wall_mask: Optional[np.ndarray],
     wall_edges: list,
     cfg: dict,
 ) -> tuple[list[GraphPoint], list[RejectedEvidence]]:
+    """task16/task17: hinge/end come directly from 2 adjacent vertices of the
+    door_arc bbox (``select_door_hinge_end_from_bbox``) instead of being
+    searched from orange/purple mask intersections and arc geometry. The red
+    bbox is trusted unconditionally (task17 "Red Bbox Assumption") - a
+    vertex pair is always selected, even with zero evidence; only the
+    min-area cleanup (component extraction, upstream), the bbox aspect-ratio
+    floor below, and the downstream too-narrow/scale-blocked/200mm-floor
+    checks can still reject."""
     points: list[GraphPoint] = []
     rejected: list[RejectedEvidence] = []
-    claimed_origin_ids: set[int] = set()
     counter = 0
     scale_info = cfg["scale_info"]
+    probe_px = cfg["hinge_probe_radius"]
+    max_aspect_ratio = cfg.get("max_door_bbox_aspect_ratio", 2.0)
 
     for arc in door_arc_components:
         if arc.mask is None:
             continue
-        ys, xs = np.nonzero(arc.mask)
-        arc_pixel_coords = np.column_stack([xs.astype(np.float64), ys.astype(np.float64)])
-        arc_center = arc.centroid
 
-        hinge_candidate = _orange_purple_intersection(
-            door_leaf_mask, door_origin_mask, arc_center,
-            search_radius=cfg["hinge_probe_radius"] * 2.0,
-            tolerance_px=cfg["hinge_intersection_tolerance_px"],
-        )
-
-        if hinge_candidate is None:
-            if not cfg["hinge_arc_inference_enabled"]:
-                rejected.append(RejectedEvidence(kind="unresolved_door_arc",
-                                                   reason="no orange/purple intersection; arc inference disabled",
-                                                   class_name="door_arc", bbox=arc.bbox, centroid=arc_center,
-                                                   component_id=arc.component_id))
-                continue
-            provisional_host = select_host_wall_for_opening(
-                arc_pixel_coords, wall_edges, max_dist=cfg["max_wall_dist"],
-                corner_ambiguity_px=cfg["corner_ambiguity_px"], min_remainder_px=cfg["min_remainder_px"],
-            )
-            if provisional_host is None:
-                rejected.append(RejectedEvidence(kind="unresolved_door_arc",
-                                                   reason="no host wall for arc-geometry hinge inference",
-                                                   class_name="door_arc", bbox=arc.bbox, centroid=arc_center,
-                                                   component_id=arc.component_id))
-                continue
-            hinge_candidate = _infer_hinge_from_arc_geometry(arc_pixel_coords, provisional_host)
-
-        snapped = _hinge_snap_to_wall(
-            hinge_candidate, wall_edges, cfg["hinge_snap_to_wall_max_dist_px"],
-            arc_pixel_coords=arc_pixel_coords,
-            corner_ambiguity_px=cfg["corner_ambiguity_px"], min_remainder_px=cfg["min_remainder_px"],
-        )
-        if snapped is None:
-            rejected.append(RejectedEvidence(kind="unresolved_door_hinge",
-                                               reason="hinge candidate too far from any wall",
-                                               class_name="door_arc", bbox=arc.bbox, centroid=hinge_candidate,
+        x0, y0, x1, y1 = arc.bbox
+        width_px, height_px = float(x1 - x0), float(y1 - y0)
+        shorter, longer = sorted((width_px, height_px))
+        aspect_ratio = longer / shorter if shorter > 0 else float("inf")
+        if aspect_ratio > max_aspect_ratio:
+            rejected.append(RejectedEvidence(kind="unresolved_door_arc_aspect_ratio",
+                                               reason=f"bbox aspect ratio {aspect_ratio:.2f}:1 exceeds {max_aspect_ratio:.2f}:1",
+                                               class_name="door_arc", bbox=arc.bbox, centroid=arc.centroid,
                                                component_id=arc.component_id))
             continue
-        hinge_point, host_edge = snapped
 
-        far_result = _find_paired_far_point(door_origin_components, claimed_origin_ids, hinge_point, host_edge,
-                                              cfg["hinge_probe_radius"])
-        if far_result is not None:
-            paired_far_point, paired_origin_id = far_result
-            paired_width_px = math.hypot(paired_far_point[0] - hinge_point[0], paired_far_point[1] - hinge_point[1])
-        else:
-            paired_far_point, paired_origin_id, paired_width_px = None, None, 0.0
-
-        if paired_far_point is not None and paired_width_px >= cfg["min_hosted_width_px"]:
-            far_point, origin_id = paired_far_point, paired_origin_id
-            claimed_origin_ids.add(origin_id)
-        else:
-            # task13 "Forceful Inference Rule" (rules 47/50/51): missing,
-            # fragmented, or implausibly narrow (e.g. a stray sliver of the
-            # purple stroke) door_origin evidence must not delete the door -
-            # infer the end point from the red door_arc cluster's own
-            # geometry instead.
-            far_point = _infer_far_point_from_arc_geometry(arc_pixel_coords, hinge_point, host_edge)
-            origin_id = None
+        selection = select_door_hinge_end_from_bbox(arc.bbox, door_origin_mask, wall_mask, door_leaf_mask, probe_px)
+        hinge_point, far_point = selection.hinge, selection.end
 
         raw_width_px = math.hypot(far_point[0] - hinge_point[0], far_point[1] - hinge_point[1])
         if raw_width_px < cfg["min_hosted_width_px"]:
-            # Rule 51: only reject here if even the arc-geometry fallback
-            # could not produce a plausible span.
             rejected.append(RejectedEvidence(kind="unresolved_door_too_narrow",
-                                               reason=f"{raw_width_px:.1f}px span even after arc-geometry fallback",
+                                               reason=f"{raw_width_px:.1f}px bbox edge span",
                                                class_name="door_arc", bbox=arc.bbox, centroid=hinge_point,
                                                component_id=arc.component_id))
             continue
@@ -876,18 +878,52 @@ def _detect_door_points(
         width_mm = _nearest_door_module_mm(raw_width_px * scale_info.px_to_mm, cfg["door_width_modules_mm"])
         snapped_width_px = width_mm / scale_info.px_to_mm
         max_dist_px = cfg["door_point_max_dist_from_arc_mm"] / scale_info.px_to_mm
-
-        # Snapping to the nearest door module is a small correction for real
-        # evidence (task13: "slightly different from noisy purple pixels").
-        # If the raw measured span is far enough from the module that
-        # extending to it would push the end point out of the door's
-        # plausible search area, keep the evidence-driven point instead of
-        # forcing the door out of range - the snapped width is still recorded
-        # as metric evidence (task13 forceful-inference rule: weak evidence
-        # lowers confidence, it does not delete the door).
         snapped_far_point = _extend_point(hinge_point, far_point, snapped_width_px)
-        if _point_to_bbox_distance(snapped_far_point, arc.bbox) <= max_dist_px:
+
+        if scale_info.scale_status == "resolved":
+            # task15 problem 3: rules 10/124 require the final door-origin
+            # width to be exactly 700mm or 900mm whenever scale is
+            # *resolved* (explicit/high-confidence) - always snap, with no
+            # silent exception. The unresolved_door_too_far_from_arc check
+            # right below then evaluates the *snapped* point, so a span that
+            # can't be snapped within rule 17's 200mm floor is correctly
+            # rejected (rule 51's "no plausible geometry" case) rather than
+            # silently kept unsnapped.
             far_point = snapped_far_point
+        else:
+            # scale_status == "estimated": snap only when it still lands
+            # within rule 17's 200mm floor; otherwise keep the
+            # real-evidence-grounded bbox vertex (see task15 notes).
+            if _point_to_bbox_distance(snapped_far_point, arc.bbox) <= max_dist_px:
+                far_point = snapped_far_point
+
+        # A door commonly sits between two separate wall stub fragments, one
+        # on each side - host the hinge and end independently rather than
+        # forcing both onto whichever single wall happened to be nearest the
+        # arc's overall shape (task15 notes).
+        #
+        # task17: the hinge/end vector's own orientation (vertical when they
+        # share x, horizontal when they share y) must match its host wall's
+        # running direction, or point_connection.py's build_wall_edges later
+        # finds the point's "wall" attachment direction incompatible with
+        # the chain's own direction labels and silently drops the edge,
+        # leaving the door floating. Plain nearest-by-distance can pick an
+        # orientation-incompatible wall over a slightly farther compatible
+        # one (a short, irrelevant skeleton fragment closer to the point
+        # than the real host) - prefer an orientation-matching host first.
+        door_orientation = "vertical" if hinge_point[0] == far_point[0] else "horizontal"
+        hinge_host = _nearest_wall_matching_orientation(
+            hinge_point, wall_edges, door_orientation, cfg["hinge_snap_to_wall_max_dist_px"]
+        )
+        far_host = _nearest_wall_matching_orientation(
+            far_point, wall_edges, door_orientation, cfg["hinge_snap_to_wall_max_dist_px"]
+        )
+        if hinge_host is None or far_host is None:
+            rejected.append(RejectedEvidence(kind="unresolved_door_hinge",
+                                               reason="hinge/end vertex too far from any wall",
+                                               class_name="door_arc", bbox=arc.bbox, centroid=hinge_point,
+                                               component_id=arc.component_id))
+            continue
 
         hinge_dist_px = _point_to_bbox_distance(hinge_point, arc.bbox)
         end_dist_px = _point_to_bbox_distance(far_point, arc.bbox)
@@ -908,10 +944,6 @@ def _detect_door_points(
                                                component_id=arc.component_id))
             continue
         dir_far_to_hinge = OPPOSITE_DIRECTION[dir_hinge_to_far]
-        source_ids = [arc.component_id] if origin_id is None else [arc.component_id, origin_id]
-        # Forced geometric fallback (no paired door_origin evidence) is
-        # recorded at lower confidence than a real evidence pairing.
-        evidence_confidence = 1.0 if origin_id is not None else 0.5
 
         counter += 1
         points.append(
@@ -920,10 +952,11 @@ def _detect_door_points(
                 attachments=[
                     Attachment(type="wall", direction=dir_far_to_hinge, source="wall"),
                     Attachment(type="door_origin", direction=dir_hinge_to_far, source="door_origin",
-                               evidence_length_px=snapped_width_px, host_thickness_px=host_edge.thickness,
-                               confidence=evidence_confidence),
+                               evidence_length_px=snapped_width_px, host_thickness_px=hinge_host.thickness,
+                               confidence=1.0),
                 ],
-                source_component_ids=source_ids,
+                source_component_ids=[arc.component_id],
+                host_wall_edge_id=hinge_host.id,
             )
         )
         points.append(
@@ -932,18 +965,21 @@ def _detect_door_points(
                 attachments=[
                     Attachment(type="wall", direction=dir_hinge_to_far, source="wall"),
                     Attachment(type="door_origin", direction=dir_far_to_hinge, source="door_origin",
-                               evidence_length_px=snapped_width_px, host_thickness_px=host_edge.thickness,
-                               confidence=evidence_confidence),
+                               evidence_length_px=snapped_width_px, host_thickness_px=far_host.thickness,
+                               confidence=1.0),
                 ],
-                source_component_ids=source_ids,
+                source_component_ids=[arc.component_id],
+                host_wall_edge_id=far_host.id,
             )
         )
 
+    # task16: door_origin evidence is no longer paired to a specific red
+    # cluster (hinge/end come from the cluster's own bbox) - every
+    # door_origin component is reported as supporting evidence only,
+    # consistent with rule 52 (purple alone never creates a door).
     for comp in door_origin_components:
-        if comp.component_id in claimed_origin_ids:
-            continue
         rejected.append(RejectedEvidence(kind="unresolved_door_origin",
-                                           reason="door_origin evidence without a paired red door_arc",
+                                           reason="door_origin evidence is supporting evidence only, not paired to a specific red cluster",
                                            class_name="door_origin", bbox=comp.bbox, centroid=comp.centroid,
                                            component_id=comp.component_id))
 
@@ -990,7 +1026,7 @@ def detect_points(
     window_points, window_rejected = _detect_window_points(window_components, wall_edge_list, cfg)
     door_points, door_rejected = _detect_door_points(
         door_arc_components, door_origin_components,
-        masks.get("door_leaf"), masks.get("door_origin"),
+        masks.get("door_leaf"), masks.get("door_origin"), masks.get("wall"),
         wall_edge_list, cfg,
     )
 
@@ -1078,12 +1114,21 @@ def build_door_candidate_records(
             rejected_by_arc[r.component_id] = r
 
     px_to_mm = scale_info.px_to_mm if scale_info is not None else None
+    wall_mask = masks.get("wall")
     records: list[DoorCandidateRecord] = []
 
     for arc in door_arc_components:
         long_edge = float(max(arc.bbox[2] - arc.bbox[0], arc.bbox[3] - arc.bbox[1]))
         hinge = hinge_by_arc.get(arc.component_id)
         end = end_by_arc.get(arc.component_id)
+
+        # task17 "Required Metrics": report the bbox-vertex selection itself
+        # (independent of whether a door was ultimately created from it) -
+        # select_door_hinge_end_from_bbox is pure, so recomputing it here is
+        # cheap and keeps detect_points()'s own return contract unchanged.
+        selection = select_door_hinge_end_from_bbox(
+            arc.bbox, masks.get("door_origin"), wall_mask, masks.get("door_leaf"), support_probe_px
+        )
 
         if hinge is None or end is None:
             rej = rejected_by_arc.get(arc.component_id)
@@ -1092,6 +1137,13 @@ def build_door_candidate_records(
                     red_component_id=arc.component_id, red_bbox=arc.bbox, red_bbox_long_edge_px=long_edge,
                     created_door_candidate=False,
                     door_inference_notes=rej.reason if rej else "no hinge/end pair produced",
+                    all_four_bbox_vertices=selection.all_vertices,
+                    selected_hinge_vertex=selection.hinge,
+                    selected_end_vertex=selection.end,
+                    hinge_vertex_score=selection.edge_score,
+                    end_vertex_score=selection.edge_score,
+                    selected_bbox_edge=selection.edge_name,
+                    host_wall_alignment_score=selection.host_wall_alignment_score,
                 )
             )
             continue
@@ -1111,6 +1163,7 @@ def build_door_candidate_records(
             end_support.append("orange")
 
         confidence = (len(hinge_support) / 4.0 + len(end_support) / 3.0) / 2.0
+        width_px = math.hypot(end.coordinate[0] - hinge.coordinate[0], end.coordinate[1] - hinge.coordinate[1])
         records.append(
             DoorCandidateRecord(
                 red_component_id=arc.component_id, red_bbox=arc.bbox, red_bbox_long_edge_px=long_edge,
@@ -1126,6 +1179,14 @@ def build_door_candidate_records(
                     if len(hinge_support) > 2 and len(end_support) > 1
                     else "forced inference - weak or missing orange/purple evidence near the red cluster"
                 ),
+                all_four_bbox_vertices=selection.all_vertices,
+                selected_hinge_vertex=selection.hinge,
+                selected_end_vertex=selection.end,
+                hinge_vertex_score=selection.edge_score,
+                end_vertex_score=selection.edge_score,
+                selected_bbox_edge=selection.edge_name,
+                host_wall_alignment_score=selection.host_wall_alignment_score,
+                door_width_mm=(width_px * px_to_mm) if px_to_mm is not None else None,
             )
         )
 

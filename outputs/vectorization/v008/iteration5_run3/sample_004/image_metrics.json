@@ -8,33 +8,23 @@
     "door_origin": 15
   },
   "points": {
-    "2_wall_point": 30,
-    "3_wall_point": 13,
-    "wall_window_point": 2,
+    "wall_point": 48,
+    "wall_window_point": 4,
     "wall_door_hinge_point": 3,
-    "wall_door_end_point": 3,
-    "1_wall_point": 5
+    "wall_door_end_point": 3
   },
   "edges": {
-    "wall": 52,
-    "window": 1,
+    "wall": 68,
+    "window": 2,
     "door_origin": 3
   },
   "rejected_evidence": {
     "diagonal_wall_edge": 23,
-    "window_unhosted": 1,
-    "window_too_narrow": 2,
-    "window_too_narrow_mm": 2,
-    "unresolved_door_origin": 13,
-    "wall_end_near_opening_evidence": 16
+    "window_too_narrow_mm": 4,
+    "unresolved_door_origin": 12,
+    "wall_end_near_opening_evidence": 14
   },
-  "validation_issues": [
-    {
-      "rule": "floating_door_point",
-      "message": "doorpt_1_hinge has no wall edge - not hosted on wall topology",
-      "severity": "error"
-    }
-  ],
+  "validation_issues": [],
   "scale": {
     "unit": "mm",
     "px_to_mm": 10.9375,
@@ -79,6 +69,7 @@
       "scale_candidate_px_to_mm": 10.9375,
       "hinge_candidate_support_classes": [
         "red",
+        "orange",
         "purple",
         "black"
       ],
@@ -86,9 +77,9 @@
         "red",
         "purple"
       ],
-      "hinge_distance_to_red_bbox_mm": 5.613511029411633,
-      "end_distance_to_red_bbox_mm": 20.47215578114149,
-      "door_confidence": 0.7083333333333333,
+      "hinge_distance_to_red_bbox_mm": 36.81431054907629,
+      "end_distance_to_red_bbox_mm": 99.06256077308637,
+      "door_confidence": 0.8333333333333333,
       "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
     },
     {
@@ -113,8 +104,8 @@
         "purple",
         "orange"
       ],
-      "hinge_distance_to_red_bbox_mm": 11.340712900740968,
-      "end_distance_to_red_bbox_mm": 11.646895947391943,
+      "hinge_distance_to_red_bbox_mm": 0.0,
+      "end_distance_to_red_bbox_mm": 0.0,
       "door_confidence": 1.0,
       "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
     },
@@ -139,8 +130,8 @@
         "red",
         "purple"
       ],
-      "hinge_distance_to_red_bbox_mm": 75.87890625,
-      "end_distance_to_red_bbox_mm": 75.87890625,
+      "hinge_distance_to_red_bbox_mm": 91.04940913851323,
+      "end_distance_to_red_bbox_mm": 91.04940913851323,
       "door_confidence": 0.8333333333333333,
       "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
     }

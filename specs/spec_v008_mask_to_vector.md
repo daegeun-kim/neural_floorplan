@@ -359,31 +359,32 @@ Rules:
 - each endpoint has one wall attachment and one window attachment in opposite directions
 - the two window attachments must face each other along the window axis
 
-### 9.3 Door Points
+### 9.3 Door Points (task16/task17: bbox-vertex method)
 
-Search door points from red `door_arc` components first.
+Search door points from red `door_arc` components first - the red bbox is trusted unconditionally (task17 "Red Bbox Assumption") once it passes one shape floor (task18): its bounding box's long/short side ratio must be at most `2:1` (square up to `2:1` accepted; a more elongated bbox such as `1:3` is rejected outright, before vertex selection runs at all - must-rule 53). Past that floor, vertex selection is never the reason a door is rejected.
+
+`wall_door_hinge_point` and `wall_door_end_point` are 2 *adjacent* vertices of the red `door_arc` component's own bounding box - not points searched from mask intersections or arc-geometry inference:
+
+- score each of the bbox's 4 edges by the combined count of purple (`door_origin`) and black (`wall`) pixels in a band straddling that edge (widened only perpendicular to the edge, never along it, so a short run of evidence near one edge cannot bleed into and tie with an adjacent edge's band)
+- the edge with the highest score is the wall-facing edge; its 2 endpoint vertices are the hinge and end candidates - this is always evaluated and a pair is always selected, even when every edge scores 0 (task17: vertex selection itself never rejects a cluster)
+- of those 2 vertices, the one with more nearby orange (`door_leaf`) evidence is the hinge (the leaf pivots open from the hinge, not from the end) - the door-leaf clue is what tells the hinge apart from the end once the wall-facing edge itself is known
 
 Rules:
 
 - each accepted red `door_arc` component requires one `wall_door_hinge_point`
 - each accepted red `door_arc` component requires one `wall_door_end_point`
 - red pixels define the existence and count of doors
-- orange and purple pixels infer the hinge and endpoint locations
-- if red pixels exist but purple door-origin evidence is missing or too noisy, infer the door-origin segment from the nearest host wall and the orange/red swing evidence
-- if no red pixels exist, reject the door even when purple or orange evidence exists
-- purple door-origin evidence without a red arc is debug-only
+- purple door-origin evidence without a red arc is debug-only and never creates a door (must-rule 52)
 
-The hinge should prefer the orange/purple intersection when present. If that intersection is missing, infer the hinge from the red arc geometry and nearest plausible host wall.
+After the 2 vertices are chosen, the raw hinge-to-end span is snapped to the nearest `700`/`900 mm` module (## 5). Each point is then hosted onto the nearest real wall edge independently (a door commonly sits between two separate wall fragments, one on each side) - task17: this hosting search must prefer a wall edge whose own running direction matches the hinge-to-end vector's orientation (sharing the same axis the door's own gap shares) over a merely-closer but orientation-incompatible wall, since a point can only ever connect into a wall chain whose direction label matches its own attachment direction (## 12.1) - falling back to plain nearest-by-distance only when no orientation-matching wall exists within range.
 
-### 9.3.1 Forceful Inference Rule (task13)
+### 9.3.1 Forceful Inference Rule (task13, revised task16/task17)
 
-A connected red `door_arc` cluster is a door, always, once it survives component cleanup. Purple/orange/black evidence refines hinge/end geometry but never decides whether the red cluster is a door:
+A connected red `door_arc` cluster is a door, always, once it survives component cleanup (task17: bbox vertex selection never rejects regardless of how little evidence exists). Purple/black evidence (edge scoring) and orange evidence (hinge/end disambiguation) refine the geometry but never decide whether the red cluster is a door:
 
-- `wall_door_hinge_point` and `wall_door_end_point` must each lie within `200 mm` of the red cluster's bounding box (the point may sit just outside the box, not only inside it). Scale must be resolved before this check runs.
-- the hinge point is the location with the highest combined proximity to the available subset of `[red, orange, purple, black]` evidence; if all four are unavailable, fall back to the largest available subset (down to black/red alone via arc-geometry + host-wall inference).
-- the end point is the location with the highest combined proximity to the available subset of `[red, purple, orange]`; if door-origin evidence cannot be paired, infer the end point from the red cluster's own bounding-box geometry projected onto the host wall.
+- `wall_door_hinge_point` and `wall_door_end_point` must each lie within `200 mm` of the red cluster's bounding box (the point may sit just outside the box, not only inside it, once the width-module snap is applied). Scale must be resolved before this check runs.
 - fragmented, missing, or noisy purple/orange evidence must lower the resulting `door_confidence` but must not delete the door.
-- a red cluster may be rejected only when it is below the minimum component area, or when no plausible wall evidence exists anywhere near it (i.e. no plausible door geometry can be inferred even after fallback).
+- a red cluster may be rejected only when it is below the minimum component area, when no real wall exists anywhere to host the resulting hinge/end at all, or when even the snapped width's hinge/end can't land within the `200 mm` floor.
 
 ## 10. Point Detection Invariants
 
@@ -404,31 +405,28 @@ If an invariant fails, reject only the affected component or graph region when p
 
 Point alignment converts approximate pixel detections into clean orthogonal graph coordinates.
 
-### 11.1 Axis Alignment
+### 11.1 Axis Alignment (task17: door-anchored, distance-only, per-axis-independent)
 
-If two or more points have nearly equal `x` coordinates, they may share one vertical axis.
+Red `door_arc` bbox vertices (`wall_door_hinge_point`/`wall_door_end_point`) are trusted anchors and are never moved by this step - they were already established directly from the bbox (## 9.3). `wall_point` and `wall_window_point` ("followers") cluster onto a shared axis with *each other* whenever their coordinates are within the tolerance on *either* axis, checked independently per axis and regardless of how far apart they are on the other one (e.g. if two points' `x` difference is `500 mm`, their `x` is forced equal regardless of their `y` difference) - then any follower within tolerance of a door anchor on a given axis snaps (overrides, not averages) onto that anchor's exact value. Door anchors always win; a follower never pulls a door anchor toward it.
 
-If two or more points have nearly equal `y` coordinates, they may share one horizontal axis.
+If two or more points have nearly equal `x` coordinates (within tolerance), they share one vertical axis - their `x` is forced exactly equal.
 
-The default tolerance is `500 mm` after scale resolution. If scale is unavailable, use a configured pixel fallback only for graph construction and mark metric alignment decisions as scale-blocked.
+If two or more points have nearly equal `y` coordinates (within tolerance), they share one horizontal axis - their `y` is forced exactly equal.
+
+The default tolerance is `500 mm` after scale resolution (task17: reverted from task15's `1000 mm` experiment - door-derived axes are the trusted anchors now, so the goal is no longer to over-merge distant geometry by raw distance alone). If scale is unavailable, use a configured pixel fallback only for graph construction and mark metric alignment decisions as scale-blocked.
 
 After alignment:
 
 - points on the same vertical axis have exactly equal `x`
 - points on the same horizontal axis have exactly equal `y`
 - final edges are horizontal or vertical only
+- a door anchor's own coordinate is identical before and after this step
 
-### 11.2 Alignment Evidence
+### 11.2 Alignment Evidence (task16: removed for generic clustering)
 
-An axis alignment must be supported by semantic evidence:
+Generic distance-based clustering (## 11.1) requires no semantic evidence beyond the coordinate distance itself - task15's wall-pixel-corridor requirement was dropped per the literal task16 instruction. Two genuinely unrelated followers that happen to be within tolerance on one axis are still aligned to each other (or to a nearby door anchor); `point_connection.py`'s separate axis *connection* step (## 12.1) is what continues to require real wall pixel evidence before drawing an edge between two now-aligned points, so a spurious alignment does not by itself produce a spurious wall.
 
-- wall pixels along the axis
-- window pixels along the axis
-- door-origin pixels along the axis
-- endpoints from the same connected component
-- endpoints from a known door or window pair
-
-Do not align unrelated points only because their coordinates are close.
+The wall-skeleton-edge pass (a continuous wall chain's own two endpoints) and the opening-pair pass (a window's two points, or a door's hinge/end) remain priority, exact, evidence-grounded passes that run *before* generic clustering and are re-asserted once more *after* the door-anchor snap - so a door's own hinge-to-end span (or a window's own two points) is never collapsed by either pass moving either side independently.
 
 ### 11.3 Window and Door Direction Alignment
 
@@ -608,14 +606,14 @@ Debug output must show or record:
 - cleaned components
 - removed tiny components
 - searched points by type
-- rejected candidate evidence
+- rejected candidate evidence (task19: `metrics.json` only - no longer drawn in `debug_overlay.png`, see below)
 - aligned axes
 - wall/window/door-origin graph edges
 - door hinge choices
 - inferred door origins
 - scale estimate and confidence
 - validation failures
-- every red `door_arc` candidate bounding box, its inferred `wall_door_hinge_point`/`wall_door_end_point`, and its supporting nearby red/orange/purple/black evidence, with low-confidence inferred points rendered differently from high-confidence ones (task13)
+- every red `door_arc` candidate bounding box and its inferred `wall_door_hinge_point`/`wall_door_end_point`, with the candidate's bbox+connector line color distinguishing low-confidence from high-confidence (task13) - the hinge/end points themselves are drawn in their own final `POINT_COLORS` (orange hinge / purple end), not the candidate's confidence color (task19)
 
 `metrics.json` must additionally include, under the scale diagnostics (task12 SS1):
 
@@ -628,7 +626,7 @@ scale_source
 scale_rejected_outliers
 ```
 
-and one record per accepted red `door_arc` cluster (task13 "Metrics Requirements"), so it is obvious whether the cluster became a door and how its hinge/end points were inferred:
+and one record per accepted red `door_arc` cluster (task13 "Metrics Requirements", extended task17), so it is obvious whether the cluster became a door and how its hinge/end points were inferred:
 
 ```txt
 red_component_id
@@ -642,9 +640,17 @@ hinge_distance_to_red_bbox_mm
 end_distance_to_red_bbox_mm
 door_confidence
 door_inference_notes
+all_four_bbox_vertices
+selected_hinge_vertex
+selected_end_vertex
+hinge_vertex_score
+end_vertex_score
+selected_bbox_edge
+host_wall_alignment_score
+door_width_mm
 ```
 
-Rejected evidence and low-confidence/forced-inference door candidates belong only in `debug_overlay.png` and `metrics.json`, never in `vector.svg`.
+Rejected evidence belongs only in `metrics.json` (task19); low-confidence/forced-inference door candidates belong only in `debug_overlay.png` and `metrics.json`. Neither ever appears in `vector.svg`.
 
 ## 16. Configuration
 
@@ -746,6 +752,19 @@ Tests must cover:
 38. `wall_door_hinge_point` and `wall_door_end_point` each resolve within `200 mm` of their red cluster's bounding box (task12/task13).
 39. A red `door_arc` cluster is never rejected merely because purple/orange evidence is fragmented, missing, or noisy - the door is created with a forced hinge/end inference and a lower `door_confidence` instead (task13).
 40. Door count equals accepted red `door_arc` cluster count, and `metrics.json` reports one door-candidate record per accepted red cluster (task13).
+41. Wall graph construction does not require accurate `1`/`2`/`3`/`4` wall-point subtype classification - junctions and free ends all finalize as one generic `wall_point` carrying their real attachment directions (task15).
+42. After axis alignment, any two wall-participating points (generic `wall_point`, `wall_window_point`, `wall_door_hinge_point`, `wall_door_end_point`) that share an exact aligned axis and have corridor wall evidence between them connect, even across a noisy mask break the original skeleton chain never spanned (task15).
+43. The default point merge/axis-alignment tolerance is `1000 mm` (task15).
+44. Two points are never wall-connected unless they share the same aligned axis exactly - no "close enough" fallback (task15).
+45. An opening's own two endpoints (a window's paired points, or a door's hinge/end) are never bridged by a parallel `wall` edge, even when both land on the same aligned axis - the opening already replaces that wall interval (task15).
+46. A red `door_arc` cluster's recognition as a door is not gated by hosting-search radius - only must-rule 17's `200 mm` arc-bbox-proximity floor can reject it (task15).
+47. Two `wall_point`/`wall_window_point` followers share an axis whenever they are within the configured tolerance (`500 mm`, task17) on that axis alone, independently per axis, regardless of their distance on the other axis - no corridor/wall-evidence gate (task16, tolerance reverted task17).
+48. An opening's own two endpoints (a window's paired points, or a door's hinge/end) are never collapsed onto each other by generic axis clustering - their own shared axis is re-asserted once more after generic clustering runs (task16).
+49. `wall_door_hinge_point` and `wall_door_end_point` are 2 *adjacent* of the red `door_arc` bounding box's own 4 vertices, chosen by combined purple/black evidence along the bbox edges (with orange disambiguating hinge from end) - not searched from mask intersections or arc-geometry inference (task16/task17).
+50. Bbox-vertex selection for a door never rejects a cluster, even when every one of its bbox's 4 edges has zero purple/black evidence - only the downstream min-area, no-host-wall, and `200 mm`-floor checks may still reject (task17, supersedes task16's zero-evidence vertex rejection).
+51. A `wall_point`/`wall_window_point` follower within axis-alignment tolerance of a red door_arc's `wall_door_hinge_point`/`wall_door_end_point` snaps onto that door anchor's exact coordinate on that axis; the door anchor itself is never moved by alignment (task17).
+52. A door's hinge/end hosting search prefers a wall edge whose own running direction matches the hinge-to-end vector's orientation over a merely-closer but orientation-incompatible wall (task17).
+53. A red `door_arc` bbox is rejected outright, before vertex selection, when its long/short side ratio exceeds `2:1` (task18).
 
 ## 18. Task14 Debugging Notes
 
@@ -759,12 +778,77 @@ task14 debugged the v008 implementation against `specs/vectorization_must_rules.
 - `point_connection.py` `validate_graph`: flagged the *correct* topology (a window/door point covered by one wall edge plus one opening edge) as `opening_point_multiple_edges`, and never checked for the real failure mode (zero wall edges = floating). Coverage is now counted per edge type; a new `floating_window_point`/`floating_door_point` issue catches genuine floating openings.
 - `wall_geometry.py` `window_edges_to_primitives`: window thickness was half the host wall's own pixel thickness, which only equals SS14's required `100 mm` when the host wall happens to be the (no longer universal) `200 mm` module - now uses the fixed `100 mm` constant directly whenever scale is resolved.
 
-Remaining, not-fully-resolved for the required test case (documented per task14 acceptance criterion 6, not further pursued to avoid pipeline redesign):
+A follow-up pass (still task14, after also checking the previously-unexamined `sample_005`) found two further bugs of the same class, both rooted in how an opening's host wall is found and reconnected:
 
-- A few door hinge/end points on the most heavily fragmented wall corners (several near-duplicate sub-pixel skeleton chains from `skeletonize` noise) still end up with no wall edge, because those chains' own endpoints don't resolve to any final point either - a deeper skeleton-graph fragmentation issue at corners, not a single rule violation.
+- `point_detection.py` `select_host_wall_for_opening`: measured distance from the opening's pixel **centroid** to each candidate wall, instead of the minimum distance from any of the opening's own pixels. A tall/elongated opening (e.g. a window spanning most of a wall's height) commonly has its host wall split into two short skeleton chains - one ending just above the opening, one starting just below it - and the centroid sits roughly equidistant from both, often beyond `max_wall_dist`, even though the opening's own top/bottom extremity is only a few px from one of them. This was the direct cause of `sample_005` having zero windows despite a clearly real, visible window in the source image. Fixed via a new `_min_pixel_distance_to_wall` helper used for all hosting decisions (windows and doors).
+- `point_connection.py` `build_wall_edges`: once an opening's host wall is fixed at detection time, reconnecting it back into the wall graph still relied on a fixed pixel tolerance (`opening_match_tolerance_px`) to guess which nearby point belonged to which chain - which fails for the same reason above (the real gap between an opening's boundary and its host chain's literal pixel endpoint can be far larger than any one fixed tolerance, without being unbounded). `point_detection.py` now records the exact `host_wall_edge_id` on every window/door point it creates (`GraphPoint.host_wall_edge_id`), and `build_wall_edges` uses that exact reference - building each chain's ordered list of stops (its own natural endpoints plus every point hosted on it, by id, regardless of how far outside `[0, chain_length]` the point's projection falls) - instead of re-guessing the relationship by coordinate distance. The geometric/distance-based fallback remains only for points with no recorded host edge (hand-built test fixtures).
+
+Remaining, not-fully-resolved for the required test cases (documented per task14 acceptance criterion 6, not further pursued to avoid pipeline redesign):
+
+- A few window/door points on the most heavily fragmented wall corners still end up with no wall edge at all, because *no* wall chain - not even an extrapolated/extended one - comes within any reasonable distance of that specific point. Confirmed by direct measurement in `sample_005`: the nearest candidate is itself a disconnected 1-2px skeleton noise fragment with no further neighbor for tens of px in the relevant direction. This is a genuine gap in the CNN wall mask / skeleton, not a fixed-tolerance or coordinate-guessing problem (those were the two bugs fixed above) - closing it fully would require either stitching disconnected skeleton fragments into one continuous host line before projecting, or accepting a host wall whose own pixel evidence doesn't reach the opening at all. Left as a visible, correctly-flagged (`floating_window_point`/`floating_door_point`) failure rather than silently hidden, per the observable-failure rules.
 - A small number of final wall polygon edges are within a few degrees of axis rather than exactly orthogonal, where a long wall run is split across more than one chained skeleton segment and `point_alignment.py`'s per-pair axis snapping doesn't compound transitively across the whole run.
 
-## 19. Completion Criteria
+## 19. Task15 Debugging Notes
+
+task15 merged `1_wall_point`/`2_wall_point`/`3_wall_point`/`4_wall_point` into one generic `wall_point` for wall-graph construction, raised the axis-alignment tolerance to `1000 mm`, and lowered the red `door_arc` recognition threshold so almost any surviving red cluster becomes a door (see `## 17` items 41-46). Continuing to debug the required test case (`outputs/vectorization/v008/iteration5_run3`) against `specs/vectorization_must_rules.md` after that change found the following further implementation bugs, all variants of the same root issue task14 already named (an opening's true host wall can be a wall fragment other than its own immediate skeleton neighbor):
+
+- `point_detection.py` `_hinge_snap_to_wall`/`select_host_wall_for_opening`: door hinge hosting reused the window-hosting tie-break, which scores a candidate wall by how well the *opening's own pixel shape* orientation matches the wall's orientation. That assumption holds for a window (a thin rectangle aligned with its host wall) but not for a door_arc (a swing-wedge shape uncorrelated with which wall it sits on) - a short, incidentally diagonal skeletonize corner-noise stub could outscore the real, much longer wall right next to it, then get its candidate point projected (unclamped) far past its own real pixel extent. Added `_select_door_host_wall`: disqualifies a nearest candidate under `MIN_PLAUSIBLE_DOOR_HOST_LENGTH_PX` (10px) in favor of a longer one within the same ambiguity window, falling back to the window-style score only when both candidates are plausibly real wall fragments (e.g. two stubs flanking the door, one each side).
+- `point_detection.py` `_detect_door_points`: a door's hinge and far/end point were always hosted on the *same* wall edge - whichever `_hinge_snap_to_wall` picked using the whole arc's pixel shape - even though a door commonly sits between two separate wall stub fragments, one on each side. When the far point's projection onto that shared edge fell outside the edge's own `[0, 1]` span, it is now independently re-targeted (by plain nearest-distance) to whichever real wall edge it actually lands within range of; only the recorded host id is retargeted, never the coordinate itself, so an already-exact `700`/`900 mm` snap is never perturbed by the new host's own pixel-rounded line angle.
+- `point_connection.py` `build_wall_edges`: chained a skeleton edge's stops (its own two endpoints plus every window/door point hosted on it) by checking every consecutive pair against that *edge's own* `dir_from_start`/`dir_from_end` labels - correct only for the pair literally at the edge's two true endpoints. A host point legitimately extrapolated beyond the edge's real extent (same scenario as above) sits outside that two-label relationship, so a pair involving it now derives its required direction from that pair's own coordinates instead, falling back to the original (well-tested) edge-label check whenever both stops are within the edge's real `[0, seg_len]` span.
+- `point_connection.py` `_connect_axis_aligned_points`: the task15 axis-bridging pass connected *any* two same-axis, corridor-evidence-backed wall-participating points - including, once a door's hinge and end legitimately land on the same aligned axis (the normal case, being the two ends of one straight opening span), the door's own two points. That created a `wall` edge running directly across the door's own gap, parallel to its `door_origin` edge - the door would have rendered with a solid wall polygon over its own opening. A new `_same_opening_pair` guard skips a pair sharing a source component id whose point types are a window pair or a hinge/end pair.
+- `point_connection.py` `validate_graph`: required every window *and* door point to individually carry >= 1 `wall` edge, but only window hosting is phrased that way in the must-rules (rule 78: "window **endpoints** must connect... each"); door hosting (rule 82) is phrased at the door-origin level. A door legitimately sitting at the end of a wall run has only one side (hinge or end) continuing into more wall topology - the other side alone having no further wall edge is no longer flagged as `floating_door_point` as long as its paired hinge/end point has one.
+- `run_mask_to_vector.py`: passed the *total* `door_arc` component count (after pixel-area cleanup only) as `accepted_door_arc_count` to `validate_points`, so a cluster legitimately rejected afterwards by rule 51 (too far from any plausible wall/door geometry even after fallback, must-rule 17's `200 mm` floor) was double-counted as a `door_count_mismatch` even though the rejection was itself correct. Now subtracts components point_detection.py itself logged as rejected (`class_name == "door_arc"` in `rejected_evidence`) before comparing.
+
+These fixes brought `sample_003` and `sample_004` to zero `metrics.json` validation issues. `sample_005` still reports one `floating_window_point` and one floating door pair (`doorpt_4`) - confirmed (per task14's already-documented limitation, re-verified, not newly introduced by any task15 fix above) to be a genuine sparse-wall-mask gap: the real free wall end on that side of each opening is itself missing from the skeleton graph (suppressed as "near opening evidence" with no wall chain to take its place), not a host-selection or reconnection bug. Left as a visible, correctly-flagged failure per the observable-failure rules rather than pursued further (would require stitching disconnected skeleton fragments or accepting a host whose evidence doesn't reach the opening - out of task15's scope).
+
+## 20. Task16 Debugging Notes
+
+task16 made two deliberate behavior changes (not bug fixes) plus the bug fixes those changes exposed:
+
+**Axis alignment** (`point_alignment.py`): generic clustering (## 11.1/11.2) dropped the task15 wall-pixel-corridor evidence requirement and the wall-only 15px cap entirely - every searched point type now clusters onto a shared axis purely by single-axis coordinate distance, within the full `1000 mm` tolerance, independent of the other axis. Implementing this surfaced two real bugs, not just config changes:
+
+- A door's hinge and its own end (or a window's own two points) commonly differ by less than `1000 mm` on *both* axes - one axis only because they intentionally already share it (the wall-facing axis), the other because door/window widths are themselves well under a meter. Running the x-clustering pass and the y-clustering pass independently let each side of the pair join *different* unrelated groups, which can force both axes equal between hinge and end and collapse the door to a single point (zero width). Fixed by excluding an opening's own pair from matching each other in the generic clustering pass (`_same_opening_pair`, mirroring the existing guard of the same name in `point_connection.py`) and by re-running the exact opening-axis assertion once more *after* generic clustering, restoring cardinality regardless of how either side was nudged individually.
+- `_opening_pair_groups` grouped exclusively by `source_component_ids`, but component ids are assigned independently per mask class (`components.py`) - a window component and a door_arc component can legitimately share the same id number. This let an unrelated window pair and door pair collide into one bogus group of 4, silently no-op'ing the opening-axis assertion for both (`len(group) != 2`) and leaving one of them diagonal. Fixed by keying the group by `(category, sorted(source_component_ids))` instead of the id alone - a pre-existing bug, latent until task16's added post-clustering re-assertion pass made it visible.
+
+**Door generation** (`point_detection.py`): `_detect_door_points` was rewritten so `wall_door_hinge_point`/`wall_door_end_point` come directly from 2 of the red `door_arc` bounding box's 4 vertices - the edge with the strongest combined purple+black evidence (widened only perpendicular to itself, so adjacent edges' bands don't bleed into each other and tie), with orange evidence picking which of that edge's 2 endpoints is the hinge. This fully replaces the old orange/purple-intersection search, arc-geometry inference, paired-door-origin search, and bespoke host-wall tie-break (`_select_door_host_wall`) - all removed. Downstream width-module snapping, the `200 mm` floor check, and per-point host-wall hosting (`nearest_wall`, unbounded search radius) are unchanged from task15.
+
+Both changes were verified against the unit suite (rewriting `TestForcefulDoorInference`'s 6 tests whose premises were specific to the retired door mechanism or to the old evidence-gated/capped alignment - all other tests, including the door/window/wall geometry and connection suites, passed unmodified) and against the required real samples in `outputs/vectorization/v008/iteration5_run3`:
+
+- `sample_003` and `sample_004`: zero `metrics.json` validation issues, with door counts now matching every accepted red `door_arc` component (previously several clusters were silently dropped by the old mechanism's stricter pairing requirements).
+- `sample_005`: one remaining `floating_window_point` (`winpt_1_a`). Confirmed by direct reproduction with alignment fully bypassed that this is **not** caused by either task16 change - `winpt_1_a`'s own coordinate is untouched by clustering in this run. It is a latent bug in `select_host_wall_for_opening`'s window-hosting choice (assigns `host_wall_edge_id` to a geometrically unrelated, disconnected skeleton stub far from the window's true location) that the now-stricter post-clustering checks simply expose rather than mask. Same class of issue as task14/task15's already-documented `sample_005` limitation; left unresolved as out of task16's two-item scope (axis alignment, door generation) rather than pursued into window-hosting logic.
+
+## 21. Task17 Debugging Notes
+
+task17 made the vectorization process door-first: red `door_arc` bboxes are trusted anchors the rest of the graph builds from, rather than one input among many resolved by mutual, symmetric clustering.
+
+**Door point selection** (`point_detection.py`): vertex selection (## 9.3) no longer rejects a cluster for missing evidence at all - `select_door_hinge_end_from_bbox` always returns a pair, even when every edge scores 0 (task16 had a `best_score <= 0` rejection; task17 dropped it per "Red Bbox Assumption" - "do not overcomplicate red-bbox acceptance with many early rejection conditions"). Per-vertex scores reported in `DoorCandidateRecord`/metrics are the same edge-band score attributed to both of an edge's vertices (confirmed as acceptable - edge-based and per-vertex scoring are the same selection described two ways).
+
+**Door-anchored alignment** (`point_alignment.py`): `wall_point`/`wall_window_point` ("followers") first cluster among themselves the same distance-only way task16 introduced, then any follower within tolerance of a door anchor (`wall_door_hinge_point`/`wall_door_end_point`) on a given axis snaps onto that anchor's exact value, overriding whatever the follower-only pass decided - door anchors are never moved. The axis-alignment tolerance reverted to `500 mm` (task15's `1000 mm` experiment is retired).
+
+**Two real bugs found while verifying against the required samples**, both about door hinge/end ending up unconnectable to any wall topology ("not reliably aligned with wall lines" per task17's own framing of the prior failure):
+
+- An initial attempt added a `host_wall_direction` parameter to `select_door_hinge_end_from_bbox` that restricted candidate edges to the orientation of whichever wall `nearest_wall` found closest to the bbox's *centroid*, intending to satisfy "the selected adjacent pair should be the bbox edge with the closest alignment to the host wall." This was the wrong place to enforce that: `nearest_wall`'s nearest-by-raw-distance pick is frequently a short, unrelated skeleton noise fragment rather than the real host wall, so restricting vertex selection to *its* orientation overrode an already-correct, well-evidenced selection more often than it fixed a wrong one (verified directly - removing the restriction fixed one required sample's floating door while leaving the others at zero issues; keeping it broke a previously-correct door in a different sample). Reverted; vertex selection relies solely on its own local purple/black evidence (## 9.3), which already concentrates on the true host-wall-facing edge in practice.
+- The real bug was in **hosting**, not selection: once hinge/end are chosen, each is hosted onto the nearest real wall edge (`nearest_wall`) independently - but a door's hinge/end attachment direction is always along the same axis the hinge-to-end vector itself shares (the door's own gap continues its host wall's line), and `point_connection.py`'s `build_wall_edges` only connects a point into a chain whose direction label actually matches that attachment. Plain nearest-by-distance hosting could pick an orientation-incompatible wall edge that happened to be marginally closer than the real, orientation-matching one, silently producing an unconnectable (floating) hinge/end. Fixed via `_nearest_wall_matching_orientation`: prefer the nearest wall edge whose own running direction matches the door's orientation, falling back to plain nearest-by-distance only when no matching-orientation wall exists within range.
+
+These fixes brought `sample_003` and `sample_004` to zero `metrics.json` validation issues, with every accepted red `door_arc` component producing exactly one door. `sample_005` retains the same single `floating_window_point` already documented in task15/task16's notes (confirmed, by direct reproduction with alignment bypassed entirely, to be a latent `select_host_wall_for_opening` window-hosting bug unrelated to any task17 change) - left unresolved as out of task17's scope.
+
+## 22. Task18 Debugging Notes
+
+task18 added one geometric acceptance floor ahead of door vertex selection (## 9.3): a red `door_arc` bbox whose long/short side ratio exceeds `2:1` is rejected outright (`RejectedEvidence(kind="unresolved_door_arc_aspect_ratio")`), before any purple/black/orange evidence is even looked at. A real 90-degree door arc's bbox is close to square (its two sides are both roughly the door's own radius), so a markedly elongated bbox (e.g. `1:3`) is not a plausible arc regardless of nearby evidence - this is a shape floor on the red cluster itself, the same class of check as the existing minimum-component-area floor, not an evidence-based rejection (must-rule 53; `doors.max_bbox_aspect_ratio` in config, default `2.0`).
+
+Verified against all three required samples (`outputs/vectorization/v008/iteration5_run3`): every accepted red `door_arc` bbox across all 17 doors already has a ratio between `1.05:1` and `2.00:1` (the `2.00:1` case landing exactly on the inclusive boundary), so this floor changed no observable output for the required samples - it is a guard against future/other input, not a fix for anything currently failing. Test suite fixtures that previously used deliberately elongated rectangles to stand in for an "arc" (several at roughly `3.5:1`) were widened to a realistic, roughly-square shape; one test relying on extreme elongation to represent a "weak" cluster was changed to represent weakness via smaller area instead, since aspect ratio is now a separate, independent floor.
+
+## 23. Task19 Debugging Notes
+
+task19 made two changes to `build_debug_overlay` (## 15), both purely about what gets drawn - no change to detection, alignment, connection, or `metrics.json` content.
+
+**Rejected/unresolved evidence is no longer drawn.** The gray bbox/centroid-box rendering loop over `rejected_evidence` was removed from the overlay entirely (along with its legend row and the now-unused `REJECTED_COLOR` constant) - it still flows into `metrics.json` exactly as before (`build_metrics`'s `rejected_evidence` parameter and the `rejected_by_kind` summary are untouched), since `rejected_evidence` is debug/metrics-only information per must-rule 107, and the overlay image is more readable without it. `build_debug_overlay` keeps the `rejected_evidence` parameter for call-site stability but no longer uses it (`del rejected_evidence` documents the intent inline).
+
+**`wall_door_hinge_point`/`wall_door_end_point` are no longer re-drawn in the door candidate's confidence color.** Before this task, the door-candidate loop drew a second, larger (radius-5) circle around each hinge/end point in the candidate's confidence color (red for `door_confidence >= 0.75`, yellow otherwise) - since most candidates in the required samples are high-confidence, this larger red ring visually dominated the smaller radius-3 orange/purple `POINT_COLORS` ring drawn for every other final point type, making doors look like they had "red circles" instead of reading the same way every other point type does. Fixed by dropping that redraw - the bbox rectangle and hinge-to-end connector line still use the confidence color (so accepted-vs-low-confidence candidates remain visually distinguishable per must-rule 108/113), but the points themselves are only ever drawn once, in their own orange/purple color, by the existing per-point-type loop.
+
+Verified by regenerating all three required samples (`outputs/vectorization/v008/iteration5_run3`) and visually inspecting `debug_overlay.png`: no gray rejected-evidence boxes remain anywhere, hinge/end markers read as small orange/purple circles across all 17 doors (including sample_005's 7 doors, the busiest case), and `metrics.json` content/validation issues are unchanged from before this task.
+
+## 24. Completion Criteria
 
 This spec is complete when v008 can consume `segformer_b0_run3` 7-class output and produce strict orthogonal architectural SVG geometry for walls, windows, and doors.
 

@@ -17,22 +17,21 @@ Direction = Literal["left", "right", "up", "down"]
 AttachmentType = Literal["wall", "window", "door_origin"]
 EdgeType = Literal["wall", "window", "door_origin"]
 
-# The seven allowed final point types (spec_v008 SS9).
+# task15: the four degree-classified wall-point subtypes
+# (1/2/3/4_wall_point) are collapsed into one generic "wall_point" - wall
+# graph construction must not depend on accurate pre-classification of a
+# point's eventual degree (task15 problem 1). This is a deliberate, explicit
+# deviation from must-rule 22's literal seven-type enumeration; see
+# spec_v008_mask_to_vector.md's task15 notes.
 PointType = Literal[
-    "1_wall_point",
-    "2_wall_point",
-    "3_wall_point",
-    "4_wall_point",
+    "wall_point",
     "wall_window_point",
     "wall_door_hinge_point",
     "wall_door_end_point",
 ]
 
 ALL_POINT_TYPES: tuple[PointType, ...] = (
-    "1_wall_point",
-    "2_wall_point",
-    "3_wall_point",
-    "4_wall_point",
+    "wall_point",
     "wall_window_point",
     "wall_door_hinge_point",
     "wall_door_end_point",
@@ -68,6 +67,14 @@ class GraphPoint:
     coordinate: tuple[float, float]
     attachments: list[Attachment] = field(default_factory=list)
     source_component_ids: list[int] = field(default_factory=list)
+    host_wall_edge_id: Optional[str] = None
+    """The WallSkeletonEdge.id this point was projected onto, when known
+    (window/door points). Lets point_connection.py connect the wall edge to
+    this exact point unambiguously instead of guessing by coordinate
+    distance - the projected boundary of a long/tall opening commonly lands
+    well outside any fixed pixel tolerance from the host chain's own
+    skeleton-pixel endpoint (rules 75/78/82/83: host every opening on wall
+    topology)."""
 
     def directions(self) -> set[Direction]:
         return {a.direction for a in self.attachments}
@@ -166,6 +173,16 @@ class DoorCandidateRecord:
     end_distance_to_red_bbox_mm: Optional[float] = None
     door_confidence: float = 0.0
     door_inference_notes: str = ""
+    # task17 "Required Metrics": the bbox-vertex selection itself, reported
+    # independently of whether a door was ultimately created from it.
+    all_four_bbox_vertices: dict[str, tuple[float, float]] = field(default_factory=dict)
+    selected_hinge_vertex: Optional[tuple[float, float]] = None
+    selected_end_vertex: Optional[tuple[float, float]] = None
+    hinge_vertex_score: Optional[int] = None
+    end_vertex_score: Optional[int] = None
+    selected_bbox_edge: Optional[str] = None
+    host_wall_alignment_score: Optional[int] = None
+    door_width_mm: Optional[float] = None
 
 
 @dataclass

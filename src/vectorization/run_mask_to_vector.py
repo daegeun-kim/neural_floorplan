@@ -124,17 +124,29 @@ def process_single(
 
     detect_cfg = {
         "cardinal_tolerance_deg": geometry_cfg.get("cardinal_tolerance_deg", 25.0),
-        "max_wall_dist": geometry_cfg.get("max_host_wall_dist_px", 40.0),
-        "min_hosted_width_px": geometry_cfg.get("min_hosted_width_px", 10.0),
+        # task15 problem 4: a red door_arc cluster's *recognition* as a door
+        # must not depend on point-search precision (must-rule 51 only
+        # allows rejecting for min-area or zero plausible geometry) - these
+        # two host-wall search radii are not must-rule-mandated numbers
+        # (unlike the 200mm arc-bbox proximity floor below), so they're
+        # raised to effectively "any wall anywhere in the image."
+        "max_wall_dist": geometry_cfg.get("max_host_wall_dist_px", 100000.0),
+        "min_hosted_width_px": geometry_cfg.get("min_hosted_width_px", 3.0),
         "corner_ambiguity_px": geometry_cfg.get("corner_ambiguity_px", 25.0),
         "min_remainder_px": geometry_cfg.get("min_remainder_px", 3.0),
-        "hinge_probe_radius": doors_cfg.get("hinge_probe_radius_px", 14.0),
-        "hinge_intersection_tolerance_px": doors_cfg.get("hinge_intersection_tolerance_px", 6.0),
-        "hinge_snap_to_wall_max_dist_px": doors_cfg.get("hinge_snap_to_wall_max_dist_px", 40.0),
-        "hinge_arc_inference_enabled": doors_cfg.get("infer_origin_when_purple_missing", True),
+        # task16: probe band (px) around each door_arc bbox edge/corner used
+        # to score purple/black/orange evidence when picking the hinge/end
+        # vertex pair.
+        "hinge_probe_radius": doors_cfg.get("bbox_corner_probe_px", 14.0),
+        # task18: a red door_arc bbox far from square (e.g. 1:3) is rejected
+        # outright - the long/short side ratio must be at most 2:1.
+        "max_door_bbox_aspect_ratio": doors_cfg.get("max_bbox_aspect_ratio", 2.0),
+        "hinge_snap_to_wall_max_dist_px": doors_cfg.get("hinge_snap_to_wall_max_dist_px", 100000.0),
         "door_width_modules_mm": tuple(doors_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM)),
         "min_window_width_mm": windows_cfg.get("min_width_mm", 300.0),
         "free_end_opening_proximity_px": geometry_cfg.get("free_end_opening_proximity_px", 20.0),
+        # Rule 17 fixes this at 200mm exactly - not a tunable search radius,
+        # kept unchanged.
         "door_point_max_dist_from_arc_mm": doors_cfg.get("max_hinge_end_distance_from_arc_mm", 200.0),
     }
 
@@ -144,14 +156,20 @@ def process_single(
     result.raw_points = points
 
     # --- 2. Validate searched point counts and attachment directions (SS10) ---
-    point_validation = validate_points(points, accepted_door_arc_count=len(components.get("door_arc", [])))
+    # "Accepted" (rule 40) excludes door_arc clusters point_detection.py
+    # itself already legitimately rejected (rule 51: below min area, or no
+    # plausible hinge/end geometry within rule 17's 200mm floor even after
+    # fallback) - those are correct rejections, not a hinge/cluster-count
+    # bug, so they must not double-count against this check.
+    rejected_arc_ids = {r.component_id for r in point_rejected if r.class_name == "door_arc"}
+    accepted_door_arc_count = len(components.get("door_arc", [])) - len(rejected_arc_ids)
+    point_validation = validate_points(points, accepted_door_arc_count=accepted_door_arc_count)
     result.point_validation = point_validation
 
     # --- 3. Align compatible points onto orthogonal axes (SS11) ---
     align_cfg = {
         "axis_alignment_tolerance_mm": geometry_cfg.get("axis_alignment_tolerance_mm", 500.0),
         "px_fallback_tolerance": geometry_cfg.get("px_fallback_tolerance_px", 6.0),
-        "corridor_slack_px": geometry_cfg.get("corridor_slack_px", 20.0),
     }
     aligned_points, alignment_issues = align_points(
         points, components.get("wall", []), resolved_scale, align_cfg, wall_skeleton_edges
@@ -168,8 +186,11 @@ def process_single(
     connect_cfg = {
         "node_match_tolerance_px": geometry_cfg.get("node_match_tolerance_px", 12.0),
         "opening_match_tolerance_px": geometry_cfg.get("free_end_opening_proximity_px", 20.0),
+        "corridor_slack_px": geometry_cfg.get("corridor_slack_px", 20.0),
     }
-    edges, graph_validation = connect_points(aligned_points, wall_skeleton_edges, resolved_scale, connect_cfg)
+    edges, graph_validation = connect_points(
+        aligned_points, wall_skeleton_edges, resolved_scale, connect_cfg, components.get("wall", [])
+    )
     result.edges = edges
     result.graph_validation = alignment_issues + graph_validation
 

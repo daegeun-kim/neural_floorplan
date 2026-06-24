@@ -8,15 +8,13 @@
     "door_origin": 8
   },
   "points": {
-    "2_wall_point": 30,
-    "3_wall_point": 10,
+    "wall_point": 41,
     "wall_window_point": 4,
     "wall_door_hinge_point": 5,
-    "wall_door_end_point": 5,
-    "1_wall_point": 1
+    "wall_door_end_point": 5
   },
   "edges": {
-    "wall": 46,
+    "wall": 54,
     "window": 2,
     "door_origin": 5
   },
@@ -26,41 +24,10 @@
     "diagonal_wall_edge": 33,
     "window_too_narrow_mm": 1,
     "unresolved_door_too_far_from_arc": 2,
-    "unresolved_door_origin": 4,
-    "wall_end_near_opening_evidence": 13
+    "unresolved_door_origin": 2,
+    "wall_end_near_opening_evidence": 12
   },
-  "validation_issues": [
-    {
-      "rule": "door_count_mismatch",
-      "message": "hinge count 5 != accepted door_arc components 7",
-      "severity": "error"
-    },
-    {
-      "rule": "floating_door_point",
-      "message": "doorpt_1_end has no wall edge - not hosted on wall topology",
-      "severity": "error"
-    },
-    {
-      "rule": "floating_door_point",
-      "message": "doorpt_2_hinge has no wall edge - not hosted on wall topology",
-      "severity": "error"
-    },
-    {
-      "rule": "floating_door_point",
-      "message": "doorpt_3_hinge has no wall edge - not hosted on wall topology",
-      "severity": "error"
-    },
-    {
-      "rule": "floating_door_point",
-      "message": "doorpt_3_end has no wall edge - not hosted on wall topology",
-      "severity": "error"
-    },
-    {
-      "rule": "floating_door_point",
-      "message": "doorpt_5_end has no wall edge - not hosted on wall topology",
-      "severity": "error"
-    }
-  ],
+  "validation_issues": [],
   "scale": {
     "unit": "mm",
     "px_to_mm": 13.344226579520697,
@@ -193,8 +160,8 @@
         "purple",
         "orange"
       ],
-      "hinge_distance_to_red_bbox_mm": 1.8994163976566976,
-      "end_distance_to_red_bbox_mm": 1.8994163976566976,
+      "hinge_distance_to_red_bbox_mm": 19.88137241068023,
+      "end_distance_to_red_bbox_mm": 19.88137241068023,
       "door_confidence": 1.0,
       "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
     },
@@ -216,12 +183,14 @@
         "black"
       ],
       "end_candidate_support_classes": [
-        "red"
+        "red",
+        "purple",
+        "orange"
       ],
-      "hinge_distance_to_red_bbox_mm": 47.77220323061905,
-      "end_distance_to_red_bbox_mm": 26.688453159041394,
-      "door_confidence": 0.6666666666666666,
-      "door_inference_notes": "forced inference - weak or missing orange/purple evidence near the red cluster"
+      "hinge_distance_to_red_bbox_mm": 81.14310250524161,
+      "end_distance_to_red_bbox_mm": 81.14310250524161,
+      "door_confidence": 1.0,
+      "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
     },
     {
       "red_component_id": 6,
@@ -267,12 +236,14 @@
         "black"
       ],
       "end_candidate_support_classes": [
-        "red"
+        "red",
+        "purple",
+        "orange"
       ],
-      "hinge_distance_to_red_bbox_mm": 100.04815103857972,
-      "end_distance_to_red_bbox_mm": 125.86077061425505,
-      "door_confidence": 0.6666666666666666,
-      "door_inference_notes": "forced inference - weak or missing orange/purple evidence near the red cluster"
+      "hinge_distance_to_red_bbox_mm": 136.69861606125556,
+      "end_distance_to_red_bbox_mm": 154.4985684301912,
+      "door_confidence": 1.0,
+      "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
     }
   ]
 }
