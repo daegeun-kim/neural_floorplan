@@ -1,0 +1,148 @@
+{
+  "image": "image_prediction.png",
+  "components": {
+    "wall": 6,
+    "window": 6,
+    "door_arc": 3,
+    "door_leaf": 13,
+    "door_origin": 15
+  },
+  "points": {
+    "2_wall_point": 30,
+    "3_wall_point": 13,
+    "wall_window_point": 2,
+    "wall_door_hinge_point": 3,
+    "wall_door_end_point": 3,
+    "1_wall_point": 5
+  },
+  "edges": {
+    "wall": 52,
+    "window": 1,
+    "door_origin": 3
+  },
+  "rejected_evidence": {
+    "diagonal_wall_edge": 23,
+    "window_unhosted": 1,
+    "window_too_narrow": 2,
+    "window_too_narrow_mm": 2,
+    "unresolved_door_origin": 13,
+    "wall_end_near_opening_evidence": 16
+  },
+  "validation_issues": [
+    {
+      "rule": "floating_door_point",
+      "message": "doorpt_1_hinge has no wall edge - not hosted on wall topology",
+      "severity": "error"
+    }
+  ],
+  "scale": {
+    "unit": "mm",
+    "px_to_mm": 10.9375,
+    "scale_status": "estimated",
+    "scale_source": "door_arc_bbox_long_edge_clustering",
+    "confidence": 1.0,
+    "diagnostics": {
+      "red_arc_bbox_long_edges_px": [
+        69.0,
+        64.0,
+        63.0
+      ],
+      "red_arc_px_to_mm_candidates": [
+        10.144927536231885,
+        10.9375,
+        11.11111111111111,
+        13.043478260869565,
+        14.0625,
+        14.285714285714286
+      ],
+      "red_arc_selected_modules_mm": [
+        700
+      ],
+      "selected_px_to_mm": 10.9375,
+      "scale_rejected_outliers": [],
+      "door_origin_check_px_to_mm": 233.33333333333334,
+      "wall_thickness_check_px_to_mm": 1.0324196240071275,
+      "scale_source": "door_arc_bbox_long_edge_clustering"
+    }
+  },
+  "door_candidates": [
+    {
+      "red_component_id": 1,
+      "red_bbox": [
+        78,
+        144,
+        147,
+        200
+      ],
+      "red_bbox_long_edge_px": 69.0,
+      "created_door_candidate": true,
+      "scale_candidate_px_to_mm": 10.9375,
+      "hinge_candidate_support_classes": [
+        "red",
+        "purple",
+        "black"
+      ],
+      "end_candidate_support_classes": [
+        "red",
+        "purple"
+      ],
+      "hinge_distance_to_red_bbox_mm": 5.613511029411633,
+      "end_distance_to_red_bbox_mm": 20.47215578114149,
+      "door_confidence": 0.7083333333333333,
+      "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
+    },
+    {
+      "red_component_id": 2,
+      "red_bbox": [
+        310,
+        346,
+        368,
+        410
+      ],
+      "red_bbox_long_edge_px": 64.0,
+      "created_door_candidate": true,
+      "scale_candidate_px_to_mm": 10.9375,
+      "hinge_candidate_support_classes": [
+        "red",
+        "orange",
+        "purple",
+        "black"
+      ],
+      "end_candidate_support_classes": [
+        "red",
+        "purple",
+        "orange"
+      ],
+      "hinge_distance_to_red_bbox_mm": 11.340712900740968,
+      "end_distance_to_red_bbox_mm": 11.646895947391943,
+      "door_confidence": 1.0,
+      "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
+    },
+    {
+      "red_component_id": 3,
+      "red_bbox": [
+        156,
+        443,
+        202,
+        506
+      ],
+      "red_bbox_long_edge_px": 63.0,
+      "created_door_candidate": true,
+      "scale_candidate_px_to_mm": 10.9375,
+      "hinge_candidate_support_classes": [
+        "red",
+        "orange",
+        "purple",
+        "black"
+      ],
+      "end_candidate_support_classes": [
+        "red",
+        "purple"
+      ],
+      "hinge_distance_to_red_bbox_mm": 75.87890625,
+      "end_distance_to_red_bbox_mm": 75.87890625,
+      "door_confidence": 0.8333333333333333,
+      "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
+    }
+  ]
+}

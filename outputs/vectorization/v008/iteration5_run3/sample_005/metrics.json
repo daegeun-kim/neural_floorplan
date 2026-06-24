@@ -1,0 +1,223 @@
+{
+  "image": "image_prediction.png",
+  "components": {
+    "wall": 11,
+    "window": 5,
+    "door_arc": 7,
+    "door_leaf": 13,
+    "door_origin": 32
+  },
+  "points": {
+    "2_wall_point": 50,
+    "3_wall_point": 14,
+    "wall_door_hinge_point": 1,
+    "wall_door_end_point": 1,
+    "1_wall_point": 10
+  },
+  "edges": {
+    "wall": 67,
+    "window": 0,
+    "door_origin": 1
+  },
+  "rejected_evidence": {
+    "wall_component_too_small": 2,
+    "window_component_too_small": 2,
+    "door_arc_component_too_small": 1,
+    "diagonal_wall_edge": 39,
+    "window_unhosted": 1,
+    "window_too_narrow": 4,
+    "unresolved_door_too_far_from_arc": 2,
+    "unresolved_door_too_narrow": 4,
+    "unresolved_door_origin": 25,
+    "wall_end_near_opening_evidence": 27
+  },
+  "validation_issues": [
+    {
+      "rule": "door_count_mismatch",
+      "message": "hinge count 1 != accepted door_arc components 7",
+      "severity": "error"
+    }
+  ],
+  "scale": {
+    "unit": "mm",
+    "px_to_mm": 16.071428571428573,
+    "scale_status": "estimated",
+    "scale_source": "door_arc_bbox_long_edge_clustering",
+    "confidence": 0.7142857142857143,
+    "diagnostics": {
+      "red_arc_bbox_long_edges_px": [
+        40.0,
+        56.0,
+        8.0,
+        57.0,
+        60.0,
+        54.0,
+        18.0
+      ],
+      "red_arc_px_to_mm_candidates": [
+        11.666666666666666,
+        12.280701754385966,
+        12.5,
+        12.962962962962964,
+        15.0,
+        15.789473684210526,
+        16.071428571428573,
+        16.666666666666668,
+        17.5,
+        22.5,
+        38.888888888888886,
+        50.0,
+        87.5,
+        112.5
+      ],
+      "red_arc_selected_modules_mm": [
+        700,
+        900
+      ],
+      "selected_px_to_mm": 16.071428571428573,
+      "scale_rejected_outliers": [
+        8.0,
+        18.0
+      ],
+      "door_origin_check_px_to_mm": 38.56946647660632,
+      "wall_thickness_check_px_to_mm": 0.4219409282700422,
+      "scale_source": "door_arc_bbox_long_edge_clustering"
+    }
+  },
+  "door_candidates": [
+    {
+      "red_component_id": 1,
+      "red_bbox": [
+        143,
+        101,
+        183,
+        139
+      ],
+      "red_bbox_long_edge_px": 40.0,
+      "created_door_candidate": false,
+      "scale_candidate_px_to_mm": null,
+      "hinge_candidate_support_classes": [],
+      "end_candidate_support_classes": [],
+      "hinge_distance_to_red_bbox_mm": null,
+      "end_distance_to_red_bbox_mm": null,
+      "door_confidence": 0.0,
+      "door_inference_notes": "hinge=3.8px end=18.0px exceeds 12.4px from door_arc bbox"
+    },
+    {
+      "red_component_id": 2,
+      "red_bbox": [
+        16,
+        148,
+        72,
+        190
+      ],
+      "red_bbox_long_edge_px": 56.0,
+      "created_door_candidate": false,
+      "scale_candidate_px_to_mm": null,
+      "hinge_candidate_support_classes": [],
+      "end_candidate_support_classes": [],
+      "hinge_distance_to_red_bbox_mm": null,
+      "end_distance_to_red_bbox_mm": null,
+      "door_confidence": 0.0,
+      "door_inference_notes": "no hinge/end pair produced"
+    },
+    {
+      "red_component_id": 3,
+      "red_bbox": [
+        4,
+        177,
+        8,
+        185
+      ],
+      "red_bbox_long_edge_px": 8.0,
+      "created_door_candidate": false,
+      "scale_candidate_px_to_mm": null,
+      "hinge_candidate_support_classes": [],
+      "end_candidate_support_classes": [],
+      "hinge_distance_to_red_bbox_mm": null,
+      "end_distance_to_red_bbox_mm": null,
+      "door_confidence": 0.0,
+      "door_inference_notes": "hinge=0.3px end=17.1px exceeds 12.4px from door_arc bbox"
+    },
+    {
+      "red_component_id": 4,
+      "red_bbox": [
+        176,
+        269,
+        233,
+        305
+      ],
+      "red_bbox_long_edge_px": 57.0,
+      "created_door_candidate": false,
+      "scale_candidate_px_to_mm": null,
+      "hinge_candidate_support_classes": [],
+      "end_candidate_support_classes": [],
+      "hinge_distance_to_red_bbox_mm": null,
+      "end_distance_to_red_bbox_mm": null,
+      "door_confidence": 0.0,
+      "door_inference_notes": "no hinge/end pair produced"
+    },
+    {
+      "red_component_id": 5,
+      "red_bbox": [
+        177,
+        321,
+        237,
+        361
+      ],
+      "red_bbox_long_edge_px": 60.0,
+      "created_door_candidate": false,
+      "scale_candidate_px_to_mm": null,
+      "hinge_candidate_support_classes": [],
+      "end_candidate_support_classes": [],
+      "hinge_distance_to_red_bbox_mm": null,
+      "end_distance_to_red_bbox_mm": null,
+      "door_confidence": 0.0,
+      "door_inference_notes": "no hinge/end pair produced"
+    },
+    {
+      "red_component_id": 6,
+      "red_bbox": [
+        424,
+        450,
+        471,
+        504
+      ],
+      "red_bbox_long_edge_px": 54.0,
+      "created_door_candidate": true,
+      "scale_candidate_px_to_mm": 16.071428571428573,
+      "hinge_candidate_support_classes": [
+        "red",
+        "orange",
+        "purple"
+      ],
+      "end_candidate_support_classes": [
+        "red",
+        "purple",
+        "orange"
+      ],
+      "hinge_distance_to_red_bbox_mm": 0.0,
+      "end_distance_to_red_bbox_mm": 0.0,
+      "door_confidence": 0.875,
+      "door_inference_notes": "hinge/end inferred from orange/purple/black evidence near the red cluster"
+    },
+    {
+      "red_component_id": 7,
+      "red_bbox": [
+        472,
+        472,
+        483,
+        490
+      ],
+      "red_bbox_long_edge_px": 18.0,
+      "created_door_candidate": false,
+      "scale_candidate_px_to_mm": null,
+      "hinge_candidate_support_classes": [],
+      "end_candidate_support_classes": [],
+      "hinge_distance_to_red_bbox_mm": null,
+      "end_distance_to_red_bbox_mm": null,
+      "door_confidence": 0.0,
+      "door_inference_notes": "no hinge/end pair produced"
+    }
+  ]
+}

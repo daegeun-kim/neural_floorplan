@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" data-unit="mm" data-scale-status="estimated" data-px-to-mm="16.071428571428573" data-scale-source="door_arc_bbox_long_edge_clustering">
+  <g id="wall">
+    <path d="M 269.00,258.00 269.00,440.00 743.00,440.00 743.00,249.00 487.00,249.00 487.00,238.00 743.00,238.00 743.00,21.00 487.00,21.00 487.00,-216.00 194.00,-216.00 -214.00,-216.00 -214.00,75.00 -214.00,137.00 -214.00,496.00 23.00,496.00 23.00,549.00 23.00,733.00 51.00,733.00 51.00,549.00 219.00,549.00 219.00,496.00 260.00,496.00 260.00,312.00 219.00,312.00 219.00,258.00 269.00,258.00 Z" fill="#000000" fill-rule="evenodd" stroke="none" id="wall_polygon" />
+  </g>
+  <g id="door">
+    <g id="door_0001" data-type="door"><line id="door_origin_0001" data-type="door_origin" x1="444.94" y1="494.80" x2="425.93" y2="494.80" stroke="#a046b4" stroke-width="2" stroke-linecap="square" /><line id="door_leaf_0001" data-type="door_leaf" x1="444.94" y1="494.80" x2="444.94" y2="513.82" stroke="#eb8c50" stroke-width="1.5" /><path id="door_arc_0001" data-type="door_arc" d="M 425.93 494.80 A 19.01 19.01 0 0 0 444.94 513.82" fill="none" stroke="#dc5a5a" stroke-width="1.5" /></g>
+  </g>
+</svg>

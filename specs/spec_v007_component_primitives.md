@@ -142,14 +142,13 @@ Required first implementation:
 5. Accept the estimate only if door and wall evidence are plausible.
 6. Record `scale_status="estimated"` unless explicit metadata confirms the scale.
 
-Recommended common metric modules:
+Active common metric modules:
 
 | Component | Common dimensions |
 |---|---|
 | interior wall thickness | 100 mm |
 | exterior wall thickness | 200 mm |
-| narrow door clear width | 600 mm |
-| standard door clear width | 800 mm |
+| standard door clear width | 700 mm |
 | wide door clear width | 900 mm |
 | small window width | 600 mm |
 | standard window width | 900 mm, 1200 mm, 1500 mm |
@@ -198,35 +197,29 @@ Pixel-space source evidence must remain available for debugging.
 
 ## 8. Snapping Rules
 
-All final architectural linework must snap to multiples of 45 degrees:
+All active v008 final architectural linework must be orthogonal:
 
 ```txt
 0 degrees
-45 degrees
 90 degrees
-135 degrees
 180 degrees
-225 degrees
 270 degrees
-315 degrees
 ```
 
 Do not export arbitrary-angle final wall, floor, window, or door-origin geometry.
 
 Arbitrary-angle evidence may appear only in debug output.
 
-Orthogonal directions (0/90/180/270) are the default interpretation, not an
-equal alternative to 45-degree diagonals (task09). Priority:
+Orthogonal directions (0/90/180/270) are the only active v008 interpretation.
+The previous 45-degree option is retired for the point-graph restart. Priority:
 
 ```txt
 1. horizontal / vertical, for any angle within a generous threshold of a cardinal
-2. explicit 45-degree diagonal, only for angles close to exactly 45/135 degrees
-3. otherwise default to the nearest cardinal, even if a diagonal is mathematically nearer
+2. otherwise reject or debug the evidence instead of exporting diagonal geometry
 ```
 
-Do not convert noisy or ambiguous wall pixels into diagonal walls just
-because they are closer to 45 degrees than to a cardinal - 45-degree output
-is reserved for evidence that is explicitly, strongly diagonal.
+Do not convert noisy or ambiguous wall pixels into diagonal walls. No
+45-degree wall output is allowed in the active v008 restart.
 
 ## 9. Wall Primitives
 
@@ -282,7 +275,7 @@ Requirements:
 ```txt
 closed loop
 continuous straight segments
-45-degree snapping
+orthogonal snapping only
 no dangling endpoints
 no tiny contour notches
 dominant exterior shell of the building
@@ -298,7 +291,7 @@ Requirements:
 
 ```txt
 not forced closed
-45-degree snapping
+orthogonal snapping only
 connected to outer wall or other inner walls when evidence supports it
 normalized 100 mm default thickness unless evidence supports 200 mm
 ```
@@ -372,8 +365,7 @@ normalized to common door widths when scale confidence is sufficient
 Common door widths:
 
 ```txt
-600 mm
-800 mm
+700 mm
 900 mm
 ```
 
@@ -443,7 +435,7 @@ outer wall loop
 Requirements:
 
 ```txt
-45-degree snapped boundary
+orthogonal snapped boundary for active v008 output
 follows outer wall loop when floor pixels are ambiguous
 does not create isolated floor islands from noisy floor pixels
 fills the architectural interior region
@@ -516,14 +508,14 @@ Primitive tests must verify:
 
 1. Scale metadata is stored and exported.
 2. Walls normalize to 100 mm or 200 mm when scale is known.
-3. Door origins normalize to 600 mm, 800 mm, or 900 mm when scale is known.
+3. Door origins normalize to 700 mm or 900 mm when scale is known.
 4. Door leaf is perpendicular to door origin.
 5. Door arc is centered on the hinge point and spans 90 degrees.
 6. Windows are wall-hosted and replace a wall segment.
 7. Outer wall loop is closed.
 8. Inner walls are not forced closed.
 9. Floor follows outer wall when floor evidence is ambiguous.
-10. Arbitrary final angles are rejected.
+10. Arbitrary and 45-degree final angles are rejected for active v008 output.
 11. Wall and window SVG output are closed filled polygons, not stroked
     lines with `stroke-width`; door origin, door leaf, and door arc are
     thin symbolic lines/arc (task09).
@@ -537,8 +529,8 @@ Primitive tests must verify:
     rather than overlapping independently-capped rectangles.
 16. Window total width is half the host wall's total width (100mm vs
     200mm), independent of the wall's own measured thickness value.
-17. Ambiguous wall angles (not close to an exact cardinal or an exact
-    45/135 diagonal) snap to the nearest cardinal, not the nearer diagonal.
+17. Ambiguous or diagonal wall angles are rejected or snapped to a supported
+    cardinal direction; no 45-degree final wall output is allowed.
 
 ## 16. Completion Criteria
 

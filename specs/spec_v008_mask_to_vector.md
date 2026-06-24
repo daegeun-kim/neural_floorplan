@@ -1,89 +1,67 @@
-# Spec v008: Strict 7-Class Mask-to-Vector Reconstruction
+# Spec v008: Orthogonal Point-Graph Mask-to-Vector Reconstruction
 
 ## 0. Purpose
 
-This spec defines the strict reconstruction process that converts `segformer_b0_run3` 7-class CNN predictions into architectural SVG vector output.
+This spec defines the fresh vectorization process for rebuilding `src/vectorization` from zero.
 
-The vector output must be an architectural abstraction with metric dimensions whenever scale can be resolved or estimated safely. It must not be a pixel contour trace.
+The active vectorizer must convert `segformer_b0_run3` 7-class CNN predictions into a clean architectural point graph, then export wall/window/door vectors from that graph.
+
+The final vector output must be an architectural abstraction. It must not be a contour trace of noisy prediction pixels.
 
 Pipeline:
 
 ```txt
-7-class CNN prediction
--> class masks
--> scale resolution
--> wall topology
--> hosted windows and doors
--> floor reconstruction
+7-class semantic prediction
+-> decoded class masks
+-> class components
+-> searched architectural points
+-> orthogonal point alignment
+-> typed point connections
+-> wall/window/door primitives
 -> SVG output
 ```
 
-Component definitions are in `spec_v007_component_primitives.md`.
+Component primitive definitions are in `spec_v007_component_primitives.md`. This v008 spec controls reconstruction order, topology, validation, and implementation behavior under `src/vectorization`.
 
-JSON output is intentionally out of scope for v008 and belongs to v009 after vectorization is reliable.
+JSON, DXF, room graph inference, Grasshopper export, and interactive correction are out of scope.
 
-## 1. Scope
+## 1. Implementation Scope
 
-This spec covers:
+This restart covers:
 
-```txt
-reading 7-class prediction masks
-decoding RGB preview masks when needed
-resolving or estimating scale
-building outer and inner wall vectors
-splitting walls for windows and doors
-generating door origin, leaf, and arc geometry
-generating floor geometry
-exporting SVG with scale metadata
-```
+- reading 7-class class-ID masks
+- decoding RGB prediction previews when needed
+- extracting connected components for wall, window, door arc, door leaf, and door origin
+- searching directly for the seven allowed point types
+- aligning searched points into an orthogonal graph
+- connecting points into wall, window, and door-origin segments
+- generating door leaf and door arc geometry procedurally
+- rendering final wall/window/door SVG output
+- writing debug overlays and metrics for all rejected evidence
 
-This spec does not cover:
+This restart excludes:
 
-```txt
-CNN retraining
-semantic mask generation from SVG
-editing checkpoint files
-room graph construction
-JSON export
-DXF export
-Grasshopper integration
-interactive correction UI
-```
+- floor generation
+- room graph construction
+- diagonal or 45-degree wall support
+- retired 5-class `opening`, `room`, or `icon` assumptions
+- contour-based fallback output
 
-## 2. Input Classes
+Floor may be added in a later spec once wall/window/door topology is reliable.
 
-The only active input class mapping is:
+## 2. Active Input Classes
+
+The expected input is a 7-class semantic prediction or decoded RGB semantic mask:
 
 | ID | Class | Meaning |
 |---:|---|---|
-| 0 | background | non-floorplan pixels |
-| 1 | floor | floor/interior evidence, lower confidence |
-| 2 | wall | wall evidence, high confidence |
-| 3 | window | window evidence, high confidence |
+| 0 | background | outside or unused area |
+| 1 | floor | ignored for this restart |
+| 2 | wall | structural wall evidence |
+| 3 | window | wall-hosted window evidence |
 | 4 | door_arc | door swing arc evidence |
-| 5 | door_leaf | door panel evidence |
-| 6 | door_origin | wall-aligned door threshold evidence |
-
-Do not use the retired 5-class mapping in active v008 code:
-
-```txt
-0 background
-1 wall
-2 opening
-3 room
-4 icon
-```
-
-If a 5-class mask is passed to this pipeline, raise a clear incompatible-input error.
-
-## 3. Input Files
-
-The vectorizer should support:
-
-```txt
-class-ID PNG masks
-RGB prediction preview PNGs using the run3 palette
-```
+| 5 | door_leaf | open door leaf evidence |
+| 6 | door_origin | wall-aligned door threshold/origin evidence |
 
 Run3 preview palette:
 
@@ -97,450 +75,522 @@ Run3 preview palette:
 | 5 | door_leaf | `(235, 140, 80)` |
 | 6 | door_origin | `(160, 70, 180)` |
 
-If RGB values do not match the configured palette, fail clearly unless an explicit tolerance is configured.
+If RGB values do not match the configured palette, fail clearly unless an explicit RGB tolerance is configured.
 
-## 4. Core Design Rules
+The retired 5-class mapping must not be accepted:
 
-The reconstruction must be strict.
+```txt
+0 background
+1 wall
+2 opening
+3 room
+4 icon
+```
+
+If a retired 5-class mask is passed to v008, raise an incompatible-input error.
+
+## 3. Core Design Rules
+
+The vectorizer is graph-first.
 
 Required behavior:
 
-```txt
-use wall/window/door evidence as high-confidence topology
-treat floor evidence as lower-confidence fill evidence
-snap final vectors to multiples of 45 degrees
-normalize components to common metric dimensions when scale is known
-host all windows and doors on walls
-split wall segments at all hosted openings
-preserve topology over pixel contour detail
-```
+- use wall/window/door evidence as high-confidence topology
+- ignore floor for this restart
+- search for the seven allowed point types directly
+- align all final graph geometry orthogonally
+- host every final window and door on wall topology
+- replace wall intervals with hosted window and door-origin intervals
+- generate door leaf and door arc from the accepted door-origin segment
+- emit rejected evidence only in debug artifacts and metrics
 
 Forbidden final behavior:
 
-```txt
-free-floating doors
-free-floating windows
-door arcs traced as irregular polygons
-wall contours exported as jagged polygons
-floor islands from noisy floor pixels
-arbitrary-angle final wall fragments
-pixel-unit export labeled as metric
-arbitrary pixel-geometry fallback for an explicitly millimeter-scale rule
-  (inner-wall outer-loop attachment, window minimum width, door module
-  width) when scale cannot be resolved or estimated (task10) - the sample
-  must be recorded as scale-blocked for that rule instead
-```
+- free-floating windows
+- free-floating doors
+- floor/background-border wall tracing
+- jagged wall contours
+- raw door-leaf contour tracing
+- raw door-arc contour tracing
+- arbitrary-angle wall/window/door-origin output
+- 45-degree wall output
+- untyped final points
+- unresolved final points
+- debug or unidentified visible groups inside `vector.svg`
 
-## 5. Scale Resolution
+## 4. Coordinate, Direction, and Angle Conventions
 
-Before metric export, resolve scale using the rules from spec v007.
+All geometry uses image coordinates unless explicitly converted to metric units:
 
-Priority:
+- `x` increases to the right
+- `y` increases downward
+- horizontal means constant `y`
+- vertical means constant `x`
+- directions are `left`, `right`, `up`, and `down`
 
-```txt
-1. explicit metadata
-2. SVG or dimension metadata
-3. clustered door-origin widths
-4. clustered wall thicknesses
-5. fallback to pixel units
-```
-
-Door width is the first practical fallback because standard doors are common and visible in the new 7-class output. However, use multiple confident doors and cross-check against wall thickness.
-
-Recommended algorithm:
-
-1. Measure candidate door-origin lengths in pixels.
-2. Cluster lengths by similar pixel size.
-3. Fit clusters to common door modules: `700 mm`, `900 mm` (task10: `600 mm`
-   and `800 mm` are not valid door modules - scale voting and the final
-   door-width snap, SS9.1, both use the same two-module set).
-4. Measure wall thickness clusters in pixels.
-5. Fit wall clusters to `100 mm` and `200 mm`.
-6. Choose the scale with the best combined door and wall consistency.
-7. Mark scale as `estimated` unless explicit metadata confirms it.
-
-If door and wall estimates conflict strongly, keep pixel units and report scale conflict.
-
-Door-origin lengths used for this clustering are measured directly from
-the cleaned `door_origin` mask's connected components (long axis per
-component) - scale must be resolved before doors are hosted, since several
-downstream rules (inner-wall outer-loop attachment, window minimum width,
-door module snap) require a resolved/estimated scale to run at all.
-
-## 6. Reconstruction Order
-
-The vectorizer must build geometry in this order:
+Final wall, window, and door-origin graph segments must be orthogonal:
 
 ```txt
-0. decode and clean masks
-1. build wall topology (outer loop, then inner walls, pixel-space)
-2. resolve scale (door-origin lengths measured directly from the mask,
-   wall thickness samples) - task10: moved here, before openings, because
-   several opening/wall rules below are millimeter-only
-3. attach inner-wall endpoints to the outer loop when within tolerance (mm)
-4. generate windows
-5. generate doors
-6. snap walls to 45 degrees, re-project hosted openings
-7. split walls at hosted windows/door-origins
-8. generate floor
-9. export SVG
+0 degrees
+90 degrees
+180 degrees
+270 degrees
 ```
 
-Wall topology must be built before openings.
+Do not support diagonal or 45-degree walls in this restart. Ambiguous or diagonal-looking evidence must either snap to the strongest supported orthogonal interpretation or be rejected into debug output.
 
-Openings must modify wall topology.
+Each point attachment must store:
 
-Floor must be generated after walls because wall topology is more reliable than floor pixels.
+- semantic type: `wall`, `window`, or `door_origin`
+- direction leaving the point: `left`, `right`, `up`, or `down`
+- source class evidence
+- evidence length/area or confidence
 
-## 7. Wall Building
+Door leaf and door arc are generated after door-origin pairing. They are not point-search attachment types.
 
-Wall vectors are built from:
+## 5. Scale Rules
+
+The graph may be constructed in pixel space, but metric validation requires a scale.
+
+Scale priority (task12 SS1):
+
+1. explicit metadata, if available
+2. red `door_arc` connected-component bounding-box long edge, evaluated against both `700 mm` and `900 mm` door modules
+3. clustered door-origin widths - secondary cross-check/debug evidence only, never standalone scale-setting
+4. clustered wall thicknesses - weak secondary cross-check/debug evidence only, never standalone scale-setting
+5. unknown scale, only if no usable red `door_arc` cluster exists (door-origin/wall evidence alone never resolves scale)
+
+For each connected red `door_arc` pixel cluster, take the long edge of its bounding box as a candidate standard door width, and evaluate `px_to_mm = 700 / long_edge_px` and `px_to_mm = 900 / long_edge_px`. When multiple clusters exist, vote/cluster over the resulting `px_to_mm` candidates, choose the candidate supported by the most clusters, and use the median of that winning group. Reject only obvious outliers; do not let noisy wall connected-component thickness override a resolved red door-arc scale.
+
+Allowed door modules:
+
+- `700 mm`
+- `900 mm`
+
+Allowed wall thickness modules:
+
+- `100 mm`
+- `200 mm`
+
+Window minimum width:
+
+- `300 mm`
+
+Default point merge and axis alignment tolerance:
+
+- `500 mm`
+
+If scale is unknown, the implementation may still build a pixel-space graph, but metric-only decisions must be recorded as scale-blocked instead of using arbitrary pixel defaults.
+
+Metric-only decisions include:
+
+- validating a door width as `700 mm` or `900 mm`
+- enforcing the `300 mm` minimum window width
+- applying the `500 mm` point merge or axis alignment tolerance
+- exporting dimensions as true millimeters
+
+## 6. Source Module Instructions
+
+The new implementation should be organized around explicit graph stages. Existing files may be replaced or simplified if needed.
+
+Expected source layout:
 
 ```txt
-wall pixels
-window pixels
-door_origin pixels
-door_leaf pixels
-door_arc pixels
+src/vectorization/
+  __init__.py
+  decode_prediction.py
+  masks.py
+  components.py
+  scale.py
+  graph_types.py
+  point_detection.py
+  point_alignment.py
+  point_connection.py
+  door_geometry.py
+  wall_geometry.py
+  export_svg.py
+  debug.py
+  run_mask_to_vector.py
+  primitives/
+    base.py
+    wall.py
+    window.py
+    door.py
 ```
 
-Wall pixels are primary wall evidence. Window and door pixels are opening evidence that indicate interruptions in walls.
+Implementation responsibilities:
 
-### 7.1 Outer Wall
+| Module | Responsibility |
+|---|---|
+| `decode_prediction.py` | load class-ID or RGB masks and reject incompatible input |
+| `masks.py` | expose boolean masks for each active class |
+| `components.py` | extract cleaned connected components and component metadata |
+| `scale.py` | resolve or estimate `px_to_mm` and record scale status |
+| `graph_types.py` | define point, attachment, edge, component, and validation data structures |
+| `point_detection.py` | search directly for the seven allowed point types |
+| `point_alignment.py` | align compatible points onto shared orthogonal axes |
+| `point_connection.py` | build wall, window, and door-origin edges |
+| `door_geometry.py` | infer hinge, door leaf, and 90-degree arc geometry |
+| `wall_geometry.py` | turn connected wall/window graph edges into final SVG geometry |
+| `export_svg.py` | write final SVG with only allowed visible groups |
+| `debug.py` | write overlays, metrics, rejected evidence, and validation diagnostics |
+| `run_mask_to_vector.py` | orchestrate the stage order and CLI/config entrypoint |
 
-Build the outer wall first.
+The implementation should expose intermediate artifacts for tests:
 
-Requirements:
+- decoded masks
+- connected components
+- searched points
+- aligned points
+- connection graph
+- rejected evidence list
+- final primitives
+- validation report
+
+## 7. Reconstruction Order
+
+The vectorizer must run in this order:
 
 ```txt
-closed curve
-continuous straight-line segments
-only multiples of 45 degrees
-derived from exterior wall evidence
-robust to window and door gaps
-no dangling endpoints
-no tiny contour notches
+0. load config
+1. decode class-ID or RGB prediction
+2. reject retired/incompatible masks
+3. clean masks and extract connected components
+4. resolve or estimate scale
+5. search for the seven allowed point types
+6. validate searched point counts and attachment directions
+7. align compatible points onto orthogonal axes
+8. connect aligned points into wall, window, and door-origin graph edges
+9. validate graph topology
+10. generate door leaf and door arc geometry
+11. generate wall and window final geometry
+12. export SVG
+13. write debug overlay and metrics
 ```
 
-Use opening evidence (window, door_arc, door_leaf, door_origin masks) to
-bridge across wall gaps while preserving the opening location for later
-splitting.
+Do not generate floor in v008 restart output.
 
-The outer wall must never be derived from the floor/background border.
-Floor is the lowest-accuracy class (SS10), so it must not be unioned into
-the evidence used to trace the envelope contour - doing so lets the
-envelope silently follow wherever floor evidence happens to end rather
-than the actual wall pixels, and can also cause the wall band near the
-envelope to be detected a second time as a spurious "duplicate" inner wall
-just inside the outer loop.
+## 8. Component Processing
 
-The outer wall represents the building envelope, not a raw contour.
+Before point search, extract connected components for:
 
-### 7.2 Inner Walls
+- `wall`
+- `window`
+- `door_arc`
+- `door_leaf`
+- `door_origin`
 
-Build inner walls after the outer wall.
+Recommended component metadata:
 
-Requirements:
+- class ID and class name
+- connected-component ID
+- area in pixels
+- bounding box
+- centroid
+- skeleton or centerline
+- endpoint candidates
+- orientation estimate
+- source mask slice
+
+Remove components below configured area thresholds, but record removed components in metrics.
+
+Door handling is driven by accepted red `door_arc` components. Each accepted red component should correspond to exactly one final door.
+
+Window handling is driven by accepted blue `window` components. Each accepted window component should correspond to one final window unless nearby collinear blue fragments must be merged.
+
+Purple `door_origin` and orange `door_leaf` evidence help locate a door associated with a red arc. They do not create a door without red evidence.
+
+## 9. Point Detection
+
+Point detection is not a generic keypoint detector followed by classification.
+
+The implementation must search for each of the seven allowed point types directly, one by one. Therefore, there should be no unresolved final point category.
+
+Every final detected point must be exactly one of these types:
+
+| Point type | Required attachments | Meaning |
+|---|---|---|
+| `1_wall_point` | one wall segment | free-standing end of a wall |
+| `2_wall_point` | two wall segments at 90 degrees | wall corner |
+| `3_wall_point` | three wall segments | T-junction or branch from a continuous wall |
+| `4_wall_point` | four wall segments | cross-junction with wall evidence in all cardinal directions |
+| `wall_window_point` | one wall segment and one window segment in opposite directions | end of a wall-hosted window |
+| `wall_door_hinge_point` | one wall segment and one door-origin segment in opposite directions | door hinge point on the wall |
+| `wall_door_end_point` | one wall segment and one door-origin segment in opposite directions | far end of a door origin, not the hinge |
+
+Each point must store a local attachment table.
+
+Example:
 
 ```txt
-individual line segments or snapped polylines
-not forced closed
-only multiples of 45 degrees
-connected to other walls where evidence supports connection
-trimmed or split by openings
+point_type: wall_window_point
+coordinate: (x, y)
+attachments:
+  - type: wall
+    direction: down
+    source: wall
+  - type: window
+    direction: up
+    source: window
 ```
 
-Inner wall extraction should use skeleton or centerline-style evidence
-rather than filled polygon contours for the underlying topology, even
-though the final rendered output is a filled polygon (SS12, spec v007 SS9).
+### 9.1 Wall Points
 
-A dangling inner-wall endpoint that lies within a small tolerance of
-another wall's line (outer loop or another inner wall) must be snapped or
-extended onto it rather than left disconnected, when the evidence implies
-a real connection.
+Search wall point types from wall skeleton or centerline evidence.
 
-Once the outer wall is built, only the spatial band traced along the
-outer polygon is erased before inner-wall extraction runs (task10) - not
-the whole connected wall component the band touches. Interior partition
-walls frequently fuse to the exterior wall in one continuous CNN-predicted
-blob; erasing the entire touched component (the task09 behavior) destroys
-that interior wall's only evidence along with the outer wall's. Erasing
-only the band itself keeps the outer wall from resurfacing as a duplicate
-inner wall while preserving every interior wall branch, including ones
-that touch the exterior wall.
+Rules:
 
-The inner-wall candidate mask is the union of `wall` pixels and
-`door_origin` (purple) pixels - not `door_arc`/`door_leaf`/`window`. This
-bridges the gap a doorway leaves in an interior wall's mask, the same way
-opening evidence already bridges gaps for the outer loop (SS7.1), so an
-inner wall is not falsely cut short or dropped at a doorway. The resulting
-segment that "tunnels" through a door is trimmed back to the real wall
-span once the door is hosted on it, via the same wall-splitting step used
-for any other opening (SS9.1).
+- `1_wall_point` is a legitimate free-standing wall end.
+- A `1_wall_point` must not be extended or snapped merely because another wall is nearby.
+- If evidence shows a nearby branch or connection, detect a `3_wall_point` or `4_wall_point` instead of treating the endpoint as free-standing.
+- A `1_wall_point` is valid only when the wall end is surrounded by background/floor pixels alone (task12 SS2.1). If window (`blue`), door_arc (`red`), door_leaf (`orange`), or door_origin (`purple`) evidence touches or sits immediately near the wall end, it must resolve to `wall_window_point`, `wall_door_hinge_point`, or `wall_door_end_point` instead - never `1_wall_point`. The neighborhood radius used for this check is an implementation judgment call.
+- `2_wall_point` requires exactly two wall attachments at a 90-degree corner.
+- `3_wall_point` requires one continuous wall direction pair plus one branch, or equivalent T-junction evidence.
+- `4_wall_point` requires wall evidence in all four cardinal directions.
 
-If one or both endpoints of an inner-wall segment fall within
-`walls.inner_attach_outer_threshold_mm` (default 500mm, real architectural
-distance using the resolved/estimated scale - no pixel fallback) of the
-outer wall loop, project that endpoint onto the nearest outer wall segment
-and snap it there. This never moves the outer wall loop itself. If scale
-cannot be resolved or estimated at all, this rule does not run for that
-sample and the sample is recorded as scale-blocked (`inner_wall_outer_attach_mm`)
-rather than substituting an arbitrary pixel threshold.
+### 9.2 Window Points
 
-An inner wall ending at a door or window opening boundary instead of
-another wall is a normal, valid ending (most interior walls sit a short
-distance from an opening) - it is not unresolved or incomplete, and does
-not need the outer-loop attachment rule applied to that end. Walls remain
-strongly biased toward 90-degree relationships; short freestanding stubs,
-islands/partial partitions, and explicit diagonal walls are allowed
-exceptions when the source evidence clearly supports them.
+Search `wall_window_point` endpoints from the transition between wall evidence and window evidence.
 
-Wall centerline segments that share an endpoint must be merged into one
-connected polyline before they are offset into a polygon, so a corner or
-junction gets a single clean mitred join instead of two independently
-flat-capped rectangles overlapping (task09, spec v007 SS9). A segment is
-only left with its own flat end cap where it genuinely ends - a free end,
-or one of three-or-more segments meeting at a junction (which cannot be
-represented as a single connected polyline).
+Rules:
 
-### 7.3 Wall Thickness
+- every final window has exactly two `wall_window_point` endpoints
+- the two endpoints must be paired from the same window component or compatible merged window evidence
+- each endpoint has one wall attachment and one window attachment in opposite directions
+- the two window attachments must face each other along the window axis
 
-Classify wall thickness per segment.
+### 9.3 Door Points
 
-Required metric modules:
+Search door points from red `door_arc` components first.
+
+Rules:
+
+- each accepted red `door_arc` component requires one `wall_door_hinge_point`
+- each accepted red `door_arc` component requires one `wall_door_end_point`
+- red pixels define the existence and count of doors
+- orange and purple pixels infer the hinge and endpoint locations
+- if red pixels exist but purple door-origin evidence is missing or too noisy, infer the door-origin segment from the nearest host wall and the orange/red swing evidence
+- if no red pixels exist, reject the door even when purple or orange evidence exists
+- purple door-origin evidence without a red arc is debug-only
+
+The hinge should prefer the orange/purple intersection when present. If that intersection is missing, infer the hinge from the red arc geometry and nearest plausible host wall.
+
+### 9.3.1 Forceful Inference Rule (task13)
+
+A connected red `door_arc` cluster is a door, always, once it survives component cleanup. Purple/orange/black evidence refines hinge/end geometry but never decides whether the red cluster is a door:
+
+- `wall_door_hinge_point` and `wall_door_end_point` must each lie within `200 mm` of the red cluster's bounding box (the point may sit just outside the box, not only inside it). Scale must be resolved before this check runs.
+- the hinge point is the location with the highest combined proximity to the available subset of `[red, orange, purple, black]` evidence; if all four are unavailable, fall back to the largest available subset (down to black/red alone via arc-geometry + host-wall inference).
+- the end point is the location with the highest combined proximity to the available subset of `[red, purple, orange]`; if door-origin evidence cannot be paired, infer the end point from the red cluster's own bounding-box geometry projected onto the host wall.
+- fragmented, missing, or noisy purple/orange evidence must lower the resulting `door_confidence` but must not delete the door.
+- a red cluster may be rejected only when it is below the minimum component area, or when no plausible wall evidence exists anywhere near it (i.e. no plausible door geometry can be inferred even after fallback).
+
+## 10. Point Detection Invariants
+
+After point search:
+
+- every final point is one of the seven allowed point types
+- every attachment has a type and direction
+- every attachment direction is cardinal
+- `wall_window_point` count is even
+- accepted red `door_arc` component count equals `wall_door_hinge_point` count
+- `wall_door_hinge_point` count equals `wall_door_end_point` count
+- no final door exists without an accepted red `door_arc` component
+- no final window exists without exactly two compatible `wall_window_point` endpoints
+
+If an invariant fails, reject only the affected component or graph region when possible, write diagnostics, and do not export the affected primitive as final geometry.
+
+## 11. Point Alignment
+
+Point alignment converts approximate pixel detections into clean orthogonal graph coordinates.
+
+### 11.1 Axis Alignment
+
+If two or more points have nearly equal `x` coordinates, they may share one vertical axis.
+
+If two or more points have nearly equal `y` coordinates, they may share one horizontal axis.
+
+The default tolerance is `500 mm` after scale resolution. If scale is unavailable, use a configured pixel fallback only for graph construction and mark metric alignment decisions as scale-blocked.
+
+After alignment:
+
+- points on the same vertical axis have exactly equal `x`
+- points on the same horizontal axis have exactly equal `y`
+- final edges are horizontal or vertical only
+
+### 11.2 Alignment Evidence
+
+An axis alignment must be supported by semantic evidence:
+
+- wall pixels along the axis
+- window pixels along the axis
+- door-origin pixels along the axis
+- endpoints from the same connected component
+- endpoints from a known door or window pair
+
+Do not align unrelated points only because their coordinates are close.
+
+### 11.3 Window and Door Direction Alignment
+
+For `wall_window_point`, `wall_door_hinge_point`, and `wall_door_end_point`, the opening direction decides which axis is shared.
+
+Examples:
+
+- if a window starts to the right of one point and a nearby compatible point has a window starting to the left, align those points on the horizontal axis by giving them the same `y`
+- if a door-origin segment leaves one point downward and leaves the paired point upward, align those points on the vertical axis by giving them the same `x`
+
+Window and door-origin pair alignment must prioritize the axis implied by the opening segment direction over generic coordinate clustering.
+
+## 12. Point Connection
+
+Point connection creates graph edges from aligned points.
+
+Only connect points that are compatible by:
+
+- point type
+- attachment type
+- attachment direction
+- shared axis
+- semantic evidence
+- absence of an unrelated point between them
+
+### 12.1 Wall Connections
+
+Connect two points with a wall segment when:
+
+- both points have wall attachments on the same aligned axis
+- their wall attachment directions face each other
+- no unrelated point lies between them on that axis
+- wall evidence supports the interval, or opening evidence indicates a gap that will be replaced by a hosted window or door
+
+When wall segments meet at a point, they are part of one wall graph. Final wall polygon generation must treat connected wall graph edges as joined geometry instead of unrelated capped segments.
+
+Do not duplicate already-consumed outer-wall evidence as inner-wall geometry.
+
+### 12.2 Window Connections
+
+Connect two `wall_window_point` endpoints with a window segment when:
+
+- the endpoints share the opening-implied aligned axis
+- their window directions face each other
+- they belong to the same accepted or merged window evidence
+- no unrelated point lies between them
+- the length is at least `300 mm` when scale is known or estimated
+
+The window segment replaces the wall segment over the same interval.
+
+Adjacent wall endpoints and window endpoints must coincide exactly after graph construction.
+
+### 12.3 Door-Origin Connections
+
+Connect one `wall_door_hinge_point` and one `wall_door_end_point` with a door-origin segment when:
+
+- the endpoints share the opening-implied aligned axis
+- their door-origin directions face each other
+- they are paired with the same accepted red `door_arc` component
+- no unrelated point lies between them
+- the length snaps to `700 mm` or `900 mm` when scale is known or estimated
+
+The door-origin segment replaces the wall segment over the same interval.
+
+Door count and door location are driven by accepted red `door_arc` components, not by purple door-origin pixels alone.
+
+## 13. Door Leaf and Door Arc Generation
+
+After the door-origin segment is accepted, generate door leaf and arc procedurally.
+
+### 13.1 Door Leaf
+
+The door leaf:
+
+- starts at the `wall_door_hinge_point`
+- is perpendicular to the door-origin segment
+- has the same length as the door-origin segment
+- opens to the side indicated by orange `door_leaf` and red `door_arc` evidence
+- is exported as a thin symbolic orange line
+
+Do not trace the raw orange door-leaf pixel contour as final geometry.
+
+### 13.2 Door Arc
+
+The door arc:
+
+- has center at the hinge point
+- has radius equal to the door-origin length
+- spans exactly 90 degrees
+- connects the closed-door direction to the opened leaf direction
+- follows the side indicated by red `door_arc` evidence
+- is exported as a thin symbolic red arc
+
+Do not trace the raw red arc component as an irregular contour.
+
+The SVG arc flags must be computed from hinge, origin-end, and leaf-end geometry so the rendered arc remains centered on the hinge point for every orthogonal wall orientation.
+
+## 14. Output Geometry Rules
+
+Final visible SVG groups:
 
 ```txt
-100 mm
-200 mm
+wall
+window
+door
 ```
 
-When scale is known:
+No `floor` group is required for this restart.
+
+Required drawing order:
 
 ```txt
-measured segment thickness -> nearest module
+wall
+window
+door
 ```
 
-When scale is unknown:
+Required colors:
 
 ```txt
-keep measured pixel thickness
-data-scale-status="unknown"
+wall        black   #000000
+window      blue    #3c78dc
+door_origin purple  #a046b4
+door_leaf   orange  #eb8c50
+door_arc    red     #dc5a5a
 ```
 
-## 8. Window Generation
+Geometry representation:
 
-Window pixels are high-confidence opening evidence.
+| Component | Final geometry |
+|---|---|
+| wall | closed filled polygon generated from connected wall graph edges |
+| window | closed filled polygon generated from hosted window graph edge |
+| door_origin | thin symbolic SVG line |
+| door_leaf | thin symbolic SVG line |
+| door_arc | thin symbolic 90-degree SVG arc |
 
-For each window candidate:
+Wall thickness:
 
-1. Find the nearest host wall centerline.
-2. Project window evidence onto the host wall.
-3. Locate the two transition points where wall evidence changes to window evidence.
-4. Split the host wall at those two points.
-5. Remove or suppress the wall segment between the two split points.
-6. Insert a `WindowPrimitive` between the same endpoints.
+- normalize to `100 mm` or `200 mm`
+- use evidence to choose the module when scale is known or estimated
+- keep measured pixel thickness when scale is unknown
 
-Hard requirements:
+Window thickness:
+
+- use `100 mm` total width when scale is known
+- use half the host wall pixel thickness when scale is unknown
+
+Door components are not offset into polygons.
+
+Required root SVG metadata:
 
 ```txt
-window endpoints must connect to wall segment endpoints
-window segment replaces a wall segment
-window cannot float away from the wall
-window orientation follows the host wall
-window length may snap to common window modules when scale is reliable
+data-unit="mm" or "px"
+data-scale-status="resolved" | "estimated" | "unknown"
+data-px-to-mm="..."
+data-scale-source="..."
 ```
 
-If a window cannot be hosted on a wall, export it only as debug evidence, not as a final window.
+No debug group, dashed unresolved marker, or retired-class group may appear in `vector.svg`.
 
-The window's offset width is independent of the host wall's thickness
-(task09): 50mm each side, 100mm total - exactly half the wall's 200mm
-total, regardless of that particular wall's own measured thickness.
-
-A window's hosted width must be at least `windows.min_width_mm` (default
-300mm), using the resolved/estimated architectural scale - no pixel-only
-fallback. If scale cannot be resolved or estimated, the window is recorded
-as scale-blocked rather than silently accepted at an arbitrary pixel
-width (task10).
-
-### 8.1 Opening-Near-Corner Host Selection
-
-A window or door opening is always hosted on exactly one wall - never
-split or straddled across two walls, and never reduced to a degenerate
-near-zero-length wall stub on either side (task10). When an opening's
-evidence sits near where two wall segments meet (e.g. a corner or
-T-junction), and the obvious host wall would leave a near-zero-length
-remainder on one side after splitting, evaluate both candidate host walls
-and push the opening fully onto whichever one has the higher hosting
-probability - more overlapping/aligned evidence, better orientation match,
-and a larger non-degenerate remainder after the split. This rule applies
-to both windows and the door-origin hosting step (SS9.1).
-
-## 9. Door Generation
-
-Door generation uses three CNN classes:
-
-```txt
-door_origin (purple)
-door_leaf (orange)
-door_arc (red)
-```
-
-Door count and location are driven solely by red `door_arc` connected
-components (task10) - door_origin and door_leaf are never sufficient on
-their own to create a door. If no `door_arc` evidence exists at all, no
-door is generated, regardless of how much door_origin/door_leaf evidence
-exists nearby.
-
-### 9.1 Door Origin and Hinge Detection
-
-Per red `door_arc` connected component:
-
-1. Skip components below `doors.min_door_arc_component_area`.
-2. Look for the orange (`door_leaf`)/purple (`door_origin`) intersection
-   near this arc group (within `doors.hinge_intersection_tolerance_px`) -
-   this is the preferred hinge candidate.
-3. If that intersection is missing and `doors.hinge_arc_inference_enabled`
-   is true, find a provisional host wall for the arc's own evidence
-   (SS8.1 corner-safe selection) and infer the hinge from the arc
-   evidence's oriented bounding box corner closest to that wall - the
-   swing wedge's pivot corner. If no provisional host wall is reachable,
-   the arc group is debug-only (`unresolved_door_arc`).
-4. Snap the hinge candidate onto the nearest wall, outer or inner, within
-   `doors.hinge_snap_to_wall_max_dist_px`. No reachable wall -> debug-only
-   (`unresolved_door_hinge`).
-5. Find the door_origin (purple) evidence paired with this hinge and
-   project it onto the host wall to get the far endpoint. Orange hinge
-   evidence without a paired purple far point is debug-only
-   (`unresolved_door_hinge`) - it never becomes a door (Door Pairing Rule,
-   SS9.1.1).
-6. If scale cannot be resolved/estimated with sufficient confidence, the
-   evidence is debug-only (`unresolved_door_scale_blocked`) - never
-   generate a pixel-sized door.
-7. Snap the hinge-to-far-point distance to the nearest of
-   `doors.door_width_modules_mm` (`700 mm` or `900 mm` only - `600 mm` and
-   `800 mm` are not valid door modules for this pipeline), preserving the
-   hinge position and detected orientation while rescaling the far point.
-8. Replace the wall segment between the (now module-snapped) origin
-   endpoints with a `DoorOriginPrimitive`.
-
-Hard requirements:
-
-```txt
-door origin endpoints must connect to wall endpoints
-door origin replaces a wall segment
-door origin orientation follows the host wall
-door origin cannot float away from a wall
-```
-
-#### 9.1.1 Door Pairing Rule
-
-The orange hinge marker and the purple door-origin far/end marker are a
-required pair. If both are detected, exactly one door is generated from
-that pair. An unpaired orange marker, or an unpaired purple marker (purple
-door_origin evidence with no matching red arc group), never generates a
-door on its own - it appears only in `debug_overlay.png` and `metrics.json`,
-never in `vector.svg`.
-
-Door origin (and door leaf and door arc, SS9.2/9.3) render as thin
-symbolic SVG lines/arc, not closed filled polygons - only wall and window
-are offset into polygons (task09 supersedes task08's polygon decision for
-the door primitives).
-
-### 9.2 Door Leaf
-
-Once the door origin is created, generate the leaf procedurally.
-
-Requirements:
-
-```txt
-leaf starts at one endpoint of the door origin
-leaf is 90 degrees to the door origin
-leaf length equals the normalized door width
-hinge endpoint is selected using door_leaf and door_arc evidence
-swing side is selected using door_leaf and door_arc evidence
-```
-
-Do not trace the raw door_leaf pixel contour as final geometry.
-
-### 9.3 Door Arc
-
-Generate a 90-degree arc.
-
-Requirements:
-
-```txt
-arc center is the hinge point where door origin and door leaf meet
-arc radius equals the normalized door width
-arc angle is 90 degrees
-arc side follows door_arc evidence
-```
-
-Do not export irregular arc contours.
-
-If door_arc evidence is missing but door_origin and door_leaf are confident, generate the best 90-degree arc and mark confidence lower.
-
-## 10. Floor Generation
-
-Floor generation happens after wall and opening topology.
-
-Inputs:
-
-```txt
-floor pixels
-wall pixels
-outer wall loop
-```
-
-The CNN floor class has lower accuracy than wall, window, and door classes. Wall topology has priority over floor pixels.
-
-Procedure:
-
-1. Start from the outer wall loop interior.
-2. Use floor pixels to confirm interior fill.
-3. Use wall pixels to constrain the boundary.
-4. If floor pixels are ambiguous or missing, follow the outer wall loop.
-5. Snap the floor boundary to multiples of 45 degrees.
-6. Remove tiny islands and holes unless they correspond to wall topology.
-
-Hard requirements:
-
-```txt
-floor must be one main architectural filled region unless evidence strongly supports multiple buildings
-floor boundary follows the outer wall when floor evidence conflicts
-floor sits behind walls, windows, and doors
-floor must not create jagged contour noise
-```
-
-## 11. Topology Rules
-
-Final topology must satisfy:
-
-```txt
-outer wall is closed
-inner walls are connected or intentionally free-ended
-inner wall branches that touch the outer wall in the source mask are
-  preserved, not erased along with the outer wall's evidence (task10)
-inner wall endpoints within inner_attach_outer_threshold_mm of the outer
-  loop are attached to it; an ending at an opening boundary is also valid
-all final windows are hosted by walls
-all final doors are hosted by walls
-every final window meets the configured minimum width (task10)
-every final door's count/location is driven by a red door_arc group, and
-  its width is exactly one of doors.door_width_modules_mm (task10)
-window and door origin segments replace wall segments
-door leaf and arc attach to a door origin endpoint
-floor follows or is bounded by outer wall topology
-```
-
-Topology violations should be visible in debug output and counted in metrics.
-
-## 12. Output SVG
-
-Output folder:
-
-```txt
-outputs/vectorization/v008
-```
+## 15. Debug Output and Metrics
 
 Required files per sample:
 
@@ -552,74 +602,51 @@ metrics.json
 debug_overlay.png
 ```
 
-The final SVG must contain only these four groups, in this order:
+Debug output must show or record:
+
+- decoded class masks
+- cleaned components
+- removed tiny components
+- searched points by type
+- rejected candidate evidence
+- aligned axes
+- wall/window/door-origin graph edges
+- door hinge choices
+- inferred door origins
+- scale estimate and confidence
+- validation failures
+- every red `door_arc` candidate bounding box, its inferred `wall_door_hinge_point`/`wall_door_end_point`, and its supporting nearby red/orange/purple/black evidence, with low-confidence inferred points rendered differently from high-confidence ones (task13)
+
+`metrics.json` must additionally include, under the scale diagnostics (task12 SS1):
 
 ```txt
-floor
-wall
-window
-door
+red_arc_bbox_long_edges_px
+red_arc_px_to_mm_candidates
+red_arc_selected_modules_mm
+selected_px_to_mm
+scale_source
+scale_rejected_outliers
 ```
 
-No debug group, dashed unresolved-evidence marker, or other unidentified
-element is allowed in `vector.svg` (spec v007 SS13). Debug visualization of
-unresolved/unhosted evidence lives only in `debug_overlay.png` and the
-counts in `metrics.json`.
-
-Drawing order:
+and one record per accepted red `door_arc` cluster (task13 "Metrics Requirements"), so it is obvious whether the cluster became a door and how its hinge/end points were inferred:
 
 ```txt
-floor
-wall
-window
-door
+red_component_id
+red_bbox
+red_bbox_long_edge_px
+created_door_candidate
+scale_candidate_px_to_mm
+hinge_candidate_support_classes
+end_candidate_support_classes
+hinge_distance_to_red_bbox_mm
+end_distance_to_red_bbox_mm
+door_confidence
+door_inference_notes
 ```
 
-Required final SVG colors (spec v007 SS9-11):
+Rejected evidence and low-confidence/forced-inference door candidates belong only in `debug_overlay.png` and `metrics.json`, never in `vector.svg`.
 
-```txt
-floor       white   #ffffff
-wall        black   #000000
-window      blue    #3c78dc
-door_origin purple  #a046b4
-door_leaf   orange  #eb8c50
-door_arc    red     #dc5a5a
-```
-
-Wall and window render as closed filled polygons, not stroked lines with
-`stroke-width`. Door-origin, door-leaf, and door-arc are thin symbolic
-SVG lines/arc (task09); door-arc's center is analytically fixed to the
-hinge point for any wall orientation (spec v007 SS11.3).
-
-Required root metadata:
-
-```txt
-data-unit="mm" or "px"
-data-scale-status="resolved" | "estimated" | "unknown"
-data-px-to-mm="..."
-data-scale-source="..."
-```
-
-## 13. Debug Output
-
-Debug output must show:
-
-```txt
-decoded class masks
-wall centerlines
-outer wall loop
-inner wall candidates
-window host assignments
-door origin host assignments
-door hinge choices
-floor fill source
-scale estimate and confidence
-topology errors
-```
-
-Failed hosted openings must appear in debug output but not in final `window` or `door` groups, and never inside `vector.svg` at all - only in `debug_overlay.png` and `metrics.json` (SS12).
-
-## 14. Configuration
+## 16. Configuration
 
 Expected config file:
 
@@ -627,12 +654,13 @@ Expected config file:
 configs/vectorization_v008.yaml
 ```
 
-Required config sections:
+Required config shape:
 
 ```yaml
 input:
   prediction_path:
   palette: run3
+  rgb_tolerance: 0
 
 scale:
   allow_estimated_scale: true
@@ -640,100 +668,112 @@ scale:
   wall_thickness_modules_mm: [100, 200]
   min_scale_confidence_for_metric: 0.70
 
-snapping:
-  allowed_angles_deg: [0, 45, 90, 135, 180, 225, 270, 315]
-  max_angle_snap_error_deg: 12
+geometry:
+  allowed_angles_deg: [0, 90, 180, 270]
+  allow_diagonal_walls: false
+  point_merge_tolerance_mm: 500
+  axis_alignment_tolerance_mm: 500
   min_segment_length_mm: 100
 
-walls:
-  build_order: ["outer", "inner"]
-  bridge_opening_gaps: true
-  connect_gap_px: 20
-  ortho_snap_degrees: 20
-  diagonal_snap_degrees: 10
-  inner_attach_outer_threshold_mm: 500
-
-openings:
-  require_host_wall: true
-  replace_wall_segment: true
-  corner_ambiguity_px: 25
-  min_remainder_px: 3
+components:
+  min_wall_area_px: 4
+  min_window_area_px: 4
+  min_door_arc_area_px: 4
+  min_door_leaf_area_px: 2
+  min_door_origin_area_px: 2
 
 windows:
   min_width_mm: 300
+  require_two_wall_window_points: true
+  replace_wall_segment: true
 
 doors:
   require_arc_group: true
-  min_door_arc_component_area: 4
+  infer_origin_when_purple_missing: true
+  reject_without_red_arc: true
   hinge_intersection_tolerance_px: 6
   hinge_snap_to_wall_max_dist_px: 40
-  hinge_arc_inference_enabled: true
   door_width_modules_mm: [700, 900]
+  replace_wall_segment: true
 
-floor:
-  prefer_outer_wall_when_ambiguous: true
+output:
+  include_floor: false
+  write_debug_overlay: true
+  write_metrics: true
 ```
 
-## 15. Validation Requirements
+## 17. Validation Requirements
 
 Tests must cover:
 
-1. 7-class mask decoding.
-2. Rejection of retired 5-class masks.
-3. Scale estimation from multiple door widths.
-4. Scale cross-check from wall thickness.
-5. Closed snapped outer wall loop.
-6. Inner walls are not forced into closed loops.
-7. Windows split and replace wall segments.
-8. Door origins split and replace wall segments.
-9. Door leaf is perpendicular to origin.
-10. Door arc is a 90-degree generated arc.
-11. Floor follows outer wall when floor pixels are noisy or incomplete.
-12. SVG metadata records unit and scale status.
-13. Debug output records topology failures.
-14. Outer wall is not derived from floor/background evidence.
-15. Outer wall is not duplicated by inner wall extraction.
-16. Dangling inner walls connect to the outer loop or other inner walls
-    when evidence implies a connection.
-17. Wall and window SVG output are closed filled polygons, not
-    stroke-thickness lines; door-origin/door-leaf/door-arc are thin
-    symbolic lines/arc, with the arc centered on the hinge point and red.
-18. `vector.svg` contains no debug group, dashed marker, or retired-class
-    (`room`/`icon`/generic `opening`) group.
-19. Wall centerline segments sharing an endpoint produce one connected
-    polygon body with a clean mitred join, not duplicated/overlapping caps.
-20. Only the outer wall's synthetic band (not whole connected wall
-    components) is removed before inner-wall extraction, so a connected
-    inner-wall branch that touches the outer wall in the source mask
-    survives (task10), while the outer wall still does not resurface as a
-    duplicate inner wall.
-21. Window total width is half the host wall's total width.
-22. Ambiguous wall angles default to the nearest cardinal rather than a
-    mathematically-nearer but not-explicit diagonal.
-23. Inner walls are extracted when an outer loop exists, using a candidate
-    mask that includes door_origin (purple) pixels so a doorway gap does
-    not break the wall, then trimmed at the door once it is hosted.
-24. An inner wall endpoint within `inner_attach_outer_threshold_mm` snaps
-    to the outer wall loop; beyond the threshold it is left unchanged.
-25. Window and door-origin endpoints coincide exactly with the adjacent
-    wall segment endpoints after splitting (no gap, no overlap).
-26. Door count and location are determined solely by red door_arc
-    connected components; door_origin evidence without a matching arc
-    group never creates a door, and no door_arc evidence means no door.
-27. Door hinge prefers the orange/purple intersection when present, falls
-    back to red-arc-geometry inference plus nearest-wall snapping when
-    that intersection is missing, and always ends up snapped to a wall.
-28. Orange/purple door markers are a required pair; unpaired evidence
-    never becomes a final door and stays debug-only.
-29. Door origin/leaf length snaps to exactly 700mm or 900mm when scale is
-    resolved/estimated; 600mm and 800mm are never produced.
-30. If scale cannot be resolved or estimated, mm-gated rules (inner-wall
-    outer-attachment, window minimum width, door module snap) record the
-    affected sample as scale-blocked instead of using an arbitrary pixel
-    fallback.
+1. 7-class class-ID mask decoding.
+2. RGB run3 palette decoding.
+3. Retired 5-class mask rejection.
+4. Floor class is ignored by this restart.
+5. Scale resolution from door modules `700 mm` and `900 mm`.
+6. Scale cross-check from wall modules `100 mm` and `200 mm`.
+7. Only orthogonal final graph edges are exported.
+8. 45-degree wall evidence is rejected or orthogonally snapped; no 45-degree final wall is produced.
+9. The seven allowed point types are searched directly.
+10. No unresolved final point type exists.
+11. `1_wall_point` remains a valid free wall end and is not auto-connected to nearby topology.
+12. Evidence for a nearby branch creates `3_wall_point`, not a forced `1_wall_point` extension.
+13. `wall_window_point` endpoints pair by opposing window directions.
+14. Window pair direction determines axis alignment.
+15. Window length is at least `300 mm` when scale is known.
+16. Window replaces the corresponding wall interval.
+17. Red `door_arc` components determine final door count.
+18. Purple/orange door evidence without red arc is rejected from final output.
+19. Red arc with missing/noisy purple origin can infer a door-origin segment from host wall and orange/red evidence.
+20. Door hinge prefers orange/purple intersection when present.
+21. Door hinge can be inferred from red arc geometry when purple/orange intersection is missing.
+22. Door origin length snaps to exactly `700 mm` or `900 mm` when scale is known.
+23. Door leaf starts at the hinge and is perpendicular to the door origin.
+24. Door arc is centered on the hinge and spans exactly 90 degrees.
+25. Wall graph edges sharing endpoints render as connected polygon geometry with clean joins.
+26. Wall final geometry is black closed polygons.
+27. Window final geometry is blue closed polygons.
+28. Door origin is a thin purple symbolic line.
+29. Door leaf is a thin orange symbolic line.
+30. Door arc is a thin red symbolic arc.
+31. Final SVG contains only `wall`, `window`, and `door` visible groups for this restart.
+32. Final SVG contains no debug, dashed, retired `room`, retired `icon`, or generic `opening` group.
+33. `metrics.json` records rejected components and validation failures.
+34. `debug_overlay.png` includes rejected/unpaired evidence.
+35. Red `door_arc` bounding-box long edge resolves scale to `700 mm` or `900 mm`, and beats conflicting wall-thickness evidence (task12).
+36. Multiple red `door_arc` clusters use robust candidate voting/median scale, rejecting only obvious outliers (task12).
+37. `1_wall_point` is suppressed in favor of a window/door point type when window/door evidence sits near the wall end (task12).
+38. `wall_door_hinge_point` and `wall_door_end_point` each resolve within `200 mm` of their red cluster's bounding box (task12/task13).
+39. A red `door_arc` cluster is never rejected merely because purple/orange evidence is fragmented, missing, or noisy - the door is created with a forced hinge/end inference and a lower `door_confidence` instead (task13).
+40. Door count equals accepted red `door_arc` cluster count, and `metrics.json` reports one door-candidate record per accepted red cluster (task13).
 
-## 16. Completion Criteria
+## 18. Task14 Debugging Notes
 
-This spec is complete when v008 can consume `segformer_b0_run3` 7-class output and produce strict architectural SVG geometry with metric dimensions whenever scale can be resolved or estimated safely.
+task14 debugged the v008 implementation against `specs/vectorization_must_rules.md` using the required test case (`outputs/vectorization/v008/iteration5_run3`). The must-rules and this spec were already correct; the following implementation bugs in `src/vectorization` caused observed output to violate them and were fixed:
 
-The implementation is not complete if it still depends on the retired 5-class `opening` / `room` / `icon` assumptions.
+- `primitives/scale.py`: scale resolution required the winning red-`door_arc` voting group to cover >= `min_scale_confidence_for_metric` of *all* clusters (including ordinary noise) before reporting `scale_status="estimated"` at all, collapsing scale to `"unknown"` whenever several clusters were noisy even though a clean winning group existed - contradicting SS5 priority item 5 ("unknown ... only if no usable red door_arc cluster exists"). `confidence` is now reporting metadata only; resolution itself only requires a usable winning group. The same over-gating was removed from `snap_to_module_mm` and from the window/door creation checks in `point_detection.py` - once scale is resolved/estimated, mm conversion and object creation proceed regardless of confidence.
+- `point_detection.py` `_detect_door_points`: a red `door_arc` cluster paired with a fragmented/tiny `door_origin` component (implausibly narrow projected width) was rejected outright instead of falling back to arc-geometry inference, per SS9.3.1's forceful-inference rule. `RejectedEvidence` records for scale-blocked/too-narrow/non-cardinal-axis door rejections were also attributed to the wrong component (`door_origin`/`origin_id`, often `None`) instead of the originating red `door_arc` cluster, breaking the per-cluster metrics report (SS15).
+- `point_detection.py` `_hinge_snap_to_wall`: picked the host wall by raw nearest-distance only, unreliable at corners/junctions; now reuses the same orientation/overlap/remainder-scored `select_host_wall_for_opening` window hosting already uses.
+- `point_detection.py` `build_wall_skeleton_graph`: per-chain wall thickness used the *whole wall component's* overall `minAreaRect` short axis, which is meaningless (and can be hundreds of px) for a large non-rectangular component such as a full outer-wall loop - this wildly inflated the final wall polygon's buffer width. Replaced with a local thickness sampled from a distance transform along each chain's own pixels.
+- `point_connection.py` `build_wall_edges`: only ever connected a wall edge between a skeleton chain's own pre-existing two endpoints, never splitting at a window/door point hosted mid-chain (the common case when the CNN wall mask has no real pixel gap at the opening) - leaving that point with no wall edge at all (SS3/SS14 "host every final window and door on wall topology"). Chains are now split at any window/door point that projects onto them. A real wall free end recognized as "near opening evidence" (SS9.1) but just outside the tight node-match tolerance is now also connected to that opening point via a dedicated, narrowly-scoped fallback.
+- `point_connection.py` `validate_graph`: flagged the *correct* topology (a window/door point covered by one wall edge plus one opening edge) as `opening_point_multiple_edges`, and never checked for the real failure mode (zero wall edges = floating). Coverage is now counted per edge type; a new `floating_window_point`/`floating_door_point` issue catches genuine floating openings.
+- `wall_geometry.py` `window_edges_to_primitives`: window thickness was half the host wall's own pixel thickness, which only equals SS14's required `100 mm` when the host wall happens to be the (no longer universal) `200 mm` module - now uses the fixed `100 mm` constant directly whenever scale is resolved.
+
+Remaining, not-fully-resolved for the required test case (documented per task14 acceptance criterion 6, not further pursued to avoid pipeline redesign):
+
+- A few door hinge/end points on the most heavily fragmented wall corners (several near-duplicate sub-pixel skeleton chains from `skeletonize` noise) still end up with no wall edge, because those chains' own endpoints don't resolve to any final point either - a deeper skeleton-graph fragmentation issue at corners, not a single rule violation.
+- A small number of final wall polygon edges are within a few degrees of axis rather than exactly orthogonal, where a long wall run is split across more than one chained skeleton segment and `point_alignment.py`'s per-pair axis snapping doesn't compound transitively across the whole run.
+
+## 19. Completion Criteria
+
+This spec is complete when v008 can consume `segformer_b0_run3` 7-class output and produce strict orthogonal architectural SVG geometry for walls, windows, and doors.
+
+The implementation is not complete if it:
+
+- depends on retired 5-class assumptions
+- traces contours as final geometry
+- exports diagonal or 45-degree wall geometry
+- creates doors without red arc evidence
+- creates final windows or doors that are not hosted on wall topology
+- emits debug or unidentified visible groups in `vector.svg`
+

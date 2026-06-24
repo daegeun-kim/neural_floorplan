@@ -1,14 +1,12 @@
-"""Main entry point for the v008 strict 7-class mask-to-vector reconstruction pipeline.
+"""Main entry point for the v008 orthogonal point-graph mask-to-vector
+pipeline (spec_v008 SS7):
 
-Pipeline order (per spec_v008 SS6, reordered by task10): decode + clean masks
--> wall topology (outer + inner, px) -> resolve scale -> inner-wall
-outer-loop mm-attachment -> windows -> doors (arc-group-led) -> 45-degree
-snap + opening reprojection -> wall splitting at openings -> floor -> export.
-
-Scale is resolved right after wall extraction (not at the very end) because
-several task10 rules (inner-wall outer-attachment, window minimum width,
-door module snapping) are explicitly real-world-millimeter rules with no
-pixel fallback, so they need a resolved/estimated ScaleInfo before they run.
+    load config -> decode + reject incompatible mask -> clean masks and
+    extract connected components -> resolve scale -> search the seven point
+    types -> validate points -> align points onto orthogonal axes -> connect
+    wall/window/door-origin graph edges -> validate graph -> generate door
+    leaf/arc -> generate wall/window final geometry -> export SVG -> write
+    debug overlay + metrics.
 
 Usage:
     python -m src.vectorization.run_mask_to_vector
@@ -18,49 +16,45 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
-import math
 from pathlib import Path
 
 import numpy as np
-import yaml
-from PIL import Image, ImageDraw
 
-from .cleanup import (
-    clean_door_arc_mask,
-    clean_door_leaf_mask,
-    clean_door_origin_mask,
-    clean_wall_mask,
-    clean_window_mask,
-)
-from .decode_prediction import decode_color_mask
-from .door_extraction import extract_doors, raw_door_origin_lengths_px
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - exercised in minimal envs.
+    yaml = None
+
+from .components import extract_all_components
+from .debug import build_debug_overlay, build_metrics, write_metrics
+from .decode_prediction import IncompatibleMaskError, decode_class_id_mask, decode_color_mask
+from .door_geometry import generate_door_geometry
 from .export_svg import build_svg, save_svg
-from .floor_extraction import extract_floor
-from .geometry_rules import project_opening_onto_wall, snap_walls_to_45, split_walls_at_openings
+from .graph_types import MaskToVectorResult
 from .load_prediction import find_prediction_images, load_image_as_array
 from .masks import split_class_masks
-from .primitives import ScaleInfo
-from .primitives.scale import WALL_MODULES_MM, resolve_scale, snap_to_module_mm
-from .wall_extraction import extract_walls, wall_thickness_samples_px
-from .wall_geometry import snap_inner_endpoints_to_outer_wall_mm
-from .window_extraction import extract_windows
+from .point_alignment import align_points
+from .point_connection import connect_points
+from .point_detection import build_door_candidate_records, detect_points, validate_points
+from .scale import ScaleInfo, resolve_scale_from_components
+from .wall_geometry import wall_edges_to_primitives, window_edges_to_primitives
 
 DEFAULT_DOOR_WIDTH_MODULES_MM = (700.0, 900.0)
+DEFAULT_WALL_THICKNESS_MODULES_MM = (100.0, 200.0)
 
 
 def load_config(config_path: str | Path) -> dict:
+    if yaml is None:
+        raise RuntimeError("PyYAML is required to load vectorization config files")
     with open(config_path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
 def _scale_info_from_config(cfg: dict) -> ScaleInfo:
-    """Placeholder ScaleInfo used only before pixel evidence has been measured.
-
-    The real scale is resolved per-sample inside process_single() once wall
-    thickness and door_origin widths are available - this just carries any
-    explicit px_to_mm override from config through to resolve_scale().
-    """
+    """Placeholder ScaleInfo carrying any explicit px_to_mm override from
+    config through to resolve_scale_from_components() - the real scale is
+    resolved per-sample inside process_single() once component evidence is
+    available."""
     scale_cfg = cfg.get("scale", {})
     explicit = scale_cfg.get("explicit_px_to_mm")
     return ScaleInfo(
@@ -72,89 +66,12 @@ def _scale_info_from_config(cfg: dict) -> ScaleInfo:
     )
 
 
-def _rehost_door_geometry_after_snap(door_origins, door_leaves, door_arcs) -> None:
-    """After walls are snapped/projected, origin.start/end shift slightly.
-
-    Re-anchor each door's hinge/far point to the (now snapped) origin
-    endpoints, keeping whichever endpoint was already closest to the old
-    hinge as the hinge - the snap is small enough that it never flips which
-    physical corner is the hinge.
-    """
-    for origin, leaf, arc in zip(door_origins, door_leaves, door_arcs):
-        new_start, new_end = origin.start, origin.end
-        old_hinge = leaf.hinge_point
-        d_start = math.hypot(new_start[0] - old_hinge[0], new_start[1] - old_hinge[1])
-        d_end = math.hypot(new_end[0] - old_hinge[0], new_end[1] - old_hinge[1])
-        new_hinge, new_far = (new_start, new_end) if d_start <= d_end else (new_end, new_start)
-        leaf.hinge_point = new_hinge
-        leaf.orientation_angle = origin.orientation_angle
-        arc.hinge_point = new_hinge
-        arc.origin_far_point = new_far
-        arc.orientation_angle = origin.orientation_angle
-
-
-_DIMMED_ORANGE = (255, 200, 150)
-_SOLID_ORANGE = (255, 136, 0)
-_DIMMED_PURPLE = (210, 170, 220)
-_SOLID_PURPLE = (160, 70, 180)
-_SCALE_BLOCKED_GRAY = (160, 160, 160)
-
-
-def _build_debug_overlay(
-    rgb: np.ndarray,
-    walls,
-    windows,
-    door_origins,
-    door_leaves,
-    door_arcs,
-    outer_loop,
-    unresolved,
-    scale_info: ScaleInfo,
-) -> Image.Image:
-    """Pragmatic debug raster: wall centerlines, outer loop, host markers,
-    hinge/far-point pairs, unresolved evidence, and a scale annotation.
-
-    Per task10: orange square = hinge marker, purple circle = door-origin
-    far/end marker. Resolved (paired) doors draw both solid; unresolved
-    evidence draws a hollow/dimmed variant so pairing problems are visually
-    distinct from scale-blocked problems (gray dashed).
-    """
-    img = Image.fromarray(rgb).convert("RGB")
-    draw = ImageDraw.Draw(img)
-
-    if outer_loop is not None and outer_loop.centerline:
-        pts = outer_loop.centerline + [outer_loop.centerline[0]]
-        draw.line(pts, fill=(150, 150, 150), width=1)
-
-    for wall in walls:
-        color = (80, 80, 200) if wall.wall_type == "outer" else (80, 180, 80)
-        draw.line([wall.start, wall.end], fill=color, width=1)
-
-    for window in windows:
-        cx, cy = window.center
-        draw.ellipse([cx - 4, cy - 4, cx + 4, cy + 4], outline=(60, 120, 220), width=2)
-
-    for leaf, arc in zip(door_leaves, door_arcs):
-        hx, hy = leaf.hinge_point
-        draw.rectangle([hx - 4, hy - 4, hx + 4, hy + 4], outline=_SOLID_ORANGE, width=2)
-        fx, fy = arc.origin_far_point
-        draw.ellipse([fx - 4, fy - 4, fx + 4, fy + 4], outline=_SOLID_PURPLE, width=2)
-
-    for op in unresolved:
-        cx, cy = op.center
-        if op.opening_type.endswith("_scale_blocked"):
-            draw.rectangle([cx - 5, cy - 5, cx + 5, cy + 5], outline=_SCALE_BLOCKED_GRAY, width=1)
-        elif op.opening_type == "unresolved_door_origin":
-            draw.ellipse([cx - 4, cy - 4, cx + 4, cy + 4], outline=_DIMMED_PURPLE, width=1)
-        else:
-            draw.rectangle([cx - 5, cy - 5, cx + 5, cy + 5], outline=_DIMMED_ORANGE, width=1)
-
-    label = (
-        f"unit={scale_info.unit} status={scale_info.scale_status} "
-        f"px_to_mm={scale_info.px_to_mm} conf={scale_info.confidence:.2f}"
-    )
-    draw.text((4, 4), label, fill=(255, 0, 0))
-    return img
+def decode_prediction_image(arr: np.ndarray, rgb_tolerance: int = 20) -> np.ndarray:
+    """Decode either a class-ID mask (2D) or an RGB preview (3D) into a
+    7-class class-ID map, rejecting any retired/incompatible input."""
+    if arr.ndim == 2:
+        return decode_class_id_mask(arr)
+    return decode_color_mask(arr, tolerance=rgb_tolerance)
 
 
 def process_single(
@@ -163,171 +80,126 @@ def process_single(
     scale_info: ScaleInfo,
     output_dir: Path,
     output_filename: str | None = None,
-) -> None:
+) -> MaskToVectorResult:
     print(f"  Processing: {image_path.name}")
+    result = MaskToVectorResult()
 
+    input_cfg = config.get("input", {})
     rgb = load_image_as_array(image_path)
-    class_map = decode_color_mask(rgb)
-    raw_masks = split_class_masks(class_map)
+    class_map = decode_prediction_image(rgb, input_cfg.get("rgb_tolerance", 20))
 
-    cleanup_cfg = config.get("cleanup", {})
-    wall_mask = clean_wall_mask(
-        raw_masks["wall"],
-        min_area=cleanup_cfg.get("min_wall_component_area", 20),
-        close_gap_px=cleanup_cfg.get("close_wall_gap_px", 3),
-    )
-    window_mask = clean_window_mask(
-        raw_masks["window"],
-        min_area=cleanup_cfg.get("min_window_component_area", 8),
-    )
-    door_arc_mask = clean_door_arc_mask(
-        raw_masks["door_arc"],
-        min_area=cleanup_cfg.get("min_door_arc_component_area", 4),
-    )
-    door_leaf_mask = clean_door_leaf_mask(
-        raw_masks["door_leaf"],
-        min_area=cleanup_cfg.get("min_door_leaf_component_area", 4),
-    )
-    door_origin_mask = clean_door_origin_mask(
-        raw_masks["door_origin"],
-        min_area=cleanup_cfg.get("min_door_origin_component_area", 4),
-    )
+    all_masks = split_class_masks(class_map)
+    result.decoded_masks = all_masks
+    # Floor is ignored entirely for this restart (spec_v008 SS1/SS2).
+    masks = {k: v for k, v in all_masks.items() if k != "floor"}
+
+    components_cfg = config.get("components", {})
+    min_area_px = {
+        "wall": components_cfg.get("min_wall_area_px", 4.0),
+        "window": components_cfg.get("min_window_area_px", 4.0),
+        "door_arc": components_cfg.get("min_door_arc_area_px", 4.0),
+        "door_leaf": components_cfg.get("min_door_leaf_area_px", 2.0),
+        "door_origin": components_cfg.get("min_door_origin_area_px", 2.0),
+    }
+    components, rejected_components = extract_all_components(masks, min_area_px=min_area_px)
+    result.components = components
+    result.rejected_evidence.extend(rejected_components)
 
     scale_cfg = config.get("scale", {})
-    min_confidence_for_metric = scale_cfg.get("min_scale_confidence_for_metric", 0.70)
-    door_modules_mm = tuple(scale_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM))
-    wall_modules_mm = tuple(scale_cfg.get("wall_thickness_modules_mm", WALL_MODULES_MM))
-
-    # --- 1. Wall topology: outer rectilinear loop first, then inner walls (px) ---
-    # The outer loop must follow wall + opening (window/door) evidence only -
-    # never floor, which is the CNN's least accurate class (task08).
-    wall_cfg = config.get("walls", config.get("wall_extraction", {}))
-    opening_evidence_mask = np.maximum.reduce(
-        [window_mask, door_arc_mask, door_leaf_mask, door_origin_mask]
-    )
-    outer_walls, inner_walls, outer_polygon, outer_loop = extract_walls(
-        wall_mask,
-        opening_evidence_mask=opening_evidence_mask,
-        door_origin_mask=door_origin_mask,
-        merge_distance_px=wall_cfg.get("merge_distance_px", 6.0),
-        min_wall_length_px=wall_cfg.get("min_wall_length_px", 10.0),
-        connect_gap_px=wall_cfg.get("connect_gap_px", 20.0),
-        scale_info=scale_info,
-    )
-
-    # --- 2. Resolve metric scale early (task10): several downstream rules ---
-    # (inner-wall outer-attachment, window minimum width, door module snap)
-    # are explicit real-world-mm rules with no pixel fallback, so scale must
-    # be known before they run, not just annotated post-hoc at the end.
     explicit_px_to_mm = scale_info.px_to_mm if scale_info.scale_status == "resolved" else None
-    door_lengths_px = raw_door_origin_lengths_px(door_origin_mask)
-    wall_thickness_px = wall_thickness_samples_px(wall_mask)
-    resolved_scale = resolve_scale(
-        door_origin_lengths_px=door_lengths_px,
-        wall_thickness_px=wall_thickness_px,
+    resolved_scale = resolve_scale_from_components(
+        components.get("door_arc", []),
+        components.get("door_origin", []),
+        components.get("wall", []),
         explicit_px_to_mm=explicit_px_to_mm,
-        door_modules_mm=door_modules_mm,
-        wall_modules_mm=wall_modules_mm,
-        min_confidence=min_confidence_for_metric,
+        door_modules_mm=tuple(scale_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM)),
+        wall_modules_mm=tuple(scale_cfg.get("wall_thickness_modules_mm", DEFAULT_WALL_THICKNESS_MODULES_MM)),
+        min_confidence=scale_cfg.get("min_scale_confidence_for_metric", 0.70),
     )
-    scale_blocked: list[str] = []
+    result.scale_info = resolved_scale
 
-    for wall in outer_walls + inner_walls:
-        wall.scale_info = resolved_scale
-        wall.thickness_mm, _ = snap_to_module_mm(
-            wall.thickness, resolved_scale, wall_modules_mm, min_confidence_for_metric
-        )
-
-    # --- 3. Inner-wall endpoint attachment to the outer loop (mm, task10) ---
-    inner_attach_threshold_mm = wall_cfg.get("inner_attach_outer_threshold_mm", 500.0)
-    if resolved_scale.px_to_mm is not None and resolved_scale.scale_status in ("resolved", "estimated"):
-        snapped_endpoints = snap_inner_endpoints_to_outer_wall_mm(
-            inner_walls, outer_walls, resolved_scale, threshold_mm=inner_attach_threshold_mm
-        )
-    else:
-        snapped_endpoints = {}
-        scale_blocked.append("inner_wall_outer_attach_mm")
-    walls = outer_walls + inner_walls
-
-    # --- 4. Windows: host on walls (corner-safe), enforce 300mm minimum (px+mm) ---
-    opening_cfg = config.get("openings", {})
-    windows_cfg = config.get("windows", {})
-    min_hosted_width_px = opening_cfg.get("min_hosted_width_px", 10.0)
-    corner_ambiguity_px = opening_cfg.get("corner_ambiguity_px", 25.0)
-    min_remainder_px = opening_cfg.get("min_remainder_px", 3.0)
-    windows, unresolved_windows = extract_windows(
-        window_mask,
-        walls,
-        max_wall_dist=opening_cfg.get("max_host_wall_dist_px", 40.0),
-        min_hosted_width_px=min_hosted_width_px,
-        min_confidence_for_metric=min_confidence_for_metric,
-        scale_info=resolved_scale,
-        min_width_mm=windows_cfg.get("min_width_mm", 300.0),
-        corner_ambiguity_px=corner_ambiguity_px,
-        min_remainder_px=min_remainder_px,
-    )
-    if any(o.opening_type == "unresolved_window_scale_blocked" for o in unresolved_windows):
-        scale_blocked.append("window_min_width_mm")
-
-    # --- 5. Doors: arc-group-led, hinge from orange/purple pairing (task10) ---
+    geometry_cfg = config.get("geometry", {})
     doors_cfg = config.get("doors", {})
-    door_origins, door_leaves, door_arcs, unresolved_doors = extract_doors(
-        door_origin_mask,
-        door_leaf_mask,
-        door_arc_mask,
-        walls,
-        max_wall_dist=opening_cfg.get("max_host_wall_dist_px", 40.0),
-        min_hosted_width_px=min_hosted_width_px,
-        min_confidence_for_metric=min_confidence_for_metric,
-        scale_info=resolved_scale,
-        hinge_intersection_tolerance_px=doors_cfg.get("hinge_intersection_tolerance_px", 6.0),
-        hinge_snap_to_wall_max_dist_px=doors_cfg.get("hinge_snap_to_wall_max_dist_px", 40.0),
-        hinge_arc_inference_enabled=doors_cfg.get("hinge_arc_inference_enabled", True),
-        door_width_modules_mm=tuple(
-            doors_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM)
-        ),
-        corner_ambiguity_px=corner_ambiguity_px,
-        min_remainder_px=min_remainder_px,
+    windows_cfg = config.get("windows", {})
+
+    detect_cfg = {
+        "cardinal_tolerance_deg": geometry_cfg.get("cardinal_tolerance_deg", 25.0),
+        "max_wall_dist": geometry_cfg.get("max_host_wall_dist_px", 40.0),
+        "min_hosted_width_px": geometry_cfg.get("min_hosted_width_px", 10.0),
+        "corner_ambiguity_px": geometry_cfg.get("corner_ambiguity_px", 25.0),
+        "min_remainder_px": geometry_cfg.get("min_remainder_px", 3.0),
+        "hinge_probe_radius": doors_cfg.get("hinge_probe_radius_px", 14.0),
+        "hinge_intersection_tolerance_px": doors_cfg.get("hinge_intersection_tolerance_px", 6.0),
+        "hinge_snap_to_wall_max_dist_px": doors_cfg.get("hinge_snap_to_wall_max_dist_px", 40.0),
+        "hinge_arc_inference_enabled": doors_cfg.get("infer_origin_when_purple_missing", True),
+        "door_width_modules_mm": tuple(doors_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM)),
+        "min_window_width_mm": windows_cfg.get("min_width_mm", 300.0),
+        "free_end_opening_proximity_px": geometry_cfg.get("free_end_opening_proximity_px", 20.0),
+        "door_point_max_dist_from_arc_mm": doors_cfg.get("max_hinge_end_distance_from_arc_mm", 200.0),
+    }
+
+    # --- 1. Search the seven allowed point types directly (SS9) ---
+    points, point_rejected, wall_skeleton_edges = detect_points(components, masks, resolved_scale, detect_cfg)
+    result.rejected_evidence.extend(point_rejected)
+    result.raw_points = points
+
+    # --- 2. Validate searched point counts and attachment directions (SS10) ---
+    point_validation = validate_points(points, accepted_door_arc_count=len(components.get("door_arc", [])))
+    result.point_validation = point_validation
+
+    # --- 3. Align compatible points onto orthogonal axes (SS11) ---
+    align_cfg = {
+        "axis_alignment_tolerance_mm": geometry_cfg.get("axis_alignment_tolerance_mm", 500.0),
+        "px_fallback_tolerance": geometry_cfg.get("px_fallback_tolerance_px", 6.0),
+        "corridor_slack_px": geometry_cfg.get("corridor_slack_px", 20.0),
+    }
+    aligned_points, alignment_issues = align_points(
+        points, components.get("wall", []), resolved_scale, align_cfg, wall_skeleton_edges
     )
-    if any(o.opening_type == "unresolved_door_scale_blocked" for o in unresolved_doors):
-        scale_blocked.append("door_module_snap_mm")
-    unresolved = unresolved_windows + unresolved_doors
+    result.aligned_points = aligned_points
 
-    # --- 6. Snap walls to 45 degrees (orthogonal-first), then re-project hosted evidence ---
-    walls = snap_walls_to_45(
-        walls,
-        ortho_snap_deg=wall_cfg.get("ortho_snap_degrees", 20.0),
-        diagonal_snap_deg=wall_cfg.get("diagonal_snap_degrees", 10.0),
+    # task13: one door-candidate report per accepted red door_arc cluster.
+    result.door_candidates = build_door_candidate_records(
+        components.get("door_arc", []), aligned_points, result.rejected_evidence,
+        masks, components.get("wall", []), resolved_scale,
     )
-    wall_map = {w.primitive_id: w for w in walls}
-    for hosted in (*windows, *door_origins):
-        if hosted.host_wall_id and hosted.host_wall_id in wall_map:
-            project_opening_onto_wall(hosted, wall_map[hosted.host_wall_id])
-    _rehost_door_geometry_after_snap(door_origins, door_leaves, door_arcs)
 
-    # --- 7. Split walls at the now-snapped hosted windows/door-origins ---
-    hosted_for_split = [o for o in (*windows, *door_origins) if o.host_wall_id]
-    if hosted_for_split:
-        walls = split_walls_at_openings(walls, hosted_for_split)
+    # --- 4. Connect aligned points into wall/window/door-origin edges (SS12) ---
+    connect_cfg = {
+        "node_match_tolerance_px": geometry_cfg.get("node_match_tolerance_px", 12.0),
+        "opening_match_tolerance_px": geometry_cfg.get("free_end_opening_proximity_px", 20.0),
+    }
+    edges, graph_validation = connect_points(aligned_points, wall_skeleton_edges, resolved_scale, connect_cfg)
+    result.edges = edges
+    result.graph_validation = alignment_issues + graph_validation
 
-    # --- 8. Floor: direct translation of the outer wall loop ---
-    floor = extract_floor(outer_polygon, scale_info=resolved_scale)
+    # --- 5. Generate door leaf and door arc geometry (SS13) ---
+    door_origin_edges = [e for e in edges if e.edge_type == "door_origin"]
+    door_origins, door_leaves, door_arcs = generate_door_geometry(
+        aligned_points, door_origin_edges, masks.get("door_leaf"), masks.get("door_origin"), resolved_scale,
+    )
+    result.door_origins = door_origins
+    result.door_leaves = door_leaves
+    result.door_arcs = door_arcs
 
-    # --- 9. Export SVG + debug overlay + metrics ---
+    # --- 6. Generate wall and window final geometry (SS14) ---
+    wall_edges = [e for e in edges if e.edge_type == "wall"]
+    window_edges = [e for e in edges if e.edge_type == "window"]
+    walls = wall_edges_to_primitives(wall_edges, resolved_scale)
+    windows = window_edges_to_primitives(window_edges, resolved_scale)
+    result.walls = walls
+    result.windows = windows
+
+    # --- 7. Export SVG ---
     h, w = rgb.shape[:2]
     svg_cfg = config.get("svg", {})
     svg_content = build_svg(
-        image_width=w,
-        image_height=h,
-        walls=walls,
-        windows=windows,
-        door_origins=door_origins,
-        door_leaves=door_leaves,
-        door_arcs=door_arcs,
-        floor=floor,
-        scale_info=resolved_scale,
-        svg_config=svg_cfg,
+        image_width=w, image_height=h,
+        walls=walls, windows=windows,
+        door_origins=door_origins, door_leaves=door_leaves, door_arcs=door_arcs,
+        scale_info=resolved_scale, svg_config=svg_cfg,
     )
+    result.svg = svg_content
 
     if output_filename is not None:
         out_path = output_dir / output_filename
@@ -336,49 +208,30 @@ def process_single(
         out_path = output_dir / f"{stem}_vector.svg"
     save_svg(svg_content, out_path)
 
-    debug_overlay = _build_debug_overlay(
-        rgb, walls, windows, door_origins, door_leaves, door_arcs, outer_loop, unresolved, resolved_scale
+    # --- 8. Write debug overlay and metrics (SS15) ---
+    debug_overlay = build_debug_overlay(
+        rgb, aligned_points, edges, result.rejected_evidence, resolved_scale, result.door_candidates
     )
     debug_overlay.save(out_path.with_name("debug_overlay.png"))
 
-    unresolved_doors_by_type: dict[str, int] = {}
-    for op in unresolved_doors:
-        unresolved_doors_by_type[op.opening_type] = unresolved_doors_by_type.get(op.opening_type, 0) + 1
-
-    metrics = {
-        "image": image_path.name,
-        "walls": {
-            "outer": len(outer_walls),
-            "inner": len(inner_walls),
-            "inner_attached_to_outer": len(snapped_endpoints),
-            "final": len(walls),
-        },
-        "windows": {"resolved": len(windows), "unresolved": len(unresolved_windows)},
-        "doors": {
-            "resolved": len(door_origins),
-            "unresolved": len(unresolved_doors),
-            "unresolved_by_type": unresolved_doors_by_type,
-        },
-        "floor_present": floor is not None,
-        "outer_loop_closed": outer_loop.is_closed() if outer_loop is not None else False,
-        "scale_blocked": scale_blocked,
-        "scale": {
-            "unit": resolved_scale.unit,
-            "px_to_mm": resolved_scale.px_to_mm,
-            "scale_status": resolved_scale.scale_status,
-            "scale_source": resolved_scale.scale_source,
-            "confidence": resolved_scale.confidence,
-        },
-    }
-    (out_path.with_name("metrics.json")).write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    metrics = build_metrics(
+        image_name=image_path.name,
+        components=components,
+        rejected_evidence=result.rejected_evidence,
+        points=aligned_points,
+        edges=edges,
+        validation_issues=result.validation_issues,
+        scale_info=resolved_scale,
+        door_candidates=result.door_candidates,
+    )
+    write_metrics(out_path.with_name("metrics.json"), metrics)
 
     print(
-        f"    walls={len(walls)} (outer={len(outer_walls)}, inner={len(inner_walls)}), "
-        f"floor={'yes' if floor else 'no'}, windows={len(windows)}, doors={len(door_origins)}, "
-        f"unresolved={len(unresolved)}, scale={resolved_scale.scale_status}, "
-        f"scale_blocked={scale_blocked}"
+        f"    walls={len(walls)}, windows={len(windows)}, doors={len(door_origins)}, "
+        f"rejected={len(result.rejected_evidence)}, scale={resolved_scale.scale_status}"
     )
     print(f"    -> {out_path}")
+    return result
 
 
 def run(config_path: str | Path = "configs/vectorization_v008.yaml") -> None:
@@ -399,18 +252,17 @@ def run(config_path: str | Path = "configs/vectorization_v008.yaml") -> None:
 
     print(f"Found {len(images)} prediction image(s) in {preview_dir}")
     for img_path in images:
-        process_single(img_path, config, scale_info, output_dir)
+        try:
+            process_single(img_path, config, scale_info, output_dir)
+        except IncompatibleMaskError as exc:
+            print(f"  Skipping {img_path.name}: {exc}")
 
     print("\nDone.")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Strict 7-class mask-to-vector pipeline (v008)")
-    parser.add_argument(
-        "--config",
-        default="configs/vectorization_v008.yaml",
-        help="Path to YAML config file",
-    )
+    parser = argparse.ArgumentParser(description="Orthogonal point-graph mask-to-vector pipeline (v008)")
+    parser.add_argument("--config", default="configs/vectorization_v008.yaml", help="Path to YAML config file")
     args = parser.parse_args()
     run(args.config)
 

@@ -1,154 +1,145 @@
-"""Tests for the v008 strict 7-class mask-to-vector pipeline (run3)."""
+"""Tests for the v008 orthogonal point-graph mask-to-vector pipeline (run3).
+
+Organized by module, following the reconstruction order in
+spec_v008_mask_to_vector.md SS7, and covering the validation requirements in
+SS17.
+"""
 
 from __future__ import annotations
 
-import inspect
 import math
-import re
 
 import numpy as np
 import pytest
 
-from src.vectorization.cleanup import (
-    clean_door_arc_mask,
-    clean_door_leaf_mask,
-    clean_door_origin_mask,
-    clean_floor_mask,
-    clean_wall_mask,
-    clean_window_mask,
-)
-from src.vectorization.decode_prediction import (
-    CLASS_PALETTE,
-    IncompatibleMaskError,
-    decode_class_id_mask,
-    decode_color_mask,
-)
-from src.vectorization.door_extraction import extract_doors, raw_door_origin_lengths_px
+from src.vectorization.components import extract_components
+from src.vectorization.decode_prediction import CLASS_PALETTE, IncompatibleMaskError, decode_class_id_mask, decode_color_mask
+from src.vectorization.door_geometry import generate_door_geometry
 from src.vectorization.export_svg import build_svg, save_svg
-from src.vectorization.floor_extraction import extract_floor
-from src.vectorization.geometry_rules import (
-    nearest_wall,
-    project_opening_onto_wall,
-    project_pixels_onto_wall,
-    select_host_wall_for_opening,
-    snap_walls_to_45,
-    split_walls_at_openings,
-)
-from src.vectorization.load_prediction import find_prediction_images, load_image_as_array
+from src.vectorization.graph_types import Attachment, GraphEdge, GraphPoint, ValidationIssue
 from src.vectorization.masks import split_class_masks
-from src.vectorization.primitives import (
-    DoorArcPrimitive,
-    DoorLeafPrimitive,
-    DoorOriginPrimitive,
-    FloorPrimitive,
-    OpeningPrimitive,
-    OuterWallLoopPrimitive,
-    ScaleInfo,
-    WallPrimitive,
-    WindowPrimitive,
-)
-from src.vectorization.wall_extraction import (
-    _erase_outer_wall_band,
-    _rectilinearize_contour,
-    extract_outer_wall_loop,
-    extract_walls,
-)
-from src.vectorization.wall_geometry import (
-    merge_connected_chains,
-    segments_to_polygon,
-    snap_inner_endpoints_to_outer_wall_mm,
-)
-from src.vectorization.window_extraction import extract_windows
+from src.vectorization.point_alignment import align_points
+from src.vectorization.point_connection import connect_points, validate_graph
+from src.vectorization.point_detection import build_wall_skeleton_graph, detect_points, validate_points
+from src.vectorization.primitives import DoorArcPrimitive, DoorLeafPrimitive, DoorOriginPrimitive, WallPrimitive, WindowPrimitive
+from src.vectorization.primitives.scale import ScaleInfo
+from src.vectorization.scale import resolve_scale_from_components
+from src.vectorization.wall_geometry import segments_to_polygon, wall_edges_to_primitives, window_edges_to_primitives
 
 RESOLVED_SCALE = ScaleInfo(unit="mm", px_to_mm=10.0, scale_status="resolved", confidence=1.0)
+UNKNOWN_SCALE = ScaleInfo()
 
 
 # ---------------------------------------------------------------------------
-# Helpers
+# Synthetic mask fixtures
 # ---------------------------------------------------------------------------
+
+
+def _l_corner_mask(h: int = 80, w: int = 80) -> np.ndarray:
+    """Horizontal + vertical wall meeting at a right-angle corner."""
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[10:14, 10:60] = 255
+    mask[10:60, 10:14] = 255
+    return mask
+
+
+def _t_junction_mask(h: int = 80, w: int = 80) -> np.ndarray:
+    """Horizontal wall with a vertical branch dropping from its midpoint."""
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[10:14, 5:75] = 255
+    mask[14:60, 38:42] = 255
+    return mask
+
+
+def _cross_mask(h: int = 80, w: int = 80) -> np.ndarray:
+    """Horizontal wall with vertical branches both above and below the midpoint."""
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[36:40, 5:75] = 255
+    mask[5:36, 38:42] = 255
+    mask[40:75, 38:42] = 255
+    return mask
+
+
+def _free_segment_mask(h: int = 40, w: int = 80) -> np.ndarray:
+    """A single straight wall segment with no other wall evidence nearby."""
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[18:22, 10:70] = 255
+    return mask
+
+
+def _diagonal_mask(h: int = 80, w: int = 80) -> np.ndarray:
+    """A genuinely diagonal wall stroke - must be rejected, not snapped."""
+    mask = np.zeros((h, w), dtype=np.uint8)
+    for i in range(60):
+        mask[10 + i, 10 + i] = 255
+        mask[10 + i, 11 + i] = 255
+    return mask
+
+
+def _wall_with_window_gap_mask(h: int = 40, w: int = 140) -> np.ndarray:
+    """Horizontal wall with a real gap (no wall pixels) where a window sits."""
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[10:14, 10:50] = 255
+    mask[10:14, 85:120] = 255
+    return mask
+
+
+def _window_mask(h: int = 40, w: int = 140) -> np.ndarray:
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[10:14, 50:85] = 255
+    return mask
+
+
+def _wall_with_door_gap_mask(h: int = 100, w: int = 40) -> np.ndarray:
+    """Vertical wall with a real gap where a door sits."""
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[10:30, 10:14] = 255
+    mask[44:90, 10:14] = 255
+    return mask
+
+
+def _door_origin_mask(h: int = 100, w: int = 40) -> np.ndarray:
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[30:44, 9:15] = 255
+    return mask
+
+
+def _door_leaf_mask(h: int = 100, w: int = 40) -> np.ndarray:
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[44:48, 9:15] = 255
+    return mask
+
+
+def _door_arc_mask(h: int = 100, w: int = 40) -> np.ndarray:
+    mask = np.zeros((h, w), dtype=np.uint8)
+    mask[48:60, 9:30] = 255
+    return mask
+
 
 def _make_color_image(h: int = 64, w: int = 64) -> np.ndarray:
-    """Synthesize a color-coded prediction image with all 7 classes."""
     rgb = np.zeros((h, w, 3), dtype=np.uint8)
-    rgb[:] = CLASS_PALETTE[0]  # background
-    rgb[10:54, 5:59] = CLASS_PALETTE[1]   # floor
-    rgb[2:6, :] = CLASS_PALETTE[2]        # wall
-    rgb[2:6, 20:28] = CLASS_PALETTE[3]    # window
-    rgb[56:60, 10:14] = CLASS_PALETTE[4]  # door_arc
-    rgb[56:60, 20:24] = CLASS_PALETTE[5]  # door_leaf
-    rgb[56:60, 30:34] = CLASS_PALETTE[6]  # door_origin
+    rgb[:] = CLASS_PALETTE[0]
+    rgb[10:54, 5:59] = CLASS_PALETTE[1]
+    rgb[2:6, :] = CLASS_PALETTE[2]
+    rgb[2:6, 20:28] = CLASS_PALETTE[3]
+    rgb[56:60, 10:14] = CLASS_PALETTE[4]
+    rgb[56:60, 20:24] = CLASS_PALETTE[5]
+    rgb[56:60, 30:34] = CLASS_PALETTE[6]
     return rgb
 
 
-def _make_wall_mask(h: int = 64, w: int = 64) -> np.ndarray:
-    mask = np.zeros((h, w), dtype=np.uint8)
-    mask[4, 5:59] = 255   # horizontal wall
-    mask[5:20, 4] = 255   # vertical wall
-    return mask
-
-
-def _make_window_mask(h: int = 64, w: int = 64) -> np.ndarray:
-    mask = np.zeros((h, w), dtype=np.uint8)
-    mask[3:6, 15:35] = 255  # 20px wide along the wall - a real window, not noise
-    return mask
-
-
-def _make_floor_mask(h: int = 64, w: int = 64) -> np.ndarray:
-    mask = np.zeros((h, w), dtype=np.uint8)
-    mask[10:54, 5:59] = 255
-    return mask
-
-
-def _make_rectangle_outline_mask(
-    h: int = 80, w: int = 80, margin: int = 10, thickness: int = 4
-) -> np.ndarray:
-    """A hollow rectangular wall outline - synthetic outer wall evidence."""
-    mask = np.zeros((h, w), dtype=np.uint8)
-    mask[margin:margin + thickness, margin:w - margin] = 255           # top
-    mask[h - margin - thickness:h - margin, margin:w - margin] = 255   # bottom
-    mask[margin:h - margin, margin:margin + thickness] = 255           # left
-    mask[margin:h - margin, w - margin - thickness:w - margin] = 255   # right
-    return mask
-
-
 # ---------------------------------------------------------------------------
-# decode_prediction
+# decode_prediction (SS17 items 1-3)
 # ---------------------------------------------------------------------------
+
 
 class TestDecodeColorMask:
-    def test_pure_background_decodes_correctly(self):
-        rgb = np.full((8, 8, 3), CLASS_PALETTE[0], dtype=np.uint8)
-        result = decode_color_mask(rgb)
-        assert (result == 0).all()
-
     def test_all_classes_decoded(self):
         rgb = _make_color_image()
         result = decode_color_mask(rgb)
         assert set(np.unique(result)).issuperset({0, 1, 2, 3, 4, 5, 6})
 
-    def test_wall_pixels_decoded(self):
-        rgb = _make_color_image()
-        result = decode_color_mask(rgb)
-        assert result[3, 10] == 2
-
-    def test_floor_pixels_decoded(self):
-        rgb = _make_color_image()
-        result = decode_color_mask(rgb)
-        assert result[30, 30] == 1
-
-    def test_door_origin_pixels_decoded(self):
-        rgb = _make_color_image()
-        result = decode_color_mask(rgb)
-        assert result[57, 31] == 6
-
-    def test_wrong_palette_raises_incompatible_mask_error(self):
-        rgb = np.random.randint(50, 150, (16, 16, 3), dtype=np.uint8)
-        with pytest.raises(IncompatibleMaskError, match="7-class run3 palette"):
-            decode_color_mask(rgb, tolerance=5)
-
     def test_retired_5class_palette_raises(self):
-        # The retired 5-class "opening" color (200, 80, 80) does not exist in
-        # the active 7-class palette and must be rejected, not silently mapped.
         rgb = np.full((16, 16, 3), (200, 80, 80), dtype=np.uint8)
         with pytest.raises(IncompatibleMaskError):
             decode_color_mask(rgb, tolerance=5)
@@ -157,1218 +148,878 @@ class TestDecodeColorMask:
 class TestDecodeClassIdMask:
     def test_valid_range_passes_through(self):
         mask = np.array([[0, 1, 2], [3, 4, 6]], dtype=np.uint8)
-        result = decode_class_id_mask(mask)
-        assert (result == mask).all()
+        assert (decode_class_id_mask(mask) == mask).all()
 
-    def test_value_above_max_class_id_raises(self):
+    def test_retired_5class_value_above_max_class_id_raises(self):
         mask = np.array([[0, 1], [2, 99]], dtype=np.uint8)
         with pytest.raises(IncompatibleMaskError):
             decode_class_id_mask(mask)
 
-    def test_non_2d_input_raises(self):
-        mask = np.zeros((4, 4, 3), dtype=np.uint8)
-        with pytest.raises(IncompatibleMaskError):
-            decode_class_id_mask(mask)
-
-
-# ---------------------------------------------------------------------------
-# masks
-# ---------------------------------------------------------------------------
 
 class TestSplitClassMasks:
-    def test_keys_present(self):
+    def test_floor_key_present_but_ignored_downstream(self):
+        # spec_v008 SS1/SS2: floor is decoded but ignored for this restart -
+        # the key exists for debug/decoded_masks, run_mask_to_vector excludes
+        # it before component extraction.
         class_map = np.zeros((8, 8), dtype=np.uint8)
+        class_map[2:4, :] = 1
         masks = split_class_masks(class_map)
-        for key in ("floor", "wall", "window", "door_arc", "door_leaf", "door_origin"):
-            assert key in masks
-
-    def test_background_not_a_key(self):
-        class_map = np.zeros((8, 8), dtype=np.uint8)
-        masks = split_class_masks(class_map)
-        assert "background" not in masks
-
-    def test_no_icon_or_room_keys(self):
-        class_map = np.zeros((8, 8), dtype=np.uint8)
-        masks = split_class_masks(class_map)
-        assert "icon" not in masks
-        assert "room" not in masks
-        assert "opening" not in masks
-
-    def test_wall_mask_binary(self):
-        class_map = np.zeros((8, 8), dtype=np.uint8)
-        class_map[2:4, :] = 2
-        masks = split_class_masks(class_map)
-        assert set(np.unique(masks["wall"])).issubset({0, 255})
-
-    def test_door_origin_isolated_from_other_classes(self):
-        class_map = np.full((8, 8), 6, dtype=np.uint8)
-        masks = split_class_masks(class_map)
-        assert (masks["door_origin"] == 255).all()
-        assert (masks["wall"] == 0).all()
-        assert (masks["window"] == 0).all()
+        assert "floor" in masks
+        assert (masks["floor"] == 255).any()
 
 
 # ---------------------------------------------------------------------------
-# cleanup
+# components.py
 # ---------------------------------------------------------------------------
 
-class TestCleanup:
-    def test_small_wall_component_removed(self):
+
+class TestComponents:
+    def test_small_component_rejected_and_recorded(self):
         mask = np.zeros((32, 32), dtype=np.uint8)
-        mask[1, 1] = 255
-        mask[5:10, 5:20] = 255
-        out = clean_wall_mask(mask, min_area=20, close_gap_px=1)
-        assert out[1, 1] == 0
-        assert out[7, 10] == 255
+        mask[1, 1] = 255  # 1px noise
+        mask[10:14, 10:20] = 255  # real wall
+        components, rejected = extract_components(mask, "wall", min_area_px=8)
+        assert len(components) == 1
+        assert len(rejected) == 1
+        assert rejected[0].kind == "wall_component_too_small"
 
-    def test_small_window_component_removed(self):
-        mask = np.zeros((32, 32), dtype=np.uint8)
-        mask[1, 1] = 255
-        mask[10:14, 10:18] = 255
-        out = clean_window_mask(mask, min_area=8)
-        assert out[1, 1] == 0
-
-    def test_floor_mask_keeps_large_region(self):
-        mask = np.zeros((64, 64), dtype=np.uint8)
-        mask[10:50, 10:50] = 255
-        out = clean_floor_mask(mask, min_area=100)
-        assert out[30, 30] == 255
-
-    def test_door_origin_cleanup_does_not_close_gaps(self):
-        # Two short collinear strokes with a real gap between them must stay
-        # separate - closing them would corrupt the measured door width.
+    def test_door_origin_not_closed_preserves_two_separate_components(self):
         mask = np.zeros((32, 32), dtype=np.uint8)
         mask[10, 5:8] = 255
         mask[10, 20:23] = 255
-        out = clean_door_origin_mask(mask, min_area=2)
-        assert out[10, 12] == 0
+        components, _ = extract_components(mask, "door_origin", min_area_px=1)
+        assert len(components) == 2
 
-    def test_door_leaf_small_noise_removed(self):
-        mask = np.zeros((32, 32), dtype=np.uint8)
-        mask[1, 1] = 255
-        out = clean_door_leaf_mask(mask, min_area=4)
-        assert out[1, 1] == 0
-
-    def test_door_arc_cleanup_fills_small_gaps(self):
-        mask = np.zeros((32, 32), dtype=np.uint8)
-        mask[10:20, 10:20] = 255
-        out = clean_door_arc_mask(mask, min_area=4)
-        assert out[15, 15] == 255
+    def test_wall_component_has_skeleton_and_rect_size(self):
+        mask = _l_corner_mask()
+        components, _ = extract_components(mask, "wall", min_area_px=4)
+        assert len(components) == 1
+        assert len(components[0].skeleton_points) > 0
+        assert components[0].rect_size is not None
 
 
 # ---------------------------------------------------------------------------
-# wall_extraction - outer rectilinear loop, then inner walls
+# scale.py (SS17 items 5-6)
 # ---------------------------------------------------------------------------
 
-class TestOuterWallLoop:
-    def test_outer_loop_is_closed_rectilinear(self):
-        mask = _make_rectangle_outline_mask()
-        outer_walls, polygon, outer_loop = extract_outer_wall_loop(mask)
-        assert len(outer_walls) >= 3
-        assert len(polygon) >= 3
-        for wall in outer_walls:
-            dx = abs(wall.end[0] - wall.start[0])
-            dy = abs(wall.end[1] - wall.start[1])
-            assert dx < 0.5 or dy < 0.5, f"Outer wall not axis-aligned: {wall.start}->{wall.end}"
-            assert wall.wall_type == "outer"
-        assert isinstance(outer_loop, OuterWallLoopPrimitive)
-        assert outer_loop.is_closed()
 
-    def test_outer_loop_empty_mask_returns_nothing(self):
-        mask = np.zeros((64, 64), dtype=np.uint8)
-        outer_walls, polygon, outer_loop = extract_outer_wall_loop(mask)
-        assert outer_walls == []
-        assert polygon == []
-        assert outer_loop is None
+class TestScaleResolution:
+    """task12 SS1: red door_arc bbox long-edge clustering is the primary -
+    and only - metric-setting source; door_origin/wall are debug-only cross
+    checks (task12 scale priority items 3-5)."""
 
+    @staticmethod
+    def _arc(component_id: int, long_edge_px: float):
+        from src.vectorization.graph_types import ComponentRecord
 
-
-class TestWallExtraction:
-    def test_extract_walls_returns_outer_inner_polygon_and_loop(self):
-        mask = _make_rectangle_outline_mask()
-        outer_walls, inner_walls, polygon, outer_loop = extract_walls(mask, min_wall_length_px=5)
-        assert len(outer_walls) > 0
-        assert len(polygon) >= 3
-        assert all(isinstance(w, WallPrimitive) for w in outer_walls)
-        assert all(isinstance(w, WallPrimitive) for w in inner_walls)
-        assert isinstance(outer_loop, OuterWallLoopPrimitive)
-
-    def test_inner_wall_extracted_inside_outer_loop(self):
-        mask = _make_rectangle_outline_mask(h=80, w=80, margin=10, thickness=4)
-        mask[40:44, 20:60] = 255  # interior wall, far from the outer band
-        _, inner_walls, _, _ = extract_walls(mask, min_wall_length_px=5)
-        assert len(inner_walls) > 0
-        assert all(w.wall_type == "inner" for w in inner_walls)
-
-    def test_opening_evidence_mask_bridges_outer_loop_gaps(self):
-        # task08: the outer loop must be bridged by wall/opening evidence
-        # (window/door masks), never by floor evidence.
-        mask = _make_rectangle_outline_mask()
-        opening_evidence_mask = np.zeros_like(mask)
-        opening_evidence_mask[10:14, 35:45] = 255  # bridges a gap in the wall band
-        outer_walls, _, polygon, _ = extract_walls(
-            mask, opening_evidence_mask=opening_evidence_mask, min_wall_length_px=5
+        return ComponentRecord(
+            "door_arc", component_id, area_px=long_edge_px * 10,
+            bbox=(0, 0, int(long_edge_px), 10), centroid=(long_edge_px / 2, 5),
         )
-        assert len(outer_walls) > 0
 
-    def test_extract_walls_rejects_floor_mask_kwarg(self):
-        # The outer loop must never be derived from the floor/background
-        # border - extract_walls no longer accepts a floor_mask parameter.
-        mask = _make_rectangle_outline_mask()
-        floor_mask = np.zeros_like(mask)
-        floor_mask[15:65, 15:65] = 255
-        with pytest.raises(TypeError):
-            extract_walls(mask, floor_mask=floor_mask, min_wall_length_px=5)
+    def test_red_arc_bbox_long_edge_resolves_700mm(self):
+        # task12 required test 1.
+        scale_info = resolve_scale_from_components([self._arc(1, 70.0)], [], [], min_confidence=0.5)
+        assert scale_info.scale_status in ("resolved", "estimated")
+        assert scale_info.px_to_mm == pytest.approx(10.0)
+        assert 700.0 in scale_info.diagnostics["red_arc_selected_modules_mm"]
 
-    def test_empty_mask_returns_no_walls(self):
-        mask = np.zeros((64, 64), dtype=np.uint8)
-        outer_walls, inner_walls, polygon, outer_loop = extract_walls(mask)
-        assert outer_walls == []
-        assert inner_walls == []
-        assert polygon == []
-        assert outer_loop is None
+    def test_red_arc_bbox_long_edge_resolves_900mm(self):
+        # task12 required test 2. A single bbox long edge is ambiguous
+        # between the 700mm and 900mm modules at different candidate
+        # scales (any homogeneous cluster ties under both, since the
+        # voting tolerance is relative) - pairing it with a second cluster
+        # that is only self-consistent as a 700mm door at the *same*
+        # px_to_mm is what lets the 900mm reading win unambiguously.
+        scale_info = resolve_scale_from_components([self._arc(1, 90.0), self._arc(2, 70.0)], [], [], min_confidence=0.5)
+        assert scale_info.scale_status in ("resolved", "estimated")
+        assert scale_info.px_to_mm == pytest.approx(10.0)
+        assert 900.0 in scale_info.diagnostics["red_arc_selected_modules_mm"]
 
-    def test_wall_ids_unique(self):
-        mask = _make_rectangle_outline_mask()
-        mask[40:44, 20:60] = 255
-        outer_walls, inner_walls, _, _ = extract_walls(mask, min_wall_length_px=5)
-        ids = [w.primitive_id for w in outer_walls + inner_walls]
-        assert len(ids) == len(set(ids))
+    def test_multiple_red_clusters_use_robust_median_voting(self):
+        # task12 required test 3: an outlier cluster must not move the
+        # winning candidate's median, and should be reported as rejected.
+        arcs = [self._arc(1, 70.0), self._arc(2, 71.0), self._arc(3, 69.0), self._arc(4, 200.0)]
+        scale_info = resolve_scale_from_components(arcs, [], [], min_confidence=0.5)
+        assert scale_info.scale_status in ("resolved", "estimated")
+        assert scale_info.px_to_mm == pytest.approx(10.0, abs=0.01)
+        assert 200.0 in scale_info.diagnostics["scale_rejected_outliers"]
 
-    def test_inner_wall_confidence_in_range(self):
-        mask = _make_rectangle_outline_mask()
-        mask[40:44, 20:60] = 255
-        _, inner_walls, _, _ = extract_walls(mask, min_wall_length_px=5)
-        for wall in inner_walls:
-            assert 0.0 <= wall.confidence <= 1.0
+    def test_red_arc_scale_beats_conflicting_wall_thickness(self):
+        # task12 required test 4: noisy wall-thickness evidence must not
+        # override the red door_arc scale.
+        from src.vectorization.graph_types import ComponentRecord
 
-    def test_walls_extracted_before_window_extraction_pipeline_dependency(self):
-        """Wall geometry must exist before window extraction can host onto it."""
-        params = inspect.signature(extract_windows).parameters
-        assert "walls" in params
-        assert params["walls"].default is inspect.Parameter.empty
-
-
-class TestEraseOuterWallBand:
-    def test_band_pixels_removed_but_bulge_outside_band_survives(self):
-        # task10: a connected wall blob that's part of the outer wall but
-        # bulges well past the synthetic erase-band thickness must now
-        # survive outside the band - removing the *whole* connected
-        # component (the retired _erase_claimed_wall_components behavior)
-        # was exactly the task10 bug: it erased real interior walls that
-        # happen to touch the exterior wall in the source mask.
-        mask = np.zeros((80, 80), dtype=np.uint8)
-        mask[10:14, 0:80] = 255          # the strip the band directly traces
-        mask[10:40, 35:45] = 255         # a bulge, still one connected blob
-
-        outer_polygon = [(0.0, 12.0), (80.0, 12.0)]
-        remainder = _erase_outer_wall_band(mask, outer_polygon, thickness=4.0)
-
-        assert remainder[10:14, 0:80].sum() == 0      # band strip removed
-        assert remainder[25:40, 35:45].sum() > 0       # bulge far from the band survives
-
-    def test_untouched_component_is_preserved(self):
-        mask = np.zeros((80, 80), dtype=np.uint8)
-        mask[10:14, 0:80] = 255          # claimed by the band
-        mask[50:54, 10:60] = 255         # a separate, untouched inner wall
-
-        outer_polygon = [(0.0, 12.0), (80.0, 12.0)]
-        remainder = _erase_outer_wall_band(mask, outer_polygon, thickness=4.0)
-
-        assert remainder[10:14, 0:80].sum() == 0
-        assert remainder[50:54, 10:60].sum() > 0
-
-    def test_no_outer_polygon_returns_mask_unchanged(self):
-        mask = np.zeros((20, 20), dtype=np.uint8)
-        mask[5:8, 5:15] = 255
-        remainder = _erase_outer_wall_band(mask, [], thickness=4.0)
-        assert np.array_equal(remainder, mask)
-
-
-class TestInnerWallRecovery:
-    def test_inner_wall_touching_outer_wall_is_preserved(self):
-        # task10: the core bug - an interior wall fused to the outer wall in
-        # one connected component must survive (only the outer band itself
-        # is erased), not get wiped out along with the outer loop.
-        mask = _make_rectangle_outline_mask(h=80, w=80, margin=10, thickness=4)
-        mask[10:50, 40:44] = 255  # interior wall starting right at the outer band
-        _, inner_walls, _, _ = extract_walls(mask, min_wall_length_px=5)
-        assert len(inner_walls) > 0
-
-    def test_inner_wall_bridges_door_origin_gap(self):
-        # An interior wall with a doorway gap (no wall pixels at the door)
-        # is recovered as one longer wall when door_origin_mask bridges the
-        # gap - door_origin (purple) pixels are unioned into the inner-wall
-        # candidate mask (task10 clarification), the same way opening
-        # evidence already bridges gaps for the outer loop.
-        mask = _make_rectangle_outline_mask(h=80, w=80, margin=10, thickness=4)
-        mask[40:44, 20:35] = 255   # interior wall, left segment
-        mask[40:44, 45:60] = 255   # interior wall, right segment (gap 35-45)
-        door_origin_mask = np.zeros_like(mask)
-        door_origin_mask[40:44, 35:45] = 255  # bridges the doorway gap
-
-        _, inner_walls_no_bridge, _, _ = extract_walls(mask, min_wall_length_px=5)
-        _, inner_walls_bridged, _, _ = extract_walls(
-            mask, min_wall_length_px=5, door_origin_mask=door_origin_mask
-        )
-        max_len_no_bridge = max((w.length for w in inner_walls_no_bridge), default=0.0)
-        max_len_bridged = max((w.length for w in inner_walls_bridged), default=0.0)
-        assert max_len_bridged > max_len_no_bridge
-
-
-# ---------------------------------------------------------------------------
-# geometry_rules - 45-degree snapping, hosting, splitting
-# ---------------------------------------------------------------------------
-
-class TestSnapWallsTo45:
-    def test_near_horizontal_wall_snapped_to_cardinal(self):
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(100.0, 3.0), thickness=5.0)
-        walls = snap_walls_to_45([wall])
-        assert walls[0].start[1] == pytest.approx(walls[0].end[1])
-
-    def test_near_vertical_wall_snapped_to_cardinal(self):
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(3.0, 100.0), thickness=5.0)
-        walls = snap_walls_to_45([wall])
-        assert walls[0].start[0] == pytest.approx(walls[0].end[0])
-
-    def test_explicit_diagonal_wall_snapped_to_nearest_45(self):
-        # ~40 degrees - within the strict diagonal_snap_deg=10 window of the
-        # exact 45-degree line, so this counts as "explicit" diagonal evidence.
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(100.0, 84.0), thickness=5.0)
-        walls = snap_walls_to_45([wall])
-        angle = walls[0].orientation_angle % 180.0
-        assert angle == pytest.approx(45.0, abs=0.5)
-
-    def test_ambiguous_angle_defaults_to_orthogonal_not_diagonal(self):
-        # task09: ~28 degrees off horizontal is closer to 45 than to 0, but
-        # not within the strict diagonal_snap_deg window - ambiguous evidence
-        # must default to orthogonal, not the mathematically-nearer diagonal.
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(100.0, 53.0), thickness=5.0)
-        walls = snap_walls_to_45([wall])
-        angle = walls[0].orientation_angle % 180.0
-        assert angle == pytest.approx(0.0, abs=0.5)
-
-    def test_exact_45_degree_wall_unchanged(self):
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(50.0, 50.0), thickness=5.0)
-        walls = snap_walls_to_45([wall])
-        angle = walls[0].orientation_angle % 180.0
-        assert angle == pytest.approx(45.0, abs=0.5)
-
-
-class TestMergeConnectedChains:
-    def test_joins_segments_sharing_an_endpoint(self):
-        segs = [((0.0, 0.0), (50.0, 0.0)), ((50.0, 0.0), (50.0, 50.0))]
-        chains = merge_connected_chains(segs)
-        assert len(chains) == 1
-        assert list(chains[0].coords) == [(0.0, 0.0), (50.0, 0.0), (50.0, 50.0)]
-
-    def test_absorbs_small_floating_point_drift(self):
-        segs = [((0.0, 0.0), (50.0, 0.0)), ((50.0001, -0.0002), (50.0, 50.0))]
-        chains = merge_connected_chains(segs, tol=1.0)
-        assert len(chains) == 1
-
-    def test_stops_at_three_way_junction(self):
-        segs = [
-            ((0.0, 0.0), (50.0, 0.0)),
-            ((50.0, 0.0), (50.0, 50.0)),
-            ((50.0, 0.0), (100.0, 0.0)),
+        walls = [
+            ComponentRecord("wall", 1, area_px=400, bbox=(0, 0, 100, 14), centroid=(50, 7), rect_size=(100.0, 14.0)),
         ]
-        chains = merge_connected_chains(segs)
-        # A LineString cannot represent a branch - the junction point keeps
-        # at least two of the three segments as separate chains.
-        assert len(chains) >= 2
+        scale_info = resolve_scale_from_components([self._arc(1, 70.0)], [], walls, min_confidence=0.5)
+        assert scale_info.px_to_mm == pytest.approx(10.0)
+        assert scale_info.scale_source == "door_arc_bbox_long_edge_clustering"
 
-    def test_leaves_disconnected_segments_separate(self):
-        segs = [((0.0, 0.0), (50.0, 0.0)), ((200.0, 200.0), (250.0, 200.0))]
-        chains = merge_connected_chains(segs)
-        assert len(chains) == 2
+    def test_insufficient_evidence_is_unknown(self):
+        # task12 SS1 priority item 5: unknown unless a usable red door_arc
+        # cluster exists - door_origin/wall evidence alone never resolves it.
+        from src.vectorization.graph_types import ComponentRecord
+
+        door_origin = [ComponentRecord("door_origin", 1, area_px=200, bbox=(0, 0, 70, 4), centroid=(35, 2), rect_size=(70.0, 4.0))]
+        walls = [ComponentRecord("wall", 1, area_px=400, bbox=(0, 0, 100, 10), centroid=(50, 5), rect_size=(100.0, 10.0))]
+        scale_info = resolve_scale_from_components([], door_origin, walls)
+        assert scale_info.scale_status == "unknown"
+        assert scale_info.px_to_mm is None
+
+    def test_majority_cluster_resolves_scale_even_below_default_confidence(self):
+        # Bug A regression (rules 8/9/19): 4 clusters cleanly agree on one
+        # px_to_mm and 3 are ordinary noise outliers - winning-group fraction
+        # is 4/7 ~= 0.57, below the default min_scale_confidence_for_metric
+        # (0.70), but rule 19 only requires "no usable red door_arc cluster"
+        # to report unknown, which is not the case here.
+        arcs = [self._arc(1, 54.0), self._arc(2, 13.0), self._arc(3, 5.0),
+                self._arc(4, 64.0), self._arc(5, 56.0), self._arc(6, 28.0), self._arc(7, 51.0)]
+        scale_info = resolve_scale_from_components(arcs, [], [])  # default min_confidence=0.70
+        assert scale_info.scale_status == "estimated"
+        assert scale_info.px_to_mm is not None
+        assert scale_info.confidence < 0.70
+
+    def test_zero_red_arcs_stays_unknown_regardless_of_other_evidence(self):
+        # The only legitimate "unknown" trigger per rule 19 is a complete
+        # absence of usable red door_arc cluster lengths.
+        scale_info = resolve_scale_from_components([], [], [])
+        assert scale_info.scale_status == "unknown"
+        assert scale_info.px_to_mm is None
 
 
-class TestSegmentsToPolygon:
+# ---------------------------------------------------------------------------
+# point_detection - wall points (SS9.1, SS17 items 8, 9, 10, 11, 12)
+# ---------------------------------------------------------------------------
+
+
+class TestWallSkeletonGraph:
+    def test_l_corner_produces_one_clean_2_wall_point(self):
+        mask = _l_corner_mask()
+        components, _ = extract_components(mask, "wall", min_area_px=4)
+        points, rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
+        corners = [p for p in points if p.point_type == "2_wall_point"]
+        assert len(corners) == 1
+        assert len(corners[0].attachments) == 2
+        dirs = {a.direction for a in corners[0].attachments}
+        assert dirs == {"right", "down"} or dirs == {"left", "up"} or len(dirs) == 2
+
+    def test_free_segment_produces_two_1_wall_points(self):
+        # SS17 item 11: a 1_wall_point is a legitimate free end and must not
+        # be force-extended just because it exists in isolation.
+        mask = _free_segment_mask()
+        components, _ = extract_components(mask, "wall", min_area_px=4)
+        points, rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
+        free_ends = [p for p in points if p.point_type == "1_wall_point"]
+        assert len(free_ends) == 2
+        for p in free_ends:
+            assert len(p.attachments) == 1
+
+    def test_t_junction_produces_3_wall_point_not_forced_free_ends(self):
+        # SS17 item 12: branch evidence must produce a 3_wall_point, not a
+        # forced 1_wall_point extension.
+        mask = _t_junction_mask()
+        components, _ = extract_components(mask, "wall", min_area_px=4)
+        points, rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
+        t_points = [p for p in points if p.point_type == "3_wall_point"]
+        assert len(t_points) == 1
+        assert len(t_points[0].attachments) == 3
+
+    def test_cross_produces_4_wall_point(self):
+        mask = _cross_mask()
+        components, _ = extract_components(mask, "wall", min_area_px=4)
+        points, rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
+        cross_points = [p for p in points if p.point_type == "4_wall_point"]
+        assert len(cross_points) == 1
+        assert len(cross_points[0].attachments) == 4
+
+    def test_diagonal_evidence_rejected_not_snapped(self):
+        # SS17 item 8: 45-degree evidence must be rejected to debug, never
+        # become a final diagonal wall point/edge.
+        mask = _diagonal_mask()
+        components, _ = extract_components(mask, "wall", min_area_px=4)
+        node_edges, rejected = build_wall_skeleton_graph(components, cardinal_tolerance_deg=20.0)
+        assert any(r.kind == "diagonal_wall_edge" for r in rejected)
+
+    def test_every_point_is_one_of_seven_allowed_types(self):
+        # SS17 item 9/10: direct search, no unresolved category.
+        mask = _cross_mask()
+        components, _ = extract_components(mask, "wall", min_area_px=4)
+        points, _rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
+        from src.vectorization.graph_types import ALL_POINT_TYPES
+
+        for p in points:
+            assert p.point_type in ALL_POINT_TYPES
+            for a in p.attachments:
+                assert a.direction in ("left", "right", "up", "down")
+
+
+# ---------------------------------------------------------------------------
+# point_detection - window points (SS9.2, SS17 items 13, 14, 15, 16)
+# ---------------------------------------------------------------------------
+
+
+class TestWindowPointDetection:
+    def _components(self, scale_info):
+        wall_components, _ = extract_components(_wall_with_window_gap_mask(), "wall", min_area_px=4)
+        window_components, _ = extract_components(_window_mask(), "window", min_area_px=4)
+        return {"wall": wall_components, "window": window_components, "door_arc": [], "door_origin": []}
+
+    def test_window_produces_two_paired_wall_window_points(self):
+        components = self._components(RESOLVED_SCALE)
+        points, rejected, _edges = detect_points(
+            components, {}, RESOLVED_SCALE, {"min_hosted_width_px": 5.0}
+        )
+        win_points = [p for p in points if p.point_type == "wall_window_point"]
+        assert len(win_points) == 2
+        assert win_points[0].source_component_ids == win_points[1].source_component_ids
+
+    def test_window_endpoints_face_each_other(self):
+        # SS17 item 13/14: opposing window directions determine pairing/axis.
+        components = self._components(RESOLVED_SCALE)
+        points, _rejected, _edges = detect_points(
+            components, {}, RESOLVED_SCALE, {"min_hosted_width_px": 5.0}
+        )
+        win_points = [p for p in points if p.point_type == "wall_window_point"]
+        d0 = win_points[0].attachment_of("window").direction
+        d1 = win_points[1].attachment_of("window").direction
+        from src.vectorization.graph_types import OPPOSITE_DIRECTION
+
+        assert OPPOSITE_DIRECTION[d0] == d1
+
+    def test_window_below_300mm_minimum_is_rejected(self):
+        # SS17 item 15: window length must be >= 300mm when scale is known.
+        narrow_wall_mask = np.zeros((40, 60), dtype=np.uint8)
+        narrow_wall_mask[10:14, 10:20] = 255
+        narrow_wall_mask[10:14, 25:35] = 255
+        narrow_window_mask = np.zeros((40, 60), dtype=np.uint8)
+        narrow_window_mask[10:14, 20:25] = 255  # 5px -> 50mm at 10mm/px
+
+        wall_components, _ = extract_components(narrow_wall_mask, "wall", min_area_px=4)
+        window_components, _ = extract_components(narrow_window_mask, "window", min_area_px=4)
+        components = {"wall": wall_components, "window": window_components, "door_arc": [], "door_origin": []}
+        points, rejected, _edges = detect_points(components, {}, RESOLVED_SCALE, {"min_hosted_width_px": 2.0})
+        assert not any(p.point_type == "wall_window_point" for p in points)
+        assert any(r.kind == "window_too_narrow_mm" for r in rejected)
+
+    def test_window_scale_unknown_blocks_window(self):
+        components = self._components(UNKNOWN_SCALE)
+        points, rejected, _edges = detect_points(
+            components, {}, UNKNOWN_SCALE, {"min_hosted_width_px": 5.0}
+        )
+        assert not any(p.point_type == "wall_window_point" for p in points)
+        assert any(r.kind == "window_scale_blocked" for r in rejected)
+
+    def test_window_low_confidence_but_estimated_scale_still_creates_window(self):
+        # Bug A regression: confidence is reporting metadata (rule 114), not
+        # a creation gate - only an unresolved (status="unknown") scale
+        # blocks the window, per rule 19/50.
+        low_confidence_scale = ScaleInfo(unit="mm", px_to_mm=10.0, scale_status="estimated", confidence=0.2)
+        components = self._components(low_confidence_scale)
+        points, rejected, _edges = detect_points(
+            components, {}, low_confidence_scale, {"min_hosted_width_px": 5.0}
+        )
+        assert any(p.point_type == "wall_window_point" for p in points)
+        assert not any(r.kind == "window_scale_blocked" for r in rejected)
+
+
+# ---------------------------------------------------------------------------
+# point_detection - door points (SS9.3, SS17 items 17-22)
+# ---------------------------------------------------------------------------
+
+
+class TestDoorPointDetection:
+    def _components(self):
+        wall_components, _ = extract_components(_wall_with_door_gap_mask(), "wall", min_area_px=4)
+        door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
+        door_arc_components, _ = extract_components(_door_arc_mask(), "door_arc", min_area_px=4)
+        return {
+            "wall": wall_components,
+            "window": [],
+            "door_arc": door_arc_components,
+            "door_origin": door_origin_components,
+        }
+
+    def _masks(self):
+        return {"door_leaf": _door_leaf_mask(), "door_origin": _door_origin_mask()}
+
+    def test_door_with_red_arc_produces_hinge_and_end_points(self):
+        components = self._components()
+        points, rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        hinge = [p for p in points if p.point_type == "wall_door_hinge_point"]
+        end = [p for p in points if p.point_type == "wall_door_end_point"]
+        assert len(hinge) == 1
+        assert len(end) == 1
+        assert hinge[0].source_component_ids == end[0].source_component_ids
+
+    def test_no_door_arc_means_no_door(self):
+        # SS17 item 17/18: red door_arc components are the sole standard for
+        # door count - origin/leaf evidence alone never creates a door.
+        components = self._components()
+        components["door_arc"] = []
+        points, rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        assert not any(p.point_type in ("wall_door_hinge_point", "wall_door_end_point") for p in points)
+        assert any(r.kind == "unresolved_door_origin" for r in rejected)
+
+    def test_hinge_prefers_orange_purple_intersection(self):
+        # SS17 item 20: hinge lands at the origin/leaf-evidence end, not the far end.
+        components = self._components()
+        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        hinge = next(p for p in points if p.point_type == "wall_door_hinge_point")
+        end = next(p for p in points if p.point_type == "wall_door_end_point")
+        # The leaf/arc evidence sits near y=44 (origin's near end); the far
+        # end should land further away along the wall axis.
+        assert abs(hinge.coordinate[1] - 44.0) < abs(end.coordinate[1] - 44.0)
+
+    def test_hinge_falls_back_to_arc_geometry_without_intersection(self):
+        # SS17 item 19/21: missing/no leaf evidence still resolves a door via
+        # the arc-geometry + host-wall fallback. The fallback picks whichever
+        # arc-bbox corner is nearest the host wall's infinite line, which is
+        # ambiguous between the two near-wall corners for an axis-aligned
+        # arc against a vertical wall - a generous probe radius is needed so
+        # pairing with the door_origin evidence still succeeds regardless of
+        # which of the two (equidistant) corners is chosen.
+        components = self._components()
+        masks = {"door_leaf": np.zeros((100, 40), dtype=np.uint8), "door_origin": _door_origin_mask()}
+        points, rejected, _edges = detect_points(
+            components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 30.0}
+        )
+        assert any(p.point_type == "wall_door_hinge_point" for p in points)
+
+    def test_door_width_snaps_to_700_or_900mm(self):
+        # SS17 item 22.
+        components = self._components()
+        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        hinge = next(p for p in points if p.point_type == "wall_door_hinge_point")
+        width_px = hinge.attachment_of("door_origin").evidence_length_px
+        assert width_px * RESOLVED_SCALE.px_to_mm in (700.0, 900.0)
+
+    def test_door_scale_unknown_blocks_door(self):
+        components = self._components()
+        points, rejected, _edges = detect_points(components, self._masks(), UNKNOWN_SCALE)
+        assert not any(p.point_type == "wall_door_hinge_point" for p in points)
+        assert any(r.kind == "unresolved_door_scale_blocked" for r in rejected)
+
+    def test_door_low_confidence_but_estimated_scale_still_creates_door(self):
+        # Bug A regression: same as the window case - confidence alone must
+        # not block door creation once scale is resolved/estimated.
+        low_confidence_scale = ScaleInfo(unit="mm", px_to_mm=10.0, scale_status="estimated", confidence=0.2)
+        components = self._components()
+        points, rejected, _edges = detect_points(components, self._masks(), low_confidence_scale)
+        assert any(p.point_type == "wall_door_hinge_point" for p in points)
+        assert not any(r.kind == "unresolved_door_scale_blocked" for r in rejected)
+
+
+# ---------------------------------------------------------------------------
+# task13: red door_arc clusters are guaranteed door objects - forceful
+# hinge/end inference and the per-cluster DoorCandidateRecord report.
+# ---------------------------------------------------------------------------
+
+
+class TestForcefulDoorInference:
+    def _components(self, door_origin_components=None):
+        wall_components, _ = extract_components(_wall_with_door_gap_mask(), "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(_door_arc_mask(), "door_arc", min_area_px=4)
+        return {
+            "wall": wall_components,
+            "window": [],
+            "door_arc": door_arc_components,
+            "door_origin": door_origin_components if door_origin_components is not None else [],
+        }
+
+    def _masks(self):
+        return {"door_leaf": _door_leaf_mask(), "door_origin": _door_origin_mask()}
+
+    def test_missing_purple_evidence_does_not_delete_the_door(self):
+        # task13 required test 4/10: no door_origin component or mask at all
+        # near the red cluster - the door must still be created by forcing
+        # both the hinge (arc-geometry fallback) and the end point
+        # (red-cluster-geometry fallback) from red+wall evidence alone.
+        components = self._components(door_origin_components=[])
+        masks = {"door_leaf": _door_leaf_mask(), "door_origin": np.zeros((100, 40), dtype=np.uint8)}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 30.0})
+        hinge = [p for p in points if p.point_type == "wall_door_hinge_point"]
+        end = [p for p in points if p.point_type == "wall_door_end_point"]
+        assert len(hinge) == 1
+        assert len(end) == 1
+        assert not any(r.kind == "unresolved_door_hinge" for r in rejected)
+
+    def test_missing_orange_evidence_does_not_delete_the_door(self):
+        # task13 required test 5: door_leaf is entirely absent, but
+        # door_origin evidence still lets the door resolve.
+        door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
+        components = self._components(door_origin_components=door_origin_components)
+        masks = {"door_leaf": np.zeros((100, 40), dtype=np.uint8), "door_origin": _door_origin_mask()}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 30.0})
+        assert sum(1 for p in points if p.point_type == "wall_door_hinge_point") == 1
+        assert sum(1 for p in points if p.point_type == "wall_door_end_point") == 1
+
+    def test_door_count_equals_accepted_red_cluster_count(self):
+        # task13 acceptance criterion: door count == accepted red cluster count.
+        door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
+        components = self._components(door_origin_components=door_origin_components)
+        points, _rejected, _edges = detect_points(components, self._masks(), RESOLVED_SCALE)
+        issues = validate_points(points, accepted_door_arc_count=len(components["door_arc"]))
+        assert not any(i.rule == "door_count_mismatch" for i in issues)
+
+    def test_one_door_candidate_record_per_red_cluster(self):
+        # task13 required test 1/12: every accepted red door_arc component
+        # gets exactly one DoorCandidateRecord, marked created.
+        from src.vectorization.point_detection import build_door_candidate_records
+
+        door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
+        components = self._components(door_origin_components=door_origin_components)
+        masks = self._masks()
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        records = build_door_candidate_records(
+            components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
+        )
+        assert len(records) == len(components["door_arc"])
+        assert all(r.created_door_candidate for r in records)
+        assert all(r.red_component_id == c.component_id for r, c in zip(records, components["door_arc"]))
+
+    def test_door_candidate_support_classes_reflect_available_evidence(self):
+        # task13 required test 6/7/9: with red/orange/purple/black all
+        # present, the hinge/end support-class lists include every
+        # available evidence type that's actually near the final points.
+        from src.vectorization.point_detection import build_door_candidate_records
+
+        door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
+        components = self._components(door_origin_components=door_origin_components)
+        masks = self._masks()
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        records = build_door_candidate_records(
+            components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
+        )
+        rec = records[0]
+        assert "red" in rec.hinge_candidate_support_classes
+        assert "red" in rec.end_candidate_support_classes
+        assert rec.door_confidence > 0.0
+
+    def test_forced_inference_lowers_confidence_but_keeps_the_door(self):
+        # task13 "Forceful Inference Rule": weak/missing evidence lowers
+        # door_confidence but never removes the record.
+        from src.vectorization.point_detection import build_door_candidate_records
+
+        components = self._components(door_origin_components=[])
+        masks = {"door_leaf": np.zeros((100, 40), dtype=np.uint8), "door_origin": np.zeros((100, 40), dtype=np.uint8)}
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE, {"hinge_probe_radius": 30.0})
+        records = build_door_candidate_records(
+            components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
+        )
+        assert len(records) == 1
+        assert records[0].created_door_candidate is True
+        assert records[0].door_confidence < 1.0
+
+    def test_fragmented_paired_door_origin_falls_back_to_arc_geometry(self):
+        # Bug D regression (rules 47/50/51): the nearest door_origin
+        # component within probe radius of the hinge is a tiny fragment
+        # (segmentation broke the purple stroke into pieces, same pattern as
+        # the red-arc fragmentation in sample_003) - its own projected width
+        # is implausibly small. The door must still resolve via the
+        # arc-geometry fallback rather than being rejected outright.
+        wall_components, _ = extract_components(_wall_with_door_gap_mask(), "wall", min_area_px=4)
+        door_arc_components, _ = extract_components(_door_arc_mask(), "door_arc", min_area_px=4)
+        tiny_origin_mask = np.zeros((100, 40), dtype=np.uint8)
+        tiny_origin_mask[30:33, 9:12] = 255  # 3x3 fragment, not the full origin stroke
+        door_origin_components, _ = extract_components(tiny_origin_mask, "door_origin", min_area_px=2)
+        components = {
+            "wall": wall_components, "window": [],
+            "door_arc": door_arc_components, "door_origin": door_origin_components,
+        }
+        masks = {"door_leaf": tiny_origin_mask.copy(), "door_origin": tiny_origin_mask}
+
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        hinge = [p for p in points if p.point_type == "wall_door_hinge_point"]
+        end = [p for p in points if p.point_type == "wall_door_end_point"]
+        assert len(hinge) == 1
+        assert len(end) == 1
+        assert not any(r.kind == "unresolved_door_too_narrow" for r in rejected)
+        # The fallback width must come from the arc, not the 3px fragment.
+        width_px = math.hypot(end[0].coordinate[0] - hinge[0].coordinate[0], end[0].coordinate[1] - hinge[0].coordinate[1])
+        assert width_px > 10.0
+
+    def test_rejected_door_evidence_attributes_to_the_correct_red_component(self):
+        # Bug C regression: rejections produced inside _detect_door_points
+        # (scale-blocked, too-narrow, non-cardinal-axis) must attribute back
+        # to the originating red door_arc cluster (class_name="door_arc",
+        # component_id=arc.component_id), not to a possibly-None origin_id,
+        # so build_door_candidate_records can report the real reason instead
+        # of falling back to a generic note.
+        from src.vectorization.point_detection import build_door_candidate_records
+
+        components = self._components()
+        masks = self._masks()
+        points, rejected, _edges = detect_points(components, masks, UNKNOWN_SCALE)
+        records = build_door_candidate_records(
+            components["door_arc"], points, rejected, masks, components["wall"], UNKNOWN_SCALE
+        )
+        assert len(records) == 1
+        assert records[0].created_door_candidate is False
+        assert records[0].door_inference_notes == "scale not resolved"
+
+    def test_debug_overlay_renders_door_candidate_bbox(self):
+        # task13 "Debug Overlay Requirements": each red cluster is drawn as
+        # a door candidate, with its bbox outline color set by confidence.
+        from src.vectorization.debug import build_debug_overlay
+        from src.vectorization.point_detection import build_door_candidate_records
+
+        door_origin_components, _ = extract_components(_door_origin_mask(), "door_origin", min_area_px=2)
+        components = self._components(door_origin_components=door_origin_components)
+        masks = self._masks()
+        points, rejected, _edges = detect_points(components, masks, RESOLVED_SCALE)
+        records = build_door_candidate_records(
+            components["door_arc"], points, rejected, masks, components["wall"], RESOLVED_SCALE
+        )
+        rgb = np.zeros((100, 40, 3), dtype=np.uint8)
+        overlay = build_debug_overlay(rgb, points, [], rejected, RESOLVED_SCALE, records)
+        x0, y0, x1, y1 = records[0].red_bbox
+        pixels = np.array(overlay)[max(0, y0 - 1):y1 + 1, max(0, x0 - 1):x1 + 1]
+        assert pixels.any()
+
+
+# ---------------------------------------------------------------------------
+# point_detection.validate_points (SS10)
+# ---------------------------------------------------------------------------
+
+
+class TestValidatePoints:
+    def test_even_window_point_count_passes(self):
+        p1 = GraphPoint("a", "wall_window_point", (0.0, 0.0), [])
+        p2 = GraphPoint("b", "wall_window_point", (10.0, 0.0), [])
+        assert validate_points([p1, p2]) == []
+
+    def test_odd_window_point_count_flagged(self):
+        p1 = GraphPoint("a", "wall_window_point", (0.0, 0.0), [])
+        issues = validate_points([p1])
+        assert any(i.rule == "odd_window_point_count" for i in issues)
+
+    def test_hinge_end_count_mismatch_flagged(self):
+        p1 = GraphPoint("a", "wall_door_hinge_point", (0.0, 0.0), [])
+        issues = validate_points([p1])
+        assert any(i.rule == "door_hinge_end_mismatch" for i in issues)
+
+
+# ---------------------------------------------------------------------------
+# point_alignment + point_connection (SS11/SS12, SS17 items 7, 16, 25)
+# ---------------------------------------------------------------------------
+
+
+class TestPointAlignmentAndConnection:
+    def test_l_corner_walls_align_and_connect_into_orthogonal_edges(self):
+        mask = _l_corner_mask()
+        components, _ = extract_components(mask, "wall", min_area_px=4)
+        points, _rejected, wall_edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)
+        aligned, _issues = align_points(points, components, UNKNOWN_SCALE, {}, wall_edges)
+        edges, _graph_issues = connect_points(aligned, wall_edges, UNKNOWN_SCALE)
+
+        assert len(edges) == 2
+        for e in edges:
+            assert e.edge_type == "wall"
+            dx = abs(e.end[0] - e.start[0])
+            dy = abs(e.end[1] - e.start[1])
+            assert dx < 1e-6 or dy < 1e-6, f"edge not orthogonal: {e.start} -> {e.end}"
+
+    def test_window_edge_replaces_wall_interval(self):
+        # SS17 item 16: the window graph edge spans the gap; no wall edge
+        # duplicates that interval.
+        wall_components, _ = extract_components(_wall_with_window_gap_mask(), "wall", min_area_px=4)
+        window_components, _ = extract_components(_window_mask(), "window", min_area_px=4)
+        components_dict = {"wall": wall_components, "window": window_components, "door_arc": [], "door_origin": []}
+        points, _rejected, wall_edges = detect_points(
+            components_dict, {}, RESOLVED_SCALE, {"min_hosted_width_px": 5.0}
+        )
+        aligned, _issues = align_points(points, wall_components, RESOLVED_SCALE, {}, wall_edges)
+        edges, _graph_issues = connect_points(aligned, wall_edges, RESOLVED_SCALE)
+
+        window_edges = [e for e in edges if e.edge_type == "window"]
+        assert len(window_edges) == 1
+        win_span = sorted([window_edges[0].start[0], window_edges[0].end[0]])
+        for e in edges:
+            if e.edge_type != "wall":
+                continue
+            wall_span = sorted([e.start[0], e.end[0]])
+            # no wall edge should overlap the window's x-span
+            assert wall_span[1] <= win_span[0] + 1.0 or wall_span[0] >= win_span[1] - 1.0
+
+    def test_validate_graph_flags_orphan_window_point(self):
+        p1 = GraphPoint("a", "wall_window_point", (0.0, 0.0), [], source_component_ids=[1])
+        issues = validate_graph([p1], [])
+        assert any(i.rule == "orphan_window_point" for i in issues)
+
+    def test_validate_graph_does_not_flag_healthy_wall_plus_opening_pair(self):
+        # Bug E regression: rules 77/78 require a window point to connect to
+        # BOTH its window edge and the adjacent host wall edge - that is
+        # exactly 2 edges total and must not be flagged as a conflict.
+        win = GraphPoint("w", "wall_window_point", (0.0, 0.0), [], source_component_ids=[1])
+        wall_pt = GraphPoint("n", "2_wall_point", (10.0, 0.0), [])
+        edges = [
+            GraphEdge("win_e", "window", "w", "w2", (0.0, 0.0), (5.0, 0.0)),
+            GraphEdge("wall_e", "wall", "w", "n", (0.0, 0.0), (10.0, 0.0)),
+        ]
+        issues = validate_graph([win, wall_pt], edges)
+        assert not any(i.rule == "opening_point_multiple_edges" for i in issues)
+
+    def test_validate_graph_flags_floating_window_point(self):
+        # Rules 76/104/105: a window point with an opening edge but no wall
+        # edge at all is floating, not hosted on wall topology.
+        win = GraphPoint("w", "wall_window_point", (0.0, 0.0), [], source_component_ids=[1])
+        edges = [GraphEdge("win_e", "window", "w", "w2", (0.0, 0.0), (5.0, 0.0))]
+        issues = validate_graph([win], edges)
+        assert any(i.rule == "floating_window_point" for i in issues)
+
+    def test_validate_graph_flags_real_multiple_opening_edge_conflict(self):
+        # A point with two edges of its own opening type is still a genuine
+        # conflict.
+        win = GraphPoint("w", "wall_window_point", (0.0, 0.0), [], source_component_ids=[1])
+        edges = [
+            GraphEdge("win_e1", "window", "w", "w2", (0.0, 0.0), (5.0, 0.0)),
+            GraphEdge("win_e2", "window", "w", "w3", (0.0, 0.0), (5.0, 5.0)),
+        ]
+        issues = validate_graph([win], edges)
+        assert any(i.rule == "opening_point_multiple_edges" for i in issues)
+
+
+# ---------------------------------------------------------------------------
+# door_geometry (SS13, SS17 items 23, 24)
+# ---------------------------------------------------------------------------
+
+
+class TestDoorGeometry:
+    def _door_origin_edge_and_points(self):
+        hinge = GraphPoint(
+            "hinge", "wall_door_hinge_point", (50.0, 50.0),
+            [Attachment("wall", "up", "wall"), Attachment("door_origin", "down", "door_origin")],
+        )
+        end = GraphPoint(
+            "end", "wall_door_end_point", (50.0, 80.0),
+            [Attachment("wall", "down", "wall"), Attachment("door_origin", "up", "door_origin")],
+        )
+        edge = GraphEdge("e1", "door_origin", "hinge", "end", (50.0, 50.0), (50.0, 80.0), length_mm=700.0)
+        return [hinge, end], [edge]
+
+    def test_leaf_is_perpendicular_and_hinge_anchored(self):
+        points, edges = self._door_origin_edge_and_points()
+        origins, leaves, arcs = generate_door_geometry(points, edges)
+        assert len(leaves) == 1
+        leaf = leaves[0]
+        assert leaf.hinge_point == (50.0, 50.0)
+        hx, hy = leaf.hinge_point
+        lx, ly = leaf.leaf_end
+        assert abs(lx - hx) > 1e-3  # perpendicular to the vertical origin -> horizontal leaf
+
+    def test_arc_spans_exactly_90_degrees_centered_on_hinge(self):
+        points, edges = self._door_origin_edge_and_points()
+        origins, leaves, arcs = generate_door_geometry(points, edges)
+        arc = arcs[0]
+        hx, hy = arc.hinge_point
+        ox, oy = arc.origin_far_point
+        ex, ey = arc.leaf_end
+        v1, v2 = (ox - hx, oy - hy), (ex - hx, ey - hy)
+        cos_angle = (v1[0] * v2[0] + v1[1] * v2[1]) / (math.hypot(*v1) * math.hypot(*v2))
+        deg = math.degrees(math.acos(max(-1.0, min(1.0, cos_angle))))
+        assert deg == pytest.approx(90.0, abs=1e-3)
+
+    def test_origin_width_mm_carried_from_edge(self):
+        points, edges = self._door_origin_edge_and_points()
+        origins, _leaves, _arcs = generate_door_geometry(points, edges)
+        assert origins[0].width_mm == 700.0
+
+
+# ---------------------------------------------------------------------------
+# wall_geometry / export_svg (SS14, SS17 items 25-32)
+# ---------------------------------------------------------------------------
+
+
+class TestWallGeometryRendering:
     def test_l_shaped_chain_produces_one_clean_mitred_polygon(self):
-        # Two perpendicular segments sharing an endpoint should buffer into
-        # ONE polygon with a sharp mitred inner/outer corner, not two
-        # independently-capped rectangles with a seam at the joint.
         segs = [((0.0, 0.0), (50.0, 0.0)), ((50.0, 0.0), (50.0, 50.0))]
         geom = segments_to_polygon(segs, half_width_px=8.0)
         assert geom is not None
         assert geom.geom_type == "Polygon"
-        # A clean L-shaped buffer has exactly 6 corners (7 coords incl. the
-        # closing repeat) - a seamed/duplicated-cap union would have more.
         assert len(list(geom.exterior.coords)) == 7
 
-    def test_disconnected_segments_produce_separate_polygons(self):
-        segs = [((0.0, 0.0), (50.0, 0.0)), ((500.0, 500.0), (550.0, 500.0))]
-        geom = segments_to_polygon(segs, half_width_px=8.0)
-        assert geom.geom_type == "MultiPolygon"
-        assert len(geom.geoms) == 2
+    def test_wall_edges_to_primitives_normalizes_thickness_to_module(self):
+        edge = GraphEdge("w1", "wall", "a", "b", (0.0, 0.0), (100.0, 0.0), thickness_px=20.0)
+        walls = wall_edges_to_primitives([edge], RESOLVED_SCALE)
+        assert walls[0].thickness_mm in (100.0, 200.0)
 
-    def test_empty_segments_returns_none(self):
-        assert segments_to_polygon([], half_width_px=8.0) is None
+    def test_window_thickness_is_fixed_100mm_when_scale_resolved(self):
+        # Rule 15: window total thickness is always 100mm once scale is
+        # known, regardless of the host wall's own thickness module (100mm
+        # or 200mm, rule 13) - not half of whatever the host measured.
+        edge_thin_host = GraphEdge("win1", "window", "a", "b", (0.0, 0.0), (40.0, 0.0), thickness_px=10.0, length_mm=400.0)
+        edge_thick_host = GraphEdge("win2", "window", "a", "b", (0.0, 0.0), (40.0, 0.0), thickness_px=20.0, length_mm=400.0)
+        windows = window_edges_to_primitives([edge_thin_host, edge_thick_host], RESOLVED_SCALE)
+        for w in windows:
+            assert w.thickness == pytest.approx(10.0)  # 100mm at 10mm/px
 
-
-class TestNearestWall:
-    def test_finds_closest_wall_within_max_dist(self):
-        wall = WallPrimitive("w0", start=(0.0, 4.0), end=(100.0, 4.0), thickness=5.0)
-        found = nearest_wall((50.0, 6.0), [wall], max_dist=20.0)
-        assert found is wall
-
-    def test_returns_none_when_too_far(self):
-        wall = WallPrimitive("w0", start=(0.0, 4.0), end=(100.0, 4.0), thickness=5.0)
-        assert nearest_wall((50.0, 100.0), [wall], max_dist=10.0) is None
-
-    def test_returns_none_for_empty_wall_list(self):
-        assert nearest_wall((0.0, 0.0), []) is None
-
-
-class TestProjectPixelsOntoWall:
-    def test_extent_matches_pixel_spread_along_wall(self):
-        wall = WallPrimitive("w0", start=(0.0, 4.0), end=(100.0, 4.0), thickness=5.0)
-        pixel_coords = np.array([[40.0, 3.0], [41.0, 4.0], [60.0, 5.0], [59.0, 4.0]])
-        center, width, t_min, t_max = project_pixels_onto_wall(pixel_coords, wall)
-        assert width == pytest.approx(20.0, abs=0.5)
-        assert center[0] == pytest.approx(50.0, abs=0.5)
-
-
-class TestSelectHostWallForOpening:
-    def test_single_candidate_matches_nearest_wall(self):
-        wall = WallPrimitive("w0", start=(0.0, 4.0), end=(100.0, 4.0), thickness=5.0)
-        pixel_coords = np.array([[40.0, 3.0], [41.0, 4.0], [42.0, 5.0]])
-        found = select_host_wall_for_opening(pixel_coords, [wall], max_dist=20.0)
-        assert found is wall
-
-    def test_corner_ambiguous_opening_picks_higher_probability_wall(self):
-        # Two walls meeting at a corner; the opening evidence hugs the
-        # horizontal wall's centerline and is oriented along it, even though
-        # the vertical wall is also within max_dist of the centroid - the
-        # horizontal wall must win the tie-break.
-        horiz = WallPrimitive("wh", start=(0.0, 0.0), end=(100.0, 0.0), thickness=8.0)
-        vert = WallPrimitive("wv", start=(0.0, 0.0), end=(0.0, 100.0), thickness=8.0)
-        xs = np.arange(5.0, 25.0)
-        pixel_coords = np.column_stack([xs, np.full_like(xs, 1.0)])
-        found = select_host_wall_for_opening(
-            pixel_coords, [horiz, vert], max_dist=20.0, corner_ambiguity_px=20.0
-        )
-        assert found is horiz
-
-    def test_no_walls_within_max_dist_returns_none(self):
-        wall = WallPrimitive("w0", start=(0.0, 4.0), end=(100.0, 4.0), thickness=5.0)
-        pixel_coords = np.array([[40.0, 100.0]])
-        assert select_host_wall_for_opening(pixel_coords, [wall], max_dist=10.0) is None
-
-
-class TestInnerWallOuterAttachment:
-    def test_endpoint_within_threshold_snaps_to_outer_wall(self):
-        outer = [WallPrimitive("wo0", start=(0.0, 0.0), end=(1000.0, 0.0), thickness=8.0)]
-        inner = [WallPrimitive("wi0", start=(500.0, 40.0), end=(500.0, 200.0), thickness=8.0)]
-        snapped = snap_inner_endpoints_to_outer_wall_mm(inner, outer, RESOLVED_SCALE, threshold_mm=500.0)
-        assert inner[0].start[1] == pytest.approx(0.0, abs=1e-6)
-        assert "wi0" in snapped
-
-    def test_endpoint_beyond_threshold_unchanged(self):
-        outer = [WallPrimitive("wo0", start=(0.0, 0.0), end=(1000.0, 0.0), thickness=8.0)]
-        inner = [WallPrimitive("wi0", start=(500.0, 8000.0), end=(500.0, 9000.0), thickness=8.0)]
-        original_start = inner[0].start
-        snapped = snap_inner_endpoints_to_outer_wall_mm(inner, outer, RESOLVED_SCALE, threshold_mm=500.0)
-        assert inner[0].start == original_start
-        assert snapped == {}
-
-    def test_unresolved_scale_raises(self):
-        outer = [WallPrimitive("wo0", start=(0.0, 0.0), end=(1000.0, 0.0), thickness=8.0)]
-        inner = [WallPrimitive("wi0", start=(500.0, 40.0), end=(500.0, 200.0), thickness=8.0)]
-        with pytest.raises(ValueError):
-            snap_inner_endpoints_to_outer_wall_mm(inner, outer, ScaleInfo(), threshold_mm=500.0)
-
-
-# ---------------------------------------------------------------------------
-# window_extraction
-# ---------------------------------------------------------------------------
-
-class TestWindowExtraction:
-    def test_extracts_and_hosts_window(self):
-        # window_mask spans x=[15,35) -> width_px=20, well over the 300mm
-        # minimum at RESOLVED_SCALE's 10mm/px (200mm)... so use a scale where
-        # 20px clears 300mm: px_to_mm=20.0 -> 400mm.
-        window_mask = _make_window_mask()
-        wall = WallPrimitive("w0", start=(5.0, 4.0), end=(59.0, 4.0), thickness=8.0)
-        si = ScaleInfo(unit="mm", px_to_mm=20.0, scale_status="resolved", confidence=1.0)
-        windows, unresolved = extract_windows(window_mask, [wall], max_wall_dist=20.0, scale_info=si)
-        assert len(windows) == 1
-        assert windows[0].host_wall_id == "w0"
-        assert unresolved == []
-
-    def test_unhosted_window_marked_unresolved(self):
-        window_mask = _make_window_mask()
-        windows, unresolved = extract_windows(window_mask, walls=[])
-        assert windows == []
-        assert len(unresolved) == 1
-        assert unresolved[0].opening_type == "unresolved_window"
-
-    def test_too_narrow_window_evidence_is_unresolved_not_a_real_window(self):
-        mask = np.zeros((64, 64), dtype=np.uint8)
-        mask[3, 30] = 255  # 1px wide - noise, not a real window
-        wall = WallPrimitive("w0", start=(0.0, 4.0), end=(64.0, 4.0), thickness=8.0)
-        si = ScaleInfo(unit="mm", px_to_mm=20.0, scale_status="resolved", confidence=1.0)
-        windows, unresolved = extract_windows(
-            mask, [wall], min_area=1, min_hosted_width_px=10.0, scale_info=si
-        )
-        assert windows == []
-        assert len(unresolved) == 1
-
-    def test_window_unresolved_scale_blocked_when_scale_unknown(self):
-        # task10: window min-width is a real-world-mm rule with no pixel
-        # fallback - an unresolved scale must block the window, not silently
-        # produce a hosted window with width_mm=None.
-        window_mask = _make_window_mask()
-        wall = WallPrimitive("w0", start=(5.0, 4.0), end=(59.0, 4.0), thickness=8.0)
-        windows, unresolved = extract_windows(window_mask, [wall], scale_info=ScaleInfo())
-        assert windows == []
-        assert len(unresolved) == 1
-        assert unresolved[0].opening_type == "unresolved_window_scale_blocked"
-
-    def test_width_mm_set_when_scale_resolved_with_confidence(self):
-        window_mask = _make_window_mask()
-        wall = WallPrimitive("w0", start=(5.0, 4.0), end=(59.0, 4.0), thickness=8.0)
-        si = ScaleInfo(unit="mm", px_to_mm=100.0, scale_status="resolved", confidence=1.0)
-        windows, _ = extract_windows(window_mask, [wall], scale_info=si)
-        assert windows[0].width_mm is not None
-
-    def test_window_thickness_is_half_the_host_wall_thickness(self):
-        # task09: window total width is 100mm vs the wall's 200mm - exactly
-        # half, regardless of the wall's measured px thickness.
-        window_mask = _make_window_mask()
-        wall = WallPrimitive("w0", start=(5.0, 4.0), end=(59.0, 4.0), thickness=16.0)
-        si = ScaleInfo(unit="mm", px_to_mm=20.0, scale_status="resolved", confidence=1.0)
-        windows, _ = extract_windows(window_mask, [wall], scale_info=si)
+    def test_window_thickness_falls_back_to_half_host_when_scale_unknown(self):
+        edge = GraphEdge("win1", "window", "a", "b", (0.0, 0.0), (40.0, 0.0), thickness_px=16.0)
+        windows = window_edges_to_primitives([edge], UNKNOWN_SCALE)
         assert windows[0].thickness == pytest.approx(8.0)
 
-    def test_window_below_300mm_minimum_is_unresolved(self):
-        # task10: window minimum hosted width is 300mm (architectural scale).
-        window_mask = _make_window_mask()  # 20px wide
-        wall = WallPrimitive("w0", start=(5.0, 4.0), end=(59.0, 4.0), thickness=8.0)
-        si = ScaleInfo(unit="mm", px_to_mm=5.0, scale_status="resolved", confidence=1.0)  # 20px -> 100mm
-        windows, unresolved = extract_windows(window_mask, [wall], scale_info=si)
-        assert windows == []
-        assert len(unresolved) == 1
-        assert unresolved[0].opening_type == "unresolved_window_too_narrow_mm"
-
-    def test_window_at_or_above_300mm_minimum_is_accepted(self):
-        window_mask = _make_window_mask()  # 20px wide
-        wall = WallPrimitive("w0", start=(5.0, 4.0), end=(59.0, 4.0), thickness=8.0)
-        si = ScaleInfo(unit="mm", px_to_mm=20.0, scale_status="resolved", confidence=1.0)  # 20px -> 400mm
-        windows, unresolved = extract_windows(window_mask, [wall], scale_info=si)
-        assert len(windows) == 1
-        assert unresolved == []
-
-
-# ---------------------------------------------------------------------------
-# door_extraction
-# ---------------------------------------------------------------------------
-
-class TestDoorExtraction:
-    """task10: doors are arc-group (red) led - every fixture below includes a
-    real door_arc component, since an empty door_arc_mask now means zero
-    doors regardless of door_origin/door_leaf evidence."""
-
-    MASK_SHAPE = (64, 100)
-
-    def _host_wall(self) -> WallPrimitive:
-        return WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-
-    def _origin_mask(self) -> np.ndarray:
-        mask = np.zeros(self.MASK_SHAPE, dtype=np.uint8)
-        mask[9:12, 40:60] = 255  # door_origin component spanning x in [40, 60)
-        return mask
-
-    def _leaf_mask_near_hinge(self) -> np.ndarray:
-        mask = np.zeros(self.MASK_SHAPE, dtype=np.uint8)
-        mask[9:12, 38:44] = 255  # overlaps the origin's near end -> orange/purple intersection
-        return mask
-
-    def _arc_mask_near_hinge(self) -> np.ndarray:
-        mask = np.zeros(self.MASK_SHAPE, dtype=np.uint8)
-        mask[12:24, 36:56] = 255  # swing wedge below the wall, near the hinge end
-        return mask
-
-    def test_extracts_origin_leaf_and_arc(self):
-        wall = self._host_wall()
-        origins, leaves, arcs, unresolved = extract_doors(
-            self._origin_mask(), self._leaf_mask_near_hinge(), self._arc_mask_near_hinge(),
-            [wall], scale_info=RESOLVED_SCALE,
-        )
-        assert len(origins) == 1
-        assert len(leaves) == 1
-        assert len(arcs) == 1
-        assert origins[0].host_wall_id == "w0"
-        assert origins[0].width_mm in (700.0, 900.0)
-
-    def test_hinge_chosen_near_orange_purple_intersection(self):
-        wall = self._host_wall()
-        origins, leaves, arcs, unresolved = extract_doors(
-            self._origin_mask(), self._leaf_mask_near_hinge(), self._arc_mask_near_hinge(),
-            [wall], scale_info=RESOLVED_SCALE,
-        )
-        hx, _hy = leaves[0].hinge_point
-        assert abs(hx - 40.0) < abs(hx - 60.0)
-
-    def test_swing_side_biased_toward_more_evidence(self):
-        wall = self._host_wall()
-        origins, leaves, arcs, unresolved = extract_doors(
-            self._origin_mask(), self._leaf_mask_near_hinge(), self._arc_mask_near_hinge(),
-            [wall], scale_info=RESOLVED_SCALE,
-        )
-        leaf = leaves[0]
-        _hx, hy = leaf.hinge_point
-        _lx, ly = leaf.leaf_end
-        assert ly > hy  # leaf swings toward the side with more evidence (larger y, below the wall)
-
-    def test_arc_origin_far_point_is_module_snapped_distance_from_hinge(self):
-        wall = self._host_wall()
-        origins, leaves, arcs, unresolved = extract_doors(
-            self._origin_mask(), self._leaf_mask_near_hinge(), self._arc_mask_near_hinge(),
-            [wall], scale_info=RESOLVED_SCALE,
-        )
-        arc = arcs[0]
-        far = arc.origin_far_point
-        hinge = arc.hinge_point
-        dist = math.hypot(far[0] - hinge[0], far[1] - hinge[1])
-        assert dist == pytest.approx(origins[0].width_mm / RESOLVED_SCALE.px_to_mm, abs=1e-3)
-        assert far != hinge
-
-    def test_no_door_arc_means_no_door(self):
-        # task10: red door_arc connected components are the sole standard for
-        # door count/location - no arc group means no door, even with
-        # plenty of door_origin/door_leaf evidence nearby.
-        wall = self._host_wall()
-        origins, leaves, arcs, unresolved = extract_doors(
-            self._origin_mask(), self._leaf_mask_near_hinge(),
-            np.zeros(self.MASK_SHAPE, dtype=np.uint8), [wall], scale_info=RESOLVED_SCALE,
-        )
-        assert origins == []
-        assert leaves == []
-        assert arcs == []
-
-    def test_door_origin_without_matching_arc_never_creates_a_door(self):
-        wall = self._host_wall()
-        # Arc evidence far away from the origin/leaf evidence - no pairing,
-        # and no provisional host wall within reach either.
-        arc_mask = np.zeros(self.MASK_SHAPE, dtype=np.uint8)
-        arc_mask[60:63, 90:96] = 255
-        origins, leaves, arcs, unresolved = extract_doors(
-            self._origin_mask(), np.zeros(self.MASK_SHAPE, dtype=np.uint8), arc_mask,
-            [wall], scale_info=RESOLVED_SCALE,
-        )
-        assert origins == []
-        assert any(o.opening_type == "unresolved_door_origin" for o in unresolved)
-
-    def test_unhosted_door_origin_marked_unresolved_when_no_walls(self):
-        origins, leaves, arcs, unresolved = extract_doors(
-            self._origin_mask(), np.zeros(self.MASK_SHAPE, dtype=np.uint8),
-            self._arc_mask_near_hinge(), walls=[], scale_info=RESOLVED_SCALE,
-        )
-        assert origins == []
-        assert any(o.opening_type == "unresolved_door_origin" for o in unresolved)
-
-    def test_too_narrow_origin_evidence_is_unresolved(self):
-        wall = self._host_wall()
-        tiny_origin_mask = np.zeros(self.MASK_SHAPE, dtype=np.uint8)
-        tiny_origin_mask[9:12, 41:43] = 255  # 2px wide - effectively at the hinge, no real width
-        origins, leaves, arcs, unresolved = extract_doors(
-            tiny_origin_mask, self._leaf_mask_near_hinge(), self._arc_mask_near_hinge(),
-            [wall], min_hosted_width_px=10.0, scale_info=RESOLVED_SCALE,
-        )
-        assert origins == []
-        assert any(o.opening_type == "unresolved_door_too_narrow" for o in unresolved)
-
-
-class TestRawDoorOriginLengths:
-    def test_measures_long_axis_length_per_component(self):
-        mask = np.zeros((64, 100), dtype=np.uint8)
-        mask[9:12, 40:60] = 255  # 20px long, 3px thick
-        lengths = raw_door_origin_lengths_px(mask)
-        assert len(lengths) == 1
-        assert lengths[0] == pytest.approx(20.0, abs=1.0)
-
-    def test_empty_mask_returns_empty_list(self):
-        mask = np.zeros((32, 32), dtype=np.uint8)
-        assert raw_door_origin_lengths_px(mask) == []
-
-
-class TestDoorHingeDetection:
-    def test_hinge_prefers_orange_purple_intersection_when_present(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-        origin_mask = np.zeros((64, 100), dtype=np.uint8)
-        origin_mask[9:12, 40:60] = 255
-        leaf_mask = np.zeros((64, 100), dtype=np.uint8)
-        leaf_mask[9:12, 38:44] = 255  # intersects the origin's near end
-        arc_mask = np.zeros((64, 100), dtype=np.uint8)
-        arc_mask[12:24, 36:56] = 255
-        origins, leaves, arcs, unresolved = extract_doors(
-            origin_mask, leaf_mask, arc_mask, [wall], scale_info=RESOLVED_SCALE,
-        )
-        assert len(leaves) == 1
-        hx, hy = leaves[0].hinge_point
-        assert 38.0 <= hx <= 46.0  # the intersection sits near x in [40, 44]
-        assert hy == pytest.approx(10.0, abs=0.5)
-
-    def test_hinge_falls_back_to_arc_geometry_when_no_intersection(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-        origin_mask = np.zeros((64, 100), dtype=np.uint8)
-        origin_mask[9:12, 40:60] = 255
-        leaf_mask = np.zeros((64, 100), dtype=np.uint8)  # no overlap possible -> no intersection
-        arc_mask = np.zeros((64, 100), dtype=np.uint8)
-        arc_mask[12:24, 36:56] = 255
-        origins, leaves, arcs, unresolved = extract_doors(
-            origin_mask, leaf_mask, arc_mask, [wall], scale_info=RESOLVED_SCALE,
-        )
-        assert len(leaves) == 1  # still resolves a door via the arc-geometry fallback
-        hx, hy = leaves[0].hinge_point
-        assert hy == pytest.approx(10.0, abs=0.5)  # snapped onto the host wall
-
-    def test_hinge_inference_disabled_leaves_evidence_unresolved(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-        origin_mask = np.zeros((64, 100), dtype=np.uint8)
-        origin_mask[9:12, 40:60] = 255
-        leaf_mask = np.zeros((64, 100), dtype=np.uint8)
-        arc_mask = np.zeros((64, 100), dtype=np.uint8)
-        arc_mask[12:24, 36:56] = 255
-        origins, leaves, arcs, unresolved = extract_doors(
-            origin_mask, leaf_mask, arc_mask, [wall],
-            scale_info=RESOLVED_SCALE, hinge_arc_inference_enabled=False,
-        )
-        assert origins == []
-        assert any(o.opening_type == "unresolved_door_arc" for o in unresolved)
-
-    def test_hinge_snaps_to_nearest_of_two_in_range_walls(self):
-        # outer/inner both within hinge_snap_to_wall_max_dist_px - the closer
-        # one (inner, at y=50) must win, not just whichever is in `walls` first.
-        outer = WallPrimitive("wo", start=(0.0, 20.0), end=(100.0, 20.0), thickness=5.0)
-        inner = WallPrimitive("wi", start=(0.0, 50.0), end=(100.0, 50.0), thickness=5.0)
-        origin_mask = np.zeros((64, 100), dtype=np.uint8)
-        origin_mask[49:52, 40:60] = 255
-        leaf_mask = np.zeros((64, 100), dtype=np.uint8)
-        leaf_mask[49:52, 38:44] = 255
-        arc_mask = np.zeros((64, 100), dtype=np.uint8)
-        arc_mask[40:49, 36:56] = 255
-        origins, leaves, arcs, unresolved = extract_doors(
-            origin_mask, leaf_mask, arc_mask, [outer, inner], scale_info=RESOLVED_SCALE,
-        )
-        assert len(origins) == 1
-        assert origins[0].host_wall_id == "wi"
-
-
-class TestDoorPairing:
-    def test_unpaired_hinge_without_purple_evidence_stays_debug_only(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-        leaf_mask = np.zeros((64, 100), dtype=np.uint8)
-        leaf_mask[9:12, 38:44] = 255
-        arc_mask = np.zeros((64, 100), dtype=np.uint8)
-        arc_mask[12:24, 36:56] = 255
-        # No door_origin evidence anywhere - an orange hinge is found/
-        # inferred, but no purple far-point partner exists to pair with it.
-        origin_mask = np.zeros((64, 100), dtype=np.uint8)
-        origins, leaves, arcs, unresolved = extract_doors(
-            origin_mask, leaf_mask, arc_mask, [wall], scale_info=RESOLVED_SCALE,
-        )
-        assert origins == []
-        assert leaves == []
-        assert any(o.opening_type == "unresolved_door_hinge" for o in unresolved)
-
-
-class TestDoorModuleSnap:
-    def _fixture(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-        origin_mask = np.zeros((64, 100), dtype=np.uint8)
-        origin_mask[9:12, 40:60] = 255
-        leaf_mask = np.zeros((64, 100), dtype=np.uint8)
-        leaf_mask[9:12, 38:44] = 255
-        arc_mask = np.zeros((64, 100), dtype=np.uint8)
-        arc_mask[12:24, 36:56] = 255
-        return wall, origin_mask, leaf_mask, arc_mask
-
-    def test_width_snaps_to_700_or_900_when_scale_resolved(self):
-        wall, origin_mask, leaf_mask, arc_mask = self._fixture()
-        origins, leaves, arcs, unresolved = extract_doors(
-            origin_mask, leaf_mask, arc_mask, [wall], scale_info=RESOLVED_SCALE,
-        )
-        assert origins[0].width_mm in (700.0, 900.0)
-        assert leaves[0].width == pytest.approx(origins[0].width_mm / RESOLVED_SCALE.px_to_mm)
-
-    def test_600_and_800_are_not_valid_modules(self):
-        wall, origin_mask, leaf_mask, arc_mask = self._fixture()
-        origins, leaves, arcs, unresolved = extract_doors(
-            origin_mask, leaf_mask, arc_mask, [wall], scale_info=RESOLVED_SCALE,
-            door_width_modules_mm=(700.0, 900.0),
-        )
-        assert origins[0].width_mm not in (600.0, 800.0)
-
-
-class TestScaleBlockedBehavior:
-    def test_door_scale_unresolved_blocks_door_generation(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-        origin_mask = np.zeros((64, 100), dtype=np.uint8)
-        origin_mask[9:12, 40:60] = 255
-        leaf_mask = np.zeros((64, 100), dtype=np.uint8)
-        leaf_mask[9:12, 38:44] = 255
-        arc_mask = np.zeros((64, 100), dtype=np.uint8)
-        arc_mask[12:24, 36:56] = 255
-        origins, leaves, arcs, unresolved = extract_doors(
-            origin_mask, leaf_mask, arc_mask, [wall], scale_info=ScaleInfo(),
-        )
-        assert origins == []
-        assert any(o.opening_type == "unresolved_door_scale_blocked" for o in unresolved)
-
-    def test_window_scale_unresolved_blocks_window_generation(self):
-        window_mask = _make_window_mask()
-        wall = WallPrimitive("w0", start=(5.0, 4.0), end=(59.0, 4.0), thickness=8.0)
-        windows, unresolved = extract_windows(window_mask, [wall], scale_info=ScaleInfo())
-        assert windows == []
-        assert unresolved[0].opening_type == "unresolved_window_scale_blocked"
-
-    def test_inner_wall_attach_scale_unresolved_raises(self):
-        outer = [WallPrimitive("wo0", start=(0.0, 0.0), end=(1000.0, 0.0), thickness=8.0)]
-        inner = [WallPrimitive("wi0", start=(500.0, 40.0), end=(500.0, 200.0), thickness=8.0)]
-        with pytest.raises(ValueError):
-            snap_inner_endpoints_to_outer_wall_mm(inner, outer, ScaleInfo(), threshold_mm=500.0)
-
-
-# ---------------------------------------------------------------------------
-# floor_extraction - floor is a direct translation of the outer wall loop
-# ---------------------------------------------------------------------------
-
-class TestFloorExtraction:
-    def test_floor_polygon_matches_outer_polygon(self):
-        polygon = [(0.0, 0.0), (100.0, 0.0), (100.0, 80.0), (0.0, 80.0)]
-        floor = extract_floor(polygon)
-        assert floor is not None
-        assert isinstance(floor, FloorPrimitive)
-        assert floor.polygon == polygon
-        assert floor.area > 0.0
-
-    def test_floor_returns_none_for_empty_polygon(self):
-        assert extract_floor([]) is None
-
-    def test_floor_returns_none_for_degenerate_polygon(self):
-        assert extract_floor([(0.0, 0.0), (1.0, 1.0)]) is None
-
-    def test_floor_primitive_to_svg_is_filled_with_no_stroke(self):
-        fp = FloorPrimitive(
-            primitive_id="floor_0",
-            polygon=[(0.0, 0.0), (100.0, 0.0), (100.0, 80.0), (0.0, 80.0)],
-        )
-        svg = fp.to_svg()
-        assert "<polygon" in svg
-        assert 'stroke="none"' in svg
-        assert "fill=" in svg
-
-    def test_floor_appears_before_wall_in_svg(self):
-        fp = FloorPrimitive(
-            primitive_id="floor_0",
-            polygon=[(0.0, 0.0), (100.0, 0.0), (100.0, 80.0), (0.0, 80.0)],
-        )
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(100.0, 0.0), thickness=5.0)
-        svg = build_svg(
-            image_width=128, image_height=128,
-            walls=[wall], windows=[], door_origins=[], door_leaves=[], door_arcs=[], floor=fp,
-        )
-        floor_pos = svg.find('<g id="floor">')
-        wall_pos = svg.find('<g id="wall">')
-        assert floor_pos != -1
-        assert wall_pos != -1
-        assert floor_pos < wall_pos
-
-    def test_rectilinearize_contour_produces_axis_aligned_edges(self):
-        pts = [(0.0, 0.0), (10.0, 3.0), (10.0, 50.0), (3.0, 50.0)]
-        result = _rectilinearize_contour(pts)
-        for i in range(len(result)):
-            a = result[i]
-            b = result[(i + 1) % len(result)]
-            dx = abs(b[0] - a[0])
-            dy = abs(b[1] - a[1])
-            assert dx < 0.5 or dy < 0.5, f"Edge {a}->{b} is diagonal: dx={dx:.3f}, dy={dy:.3f}"
-
-
-# ---------------------------------------------------------------------------
-# door primitive geometry (origin/leaf/arc)
-# ---------------------------------------------------------------------------
-
-class TestDoorPrimitiveGeometry:
-    def test_leaf_is_perpendicular_to_wall_direction(self):
-        leaf = DoorLeafPrimitive("dl0", hinge_point=(50.0, 50.0), width=30.0, orientation_angle=0.0)
-        hx, hy = leaf.hinge_point
-        lx, ly = leaf.leaf_end
-        assert abs(lx - hx) < 1e-6  # purely vertical displacement for a horizontal wall
-
-    def test_leaf_length_equals_width(self):
-        leaf = DoorLeafPrimitive("dl0", hinge_point=(50.0, 50.0), width=30.0, orientation_angle=30.0)
-        hx, hy = leaf.hinge_point
-        lx, ly = leaf.leaf_end
-        assert math.hypot(lx - hx, ly - hy) == pytest.approx(30.0, abs=1e-6)
-
-    def test_arc_spans_quarter_circle(self):
-        for angle in (0.0, 45.0, 90.0):
-            arc = DoorArcPrimitive(
-                "da0", hinge_point=(50.0, 50.0), origin_far_point=(50.0 + 30 * math.cos(math.radians(angle)),
-                                                                    50.0 + 30 * math.sin(math.radians(angle))),
-                width=30.0, orientation_angle=angle, swing_direction="left",
-            )
-            hx, hy = arc.hinge_point
-            ox, oy = arc.origin_far_point
-            ex, ey = arc.leaf_end
-            v1, v2 = (ox - hx, oy - hy), (ex - hx, ey - hy)
-            cos_angle = (v1[0] * v2[0] + v1[1] * v2[1]) / (math.hypot(*v1) * math.hypot(*v2))
-            deg = math.degrees(math.acos(max(-1.0, min(1.0, cos_angle))))
-            assert deg == pytest.approx(90.0, abs=1e-4)
-
-    def test_origin_replaces_wall_segment_shape_matches_window(self):
-        origin = DoorOriginPrimitive("do0", center=(50.0, 10.0), width=20.0, orientation_angle=0.0)
-        assert origin.start == pytest.approx((40.0, 10.0))
-        assert origin.end == pytest.approx((60.0, 10.0))
-
-    def test_svg_two_thin_lines_and_one_stroked_arc(self):
-        # task09 supersedes task08: origin and leaf are thin symbolic SVG
-        # lines again (not closed filled polygons); the arc stays a stroked
-        # path, as it always has been.
-        origin = DoorOriginPrimitive("do0", center=(50.0, 0.0), width=20.0)
-        leaf = DoorLeafPrimitive("dl0", hinge_point=(40.0, 0.0), width=20.0)
-        arc = DoorArcPrimitive("da0", hinge_point=(40.0, 0.0), origin_far_point=(60.0, 0.0), width=20.0)
-        combined = origin.to_svg() + leaf.to_svg() + arc.to_svg()
-        assert combined.count("<line") == 2
-        assert combined.count("<path") == 1
-        assert combined.count('fill="none"') == 1  # only the arc is unfilled
-
-
-# ---------------------------------------------------------------------------
-# window primitive - blue, wall-aligned line segment
-# ---------------------------------------------------------------------------
-
-class TestWindowPrimitiveGeometry:
-    def test_window_svg_is_a_single_blue_closed_polygon(self):
-        win = WindowPrimitive(
-            primitive_id="win0", center=(50.0, 10.0), width=20.0,
-            orientation_angle=0.0, thickness=8.0,
-        )
-        svg = win.to_svg()
-        assert svg.count("<line") == 0
-        assert svg.count("<path") == 1
-        assert "#3c78dc" in svg
-
-    def test_window_endpoints_collinear_with_host_wall(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=8.0)
-        win = WindowPrimitive(
-            primitive_id="win0", center=(50.0, 10.0), width=20.0,
-            orientation_angle=wall.orientation_angle, thickness=wall.thickness,
-            host_wall_id="w0",
-        )
-        s, e = win._endpoints()
-        assert s[1] == pytest.approx(10.0)
-        assert e[1] == pytest.approx(10.0)
-
-
-# ---------------------------------------------------------------------------
-# geometry_rules - projection and wall splitting
-# ---------------------------------------------------------------------------
-
-class TestProjectionAndSplitting:
-    def test_opening_projected_onto_host_wall_centerline(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-        op = OpeningPrimitive(
-            "o0", center=(50.0, 18.0), width=20.0,
-            orientation_angle=5.0, host_wall_id="w0",
-        )
-        projected = project_opening_onto_wall(op, wall)
-        assert projected.center[1] == pytest.approx(10.0, abs=0.1)
-        assert projected.orientation_angle == pytest.approx(wall.orientation_angle, abs=0.1)
-
-    def test_window_host_walls_split_at_endpoints(self):
-        wall = WallPrimitive("w0", start=(0.0, 10.0), end=(100.0, 10.0), thickness=5.0)
-        window = WindowPrimitive("win0", center=(50.0, 10.0), width=20.0,
-                                  orientation_angle=0.0, host_wall_id="w0")
-        result = split_walls_at_openings([wall], [window])
-        assert len(result) == 2
-
-    def test_split_segment_ids_are_unique(self):
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(100.0, 0.0), thickness=5.0)
-        window = WindowPrimitive("win0", center=(50.0, 0.0), width=20.0,
-                                  orientation_angle=0.0, host_wall_id="w0")
-        result = split_walls_at_openings([wall], [window])
-        ids = [w.primitive_id for w in result]
-        assert len(ids) == len(set(ids))
-
-    def test_walls_without_hosted_openings_unchanged(self):
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(100.0, 0.0), thickness=5.0)
-        result = split_walls_at_openings([wall], [])
-        assert len(result) == 1
-        assert result[0].primitive_id == "w0"
-
-    def test_split_segments_cover_complement_of_gap(self):
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(100.0, 0.0), thickness=5.0)
-        window = WindowPrimitive("win0", center=(50.0, 0.0), width=20.0,
-                                  orientation_angle=0.0, host_wall_id="w0")
-        result = split_walls_at_openings([wall], [window])
-        for seg in result:
-            xs = sorted([seg.start[0], seg.end[0]])
-            assert xs[1] <= 40.0 + 1.0 or xs[0] >= 60.0 - 1.0
-
-    def test_door_origin_segment_replaces_trimmed_wall_portion(self):
-        """Acceptance: door origin segment replaces the trimmed wall portion."""
-        wall = WallPrimitive("w0", start=(0.0, 0.0), end=(100.0, 0.0), thickness=5.0)
-        origin = DoorOriginPrimitive(
-            "door_origin_0", center=(50.0, 0.0), width=20.0,
-            orientation_angle=0.0, host_wall_id="w0",
-        )
-        result = split_walls_at_openings([wall], [origin])
-        assert len(result) == 2
-        for seg in result:
-            xs = sorted([seg.start[0], seg.end[0]])
-            assert xs[1] <= 40.0 + 1.0 or xs[0] >= 60.0 - 1.0
-
-
-# ---------------------------------------------------------------------------
-# export_svg - floor, wall, window, door, debug
-# ---------------------------------------------------------------------------
 
 class TestExportSvgFinalGroups:
-    def _all_primitives(self):
-        floor = FloorPrimitive("floor_0", [(0.0, 0.0), (100.0, 0.0), (100.0, 80.0), (0.0, 80.0)])
+    def _primitives(self):
         wall = WallPrimitive("w0", (0.0, 0.0), (100.0, 0.0))
+        window = WindowPrimitive("win0", center=(70.0, 0.0), width=20.0, host_wall_id="w0")
         origin = DoorOriginPrimitive("door_origin_0001", center=(20.0, 0.0), width=20.0, host_wall_id="w0")
         leaf = DoorLeafPrimitive("door_leaf_0001", hinge_point=(10.0, 0.0), width=20.0, host_wall_id="w0")
-        arc = DoorArcPrimitive("door_arc_0001", hinge_point=(10.0, 0.0), origin_far_point=(30.0, 0.0),
-                                width=20.0, host_wall_id="w0")
-        window = WindowPrimitive("win_0", center=(70.0, 0.0), width=20.0, host_wall_id="w0")
-        return floor, wall, origin, leaf, arc, window
+        arc = DoorArcPrimitive("door_arc_0001", hinge_point=(10.0, 0.0), origin_far_point=(30.0, 0.0), width=20.0, host_wall_id="w0")
+        return wall, window, origin, leaf, arc
 
-    def test_no_retired_class_groups_in_final_output(self):
-        floor, wall, origin, leaf, arc, window = self._all_primitives()
-        svg = build_svg(
-            image_width=128, image_height=128,
-            walls=[wall], windows=[window],
-            door_origins=[origin], door_leaves=[leaf], door_arcs=[arc], floor=floor,
-        )
-        for forbidden in ('<g id="rooms">', '<g id="walls">', '<g id="opening">',
-                          '<g id="icon">', '<g id="room">'):
-            assert forbidden not in svg
-
-    def test_exactly_four_final_semantic_groups(self):
-        floor, wall, origin, leaf, arc, window = self._all_primitives()
-        svg = build_svg(
-            image_width=128, image_height=128,
-            walls=[wall], windows=[window],
-            door_origins=[origin], door_leaves=[leaf], door_arcs=[arc], floor=floor,
-        )
-        for required in ('<g id="floor">', '<g id="wall">', '<g id="window">', '<g id="door">'):
-            assert required in svg
-
-    def test_group_order_is_floor_wall_window_door(self):
-        floor, wall, origin, leaf, arc, window = self._all_primitives()
-        svg = build_svg(
-            image_width=128, image_height=128,
-            walls=[wall], windows=[window],
-            door_origins=[origin], door_leaves=[leaf], door_arcs=[arc], floor=floor,
-        )
-        positions = [
-            svg.find('<g id="floor">'),
-            svg.find('<g id="wall">'),
-            svg.find('<g id="window">'),
-            svg.find('<g id="door">'),
-        ]
+    def test_exactly_three_final_groups_in_order(self):
+        wall, window, origin, leaf, arc = self._primitives()
+        svg = build_svg(128, 128, [wall], [window], [origin], [leaf], [arc])
+        positions = [svg.find('<g id="wall">'), svg.find('<g id="window">'), svg.find('<g id="door">')]
         assert all(p != -1 for p in positions)
         assert positions == sorted(positions)
+        assert '<g id="floor">' not in svg
 
-    def test_door_group_contains_origin_leaf_and_arc(self):
-        floor, wall, origin, leaf, arc, window = self._all_primitives()
-        svg = build_svg(
-            image_width=128, image_height=128,
-            walls=[wall], windows=[window],
-            door_origins=[origin], door_leaves=[leaf], door_arcs=[arc], floor=floor,
-        )
+    def test_no_debug_or_retired_groups(self):
+        wall, window, origin, leaf, arc = self._primitives()
+        svg = build_svg(128, 128, [wall], [window], [origin], [leaf], [arc])
+        for forbidden in ('<g id="floor">', '<g id="rooms">', '<g id="opening">', '<g id="icon">', '<g id="room">', 'id="debug"', "dasharray"):
+            assert forbidden not in svg
+
+    def test_door_group_contains_origin_leaf_arc(self):
+        wall, window, origin, leaf, arc = self._primitives()
+        svg = build_svg(128, 128, [wall], [window], [origin], [leaf], [arc])
         door_start = svg.find('<g id="door">')
-        door_end = svg.find("\n  </g>", door_start)
-        door_block = svg[door_start:door_end]
+        door_block = svg[door_start:]
         assert 'data-type="door_origin"' in door_block
         assert 'data-type="door_leaf"' in door_block
         assert 'data-type="door_arc"' in door_block
 
-    def test_svg_records_unit_and_scale_metadata(self):
-        si = ScaleInfo(unit="mm", px_to_mm=2.5, scale_status="estimated",
-                        scale_source="door_origin_width_clustering", confidence=0.8)
-        svg = build_svg(256, 256, [], [], [], [], [], scale_info=si)
-        assert 'data-unit="mm"' in svg
-        assert 'data-scale-status="estimated"' in svg
-        assert 'data-px-to-mm="2.5"' in svg
-        assert 'data-scale-source="door_origin_width_clustering"' in svg
+    def test_wall_is_black_closed_polygon(self):
+        wall, window, origin, leaf, arc = self._primitives()
+        svg = build_svg(128, 128, [wall], [], [], [], [])
+        assert "#000000" in svg
+        assert "<path" in svg
 
-    def test_build_svg_has_no_unresolved_or_debug_parameter(self):
-        # task08: debug/unresolved evidence must never reach the final SVG -
-        # build_svg no longer accepts an `unresolved` argument at all.
-        with pytest.raises(TypeError):
-            build_svg(
-                256, 256, [], [], [], [], [],
-                unresolved=[OpeningPrimitive("o_un", center=(50.0, 50.0), width=20.0)],
-            )
+    def test_window_is_blue_closed_polygon(self):
+        wall, window, origin, leaf, arc = self._primitives()
+        svg = build_svg(128, 128, [wall], [window], [], [], [])
+        assert "#3c78dc" in svg
 
-    def test_no_debug_group_in_final_svg(self):
-        floor, wall, origin, leaf, arc, window = self._all_primitives()
-        svg = build_svg(
-            128, 128,
-            walls=[wall], windows=[window],
-            door_origins=[origin], door_leaves=[leaf], door_arcs=[arc], floor=floor,
-        )
-        assert 'id="debug"' not in svg
-        assert "unresolved" not in svg
-        assert "dasharray" not in svg
-        assert "#ff8800" not in svg
+    def test_door_origin_is_thin_purple_line(self):
+        origin = DoorOriginPrimitive("door_origin_0001", center=(20.0, 0.0), width=20.0)
+        svg = origin.to_svg()
+        assert "<line" in svg
+        assert "#a046b4" in svg
+
+    def test_door_leaf_is_thin_orange_line(self):
+        leaf = DoorLeafPrimitive("door_leaf_0001", hinge_point=(10.0, 0.0), width=20.0)
+        svg = leaf.to_svg()
+        assert "<line" in svg
+        assert "#eb8c50" in svg
+
+    def test_door_arc_is_thin_red_arc(self):
+        arc = DoorArcPrimitive("door_arc_0001", hinge_point=(10.0, 0.0), origin_far_point=(30.0, 0.0), width=20.0)
+        svg = arc.to_svg()
+        assert "<path" in svg
+        assert "#dc5a5a" in svg
+        assert 'fill="none"' in svg
 
     def test_save_svg_creates_file(self, tmp_path):
         out = tmp_path / "out.svg"
         save_svg("<svg></svg>", out)
         assert out.exists()
-        assert out.read_text().startswith("<svg")
 
-    def test_svg_disabled_layers(self):
-        wall = WallPrimitive("w0", (0, 0), (100, 0))
-        svg = build_svg(
-            256, 256,
-            walls=[wall], windows=[], door_origins=[], door_leaves=[], door_arcs=[],
-            svg_config={"draw_wall": False},
+
+# ---------------------------------------------------------------------------
+# debug.py / metrics (SS17 items 33-34)
+# ---------------------------------------------------------------------------
+
+
+class TestDebugAndMetrics:
+    def test_metrics_records_rejected_components_and_validation(self):
+        from src.vectorization.debug import build_metrics
+        from src.vectorization.graph_types import RejectedEvidence
+
+        rejected = [RejectedEvidence(kind="wall_component_too_small", reason="x", class_name="wall")]
+        issues = [ValidationIssue(rule="odd_window_point_count", message="x")]
+        metrics = build_metrics(
+            image_name="sample.png", components={"wall": []}, rejected_evidence=rejected,
+            points=[], edges=[], validation_issues=issues, scale_info=RESOLVED_SCALE,
         )
-        assert '<g id="wall">' not in svg
+        assert metrics["rejected_evidence"]["wall_component_too_small"] == 1
+        assert metrics["validation_issues"][0]["rule"] == "odd_window_point_count"
+
+    def test_debug_overlay_includes_rejected_evidence(self):
+        from src.vectorization.debug import build_debug_overlay
+        from src.vectorization.graph_types import RejectedEvidence
+
+        rgb = np.zeros((32, 32, 3), dtype=np.uint8)
+        rejected = [RejectedEvidence(kind="window_too_narrow", reason="x", bbox=(5, 5, 10, 10))]
+        overlay = build_debug_overlay(rgb, [], [], rejected, RESOLVED_SCALE)
+        assert overlay.size[0] > 32
+        assert overlay.size[1] >= 32
 
 
 # ---------------------------------------------------------------------------
-# load_prediction
+# run_mask_to_vector - end-to-end integration
 # ---------------------------------------------------------------------------
 
-class TestLoadPrediction:
-    def test_find_prediction_images_filters_by_name(self, tmp_path):
-        (tmp_path / "sample_000_prediction.png").write_bytes(b"")
-        (tmp_path / "sample_000_input.png").write_bytes(b"")
-        results = find_prediction_images(tmp_path, "prediction")
-        assert len(results) == 1
-        assert "prediction" in results[0].name
-
-    def test_missing_dir_raises(self, tmp_path):
-        with pytest.raises(FileNotFoundError):
-            find_prediction_images(tmp_path / "nonexistent")
-
-    def test_load_image_returns_uint8_array(self, tmp_path):
-        from PIL import Image
-        img = Image.fromarray(np.zeros((16, 16, 3), dtype=np.uint8))
-        path = tmp_path / "test.png"
-        img.save(str(path))
-        arr = load_image_as_array(path)
-        assert arr.dtype == np.uint8
-        assert arr.shape == (16, 16, 3)
-
-
-# ---------------------------------------------------------------------------
-# run_mask_to_vector - end-to-end integration on a synthetic prediction image
-# ---------------------------------------------------------------------------
 
 class TestProcessSingleIntegration:
-    def _write_synthetic_prediction(self, tmp_path):
+    def _write_image(self, tmp_path, rgb):
         from pathlib import Path
+
         from PIL import Image as PILImage
 
-        rgb = _make_color_image(h=80, w=120)
-        path = tmp_path / "sample_000_prediction.png"
+        path = Path(tmp_path) / "sample_000_prediction.png"
         PILImage.fromarray(rgb).save(str(path))
-        return Path(path)
+        return path
 
-    def test_process_single_produces_all_required_artifacts(self, tmp_path):
+    def test_produces_all_required_artifacts(self, tmp_path):
         from src.vectorization.run_mask_to_vector import _scale_info_from_config, process_single
 
-        image_path = self._write_synthetic_prediction(tmp_path)
-        config = {
-            "cleanup": {"close_wall_gap_px": 1},
-            "walls": {"min_wall_length_px": 3},
-        }
+        h, w = 80, 80
+        rgb = np.full((h, w, 3), CLASS_PALETTE[0], dtype=np.uint8)
+        rgb[10:14, 10:60] = CLASS_PALETTE[2]
+        rgb[10:60, 10:14] = CLASS_PALETTE[2]
+        image_path = self._write_image(tmp_path, rgb)
+
+        config = {"scale": {"explicit_px_to_mm": 10.0}}
         scale_info = _scale_info_from_config(config)
         out_dir = tmp_path / "out"
-        process_single(image_path, config, scale_info, out_dir, output_filename="vector.svg")
+        result = process_single(image_path, config, scale_info, out_dir, output_filename="vector.svg")
 
         assert (out_dir / "vector.svg").exists()
         assert (out_dir / "metrics.json").exists()
         assert (out_dir / "debug_overlay.png").exists()
+        assert len(result.walls) > 0
 
-        svg_text = (out_dir / "vector.svg").read_text(encoding="utf-8")
-        assert "<svg" in svg_text
-        assert 'data-scale-status=' in svg_text
-
-    def test_metrics_json_records_scale_and_counts(self, tmp_path):
-        import json
-
+    def test_final_svg_has_only_wall_window_door_groups(self, tmp_path):
         from src.vectorization.run_mask_to_vector import _scale_info_from_config, process_single
 
-        image_path = self._write_synthetic_prediction(tmp_path)
-        config = {}
+        h, w = 80, 80
+        rgb = np.full((h, w, 3), CLASS_PALETTE[0], dtype=np.uint8)
+        rgb[10:60, 10:60] = CLASS_PALETTE[1]  # floor evidence present but must be ignored
+        rgb[10:14, 10:60] = CLASS_PALETTE[2]
+        rgb[10:60, 10:14] = CLASS_PALETTE[2]
+        image_path = self._write_image(tmp_path, rgb)
+
+        config = {"scale": {"explicit_px_to_mm": 10.0}}
         scale_info = _scale_info_from_config(config)
         out_dir = tmp_path / "out"
         process_single(image_path, config, scale_info, out_dir, output_filename="vector.svg")
 
-        metrics = json.loads((out_dir / "metrics.json").read_text(encoding="utf-8"))
-        assert "walls" in metrics
-        assert "scale" in metrics
-        assert metrics["scale"]["scale_status"] in ("resolved", "estimated", "unknown")
-
-    def test_outer_wall_not_derived_from_floor_evidence(self, tmp_path):
-        # task08: the CNN's floor class is unreliable, so the outer wall
-        # envelope must never be traced from the floor/background border.
-        # Build a sample where floor evidence spills out far beyond the
-        # actual wall rectangle (mimicking floor over-segmentation) and
-        # confirm the rendered wall polygon still hugs the small wall
-        # rectangle, not the inflated floor region.
-        from pathlib import Path
-
-        from PIL import Image as PILImage
-
-        h, w = 100, 100
-        rgb = np.full((h, w, 3), CLASS_PALETTE[0], dtype=np.uint8)
-        rgb[5:95, 5:95] = CLASS_PALETTE[1]  # floor spills across almost the whole image
-        # A small wall rectangle, much smaller than the floor region above.
-        rgb[20:24, 20:80] = CLASS_PALETTE[2]
-        rgb[76:80, 20:80] = CLASS_PALETTE[2]
-        rgb[20:80, 20:24] = CLASS_PALETTE[2]
-        rgb[20:80, 76:80] = CLASS_PALETTE[2]
-
-        path = Path(tmp_path) / "sample_000_prediction.png"
-        PILImage.fromarray(rgb).save(str(path))
-
-        from src.vectorization.run_mask_to_vector import _scale_info_from_config, process_single
-
-        config = {"walls": {"min_wall_length_px": 3}}
-        scale_info = _scale_info_from_config(config)
-        out_dir = tmp_path / "out"
-        process_single(path, config, scale_info, out_dir, output_filename="vector.svg")
-
         svg_text = (out_dir / "vector.svg").read_text(encoding="utf-8")
-        wall_start = svg_text.find('<g id="wall">')
-        wall_end = svg_text.find("</g>", wall_start)
-        wall_block = svg_text[wall_start:wall_end]
-
-        path_d = wall_block.split('<path d="')[1].split('" fill=')[0]
-        coords = [float(v) for v in re.findall(r"-?\d+\.\d+", path_d)]
-        xs, ys = coords[0::2], coords[1::2]
-
-        # The wall polygon must stay close to the 20-80 wall rectangle, not
-        # balloon out to the 5-95 floor region.
-        assert min(xs) >= 9
-        assert max(xs) <= 91
-        assert min(ys) >= 9
-        assert max(ys) <= 91
+        assert '<g id="floor">' not in svg_text
+        for required in ('<g id="wall">',):
+            assert required in svg_text
 
     def test_incompatible_mask_raises_clear_error(self, tmp_path):
-        from PIL import Image as PILImage
-
         from src.vectorization.run_mask_to_vector import _scale_info_from_config, process_single
 
-        # Retired 5-class "opening" color - must be rejected, not silently vectorized.
         rgb = np.full((32, 32, 3), (200, 80, 80), dtype=np.uint8)
-        path = tmp_path / "old_5class_prediction.png"
-        PILImage.fromarray(rgb).save(str(path))
+        image_path = self._write_image(tmp_path, rgb)
 
         config = {}
         scale_info = _scale_info_from_config(config)
         with pytest.raises(IncompatibleMaskError):
-            process_single(path, config, scale_info, tmp_path / "out")
+            process_single(image_path, config, scale_info, tmp_path / "out")

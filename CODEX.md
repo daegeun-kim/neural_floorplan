@@ -11,3 +11,7 @@ Task/spec file management rules:
 - Versioned spec files must follow the existing standard naming convention: `specs/spec_vNNN_short_name.md`.
 - Outdated spec files should be kept for now, including files explicitly marked outdated. They should only be removed when the overall project is over or when I explicitly ask for removal.
 - Repository cleanup tasks may remove obsolete generated artifacts, caches, histories, and inactive run outputs, but should preserve whole checkpoint folders when requested so previous models can be reused.
+
+Vectorization history rule:
+
+- Whenever a vectorization attempt, failure analysis, or vectorization task/spec update is made, update `specs/attempt_history.md` so the latest attempt is recorded under the appropriate phase.

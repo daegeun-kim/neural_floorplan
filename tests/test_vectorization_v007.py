@@ -447,17 +447,20 @@ class TestSnapToModuleMm:
         assert mm is None
         assert px == pytest.approx(30.0)
 
-    def test_returns_none_when_confidence_below_threshold(self):
+    def test_low_confidence_still_snaps_once_scale_is_estimated(self):
+        # Rules 123/124: once scale is resolved/estimated, a concrete mm
+        # value is required regardless of confidence - confidence is
+        # reporting metadata only (rule 114), not a conversion gate.
         si = ScaleInfo(unit="mm", px_to_mm=20.0, scale_status="estimated", confidence=0.2)
-        mm, _ = snap_to_module_mm(30.0, si, DOOR_MODULES_MM, min_confidence_for_metric=0.70)
-        assert mm is None
+        mm, _ = snap_to_module_mm(35.0, si, DOOR_MODULES_MM)
+        assert mm == pytest.approx(700.0)
 
     def test_snaps_to_nearest_door_module_when_confident(self):
         si = ScaleInfo(unit="mm", px_to_mm=20.0, scale_status="resolved", confidence=1.0)
-        # 30px * 20mm/px = 600mm -> exact module.
-        mm, px = snap_to_module_mm(30.0, si, DOOR_MODULES_MM)
-        assert mm == pytest.approx(600.0)
-        assert px == pytest.approx(30.0)
+        # 35px * 20mm/px = 700mm -> exact module.
+        mm, px = snap_to_module_mm(35.0, si, DOOR_MODULES_MM)
+        assert mm == pytest.approx(700.0)
+        assert px == pytest.approx(35.0)
 
     def test_snaps_to_nearest_wall_module_when_confident(self):
         si = ScaleInfo(unit="mm", px_to_mm=20.0, scale_status="resolved", confidence=1.0)
