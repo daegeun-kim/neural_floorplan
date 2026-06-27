@@ -74,7 +74,10 @@ doors:
   replace_wall_segment: true
 
 output:
-  output_dir: "outputs/vectorization/v008"
+  # task20: outputs/vectorization/v008/<name> was reorganized into phase
+  # folders (outputs/vectorization/README.md has the old-to-new mapping);
+  # this pipeline's output is phase3 (point-based vectorization).
+  output_dir: "outputs/vectorization/phase3_7class_point_vectorization"
   include_floor: false
   write_debug_overlay: true
   write_metrics: true

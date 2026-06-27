@@ -555,7 +555,7 @@ Optional arguments:
 
 ```powershell
 python -m src.generate_semantic_masks `
-"C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\original_vector\cubicasa5k\cubicasa5k\high_quality_architectural" `
+"C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\high_quality_architectural" `
 --verbose
 ```
 

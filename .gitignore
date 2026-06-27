@@ -1,17 +1,24 @@
-/docs/original_vector
-/checkpoints/segformer_b0
-/features/segformer_b0
-*.pt
-/features/segformer_b0
-*.pt
-/features/segformer_b0
-/checkpoints/segformer_b0
+# Python caches
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
 
-checkpoints/segformer_b0/
+# Local generated caches
+features/
+tmp/
+runs/
+*.log
 
-features/
+# Large/local datasets
+docs/high_quality_architectural/
+
+# Training outputs and local checkpoints
+checkpoints/
+checkpoints_CNN/
+checkpoints_Raster2Graph/*
+!checkpoints_Raster2Graph/
+!checkpoints_Raster2Graph/README.md
+
+# Local scratch/reference material
 code_sample/
-docs/original_vector/
-features/
-code_sample/
-docs/original_vector/

@@ -1,0 +1,687 @@
+{
+  "rows": [
+    {
+      "sample_id": "12539",
+      "category": "normal",
+      "source_variant": "crop512_margin20_truepad",
+      "standardized_margin": 0.2,
+      "content_bbox_original": [
+        218,
+        340,
+        1858,
+        1717
+      ],
+      "content_bbox_after_preprocess": [
+        73,
+        102,
+        439,
+        400
+      ],
+      "final_canvas_margins_px": {
+        "left": 73,
+        "top": 102,
+        "right": 73,
+        "bottom": 112
+      },
+      "content_touches_edge": false,
+      "gt_node_count": 68,
+      "gt_edge_count": 49,
+      "node_count_bin": "51-80",
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40,
+      "max_new_starts": 2,
+      "stage_counts": {
+        "components_nodes": 47,
+        "components_edges": 48,
+        "merged_nodes": 39,
+        "merged_edges": 23,
+        "final_nodes": 33,
+        "final_edges": 23,
+        "nodes_removed_by_post_merge_filter": 6,
+        "edges_removed_by_post_merge_filter": 0
+      },
+      "hard_filters_per_attempt": {
+        "edges_removed_angle_filter": 30,
+        "components_removed_tiny": 2,
+        "points_removed_tiny_components": 4,
+        "edges_removed_tiny_components": 2,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 8
+      },
+      "light_post_merge_filter": {
+        "edges_removed_angle_filter": 0,
+        "duplicate_edges_removed": 0,
+        "self_loop_edges_removed": 0
+      },
+      "soft_scores": {
+        "wall_evidence_alignment_score": 0.2341,
+        "rectangle_cycle_count": 0,
+        "rectangle_cycle_score": 0.0,
+        "dangling_node_count": 20,
+        "dangling_penalty": 0.3939,
+        "unsupported_edge_ratio": 0.8261,
+        "small_component_count": 10,
+        "small_component_penalty": 1.0,
+        "candidate_score": -2.3407
+      },
+      "components_before_merge": 1,
+      "components_after_merge": 10,
+      "final_num_points": 33,
+      "final_num_edges": 23,
+      "empty": false,
+      "elapsed_s": 13.79
+    },
+    {
+      "sample_id": "1316",
+      "category": "normal",
+      "source_variant": "crop512_margin20_truepad",
+      "standardized_margin": 0.2,
+      "content_bbox_original": [
+        69,
+        67,
+        656,
+        1069
+      ],
+      "content_bbox_after_preprocess": [
+        148,
+        73,
+        362,
+        439
+      ],
+      "final_canvas_margins_px": {
+        "left": 148,
+        "top": 73,
+        "right": 150,
+        "bottom": 73
+      },
+      "content_touches_edge": false,
+      "gt_node_count": 19,
+      "gt_edge_count": 17,
+      "node_count_bin": "10-50",
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40,
+      "max_new_starts": 2,
+      "stage_counts": {
+        "components_nodes": 9,
+        "components_edges": 11,
+        "merged_nodes": 9,
+        "merged_edges": 7,
+        "final_nodes": 9,
+        "final_edges": 7,
+        "nodes_removed_by_post_merge_filter": 0,
+        "edges_removed_by_post_merge_filter": 0
+      },
+      "hard_filters_per_attempt": {
+        "edges_removed_angle_filter": 0,
+        "components_removed_tiny": 0,
+        "points_removed_tiny_components": 0,
+        "edges_removed_tiny_components": 0,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 0
+      },
+      "light_post_merge_filter": {
+        "edges_removed_angle_filter": 0,
+        "duplicate_edges_removed": 0,
+        "self_loop_edges_removed": 0
+      },
+      "soft_scores": {
+        "wall_evidence_alignment_score": 0.3228,
+        "rectangle_cycle_count": 1,
+        "rectangle_cycle_score": 0.2,
+        "dangling_node_count": 4,
+        "dangling_penalty": 0.1453,
+        "unsupported_edge_ratio": 0.7143,
+        "small_component_count": 3,
+        "small_component_penalty": 0.5,
+        "candidate_score": -0.5782
+      },
+      "components_before_merge": 1,
+      "components_after_merge": 3,
+      "final_num_points": 9,
+      "final_num_edges": 7,
+      "empty": false,
+      "elapsed_s": 2.58
+    },
+    {
+      "sample_id": "13736",
+      "category": "normal",
+      "source_variant": "crop512_margin20_truepad",
+      "standardized_margin": 0.2,
+      "content_bbox_original": [
+        20,
+        32,
+        1053,
+        817
+      ],
+      "content_bbox_after_preprocess": [
+        73,
+        116,
+        439,
+        395
+      ],
+      "final_canvas_margins_px": {
+        "left": 73,
+        "top": 116,
+        "right": 73,
+        "bottom": 117
+      },
+      "content_touches_edge": false,
+      "gt_node_count": 27,
+      "gt_edge_count": 17,
+      "node_count_bin": "10-50",
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40,
+      "max_new_starts": 2,
+      "stage_counts": {
+        "components_nodes": 22,
+        "components_edges": 28,
+        "merged_nodes": 19,
+        "merged_edges": 11,
+        "final_nodes": 15,
+        "final_edges": 11,
+        "nodes_removed_by_post_merge_filter": 4,
+        "edges_removed_by_post_merge_filter": 0
+      },
+      "hard_filters_per_attempt": {
+        "edges_removed_angle_filter": 3,
+        "components_removed_tiny": 0,
+        "points_removed_tiny_components": 0,
+        "edges_removed_tiny_components": 0,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 0
+      },
+      "light_post_merge_filter": {
+        "edges_removed_angle_filter": 0,
+        "duplicate_edges_removed": 0,
+        "self_loop_edges_removed": 0
+      },
+      "soft_scores": {
+        "wall_evidence_alignment_score": 0.3158,
+        "rectangle_cycle_count": 0,
+        "rectangle_cycle_score": 0.0,
+        "dangling_node_count": 8,
+        "dangling_penalty": 0.2821,
+        "unsupported_edge_ratio": 0.6364,
+        "small_component_count": 4,
+        "small_component_penalty": 0.75,
+        "candidate_score": -1.2985
+      },
+      "components_before_merge": 1,
+      "components_after_merge": 4,
+      "final_num_points": 15,
+      "final_num_edges": 11,
+      "empty": false,
+      "elapsed_s": 3.64
+    },
+    {
+      "sample_id": "1",
+      "category": "normal",
+      "source_variant": "crop512_margin20_truepad",
+      "standardized_margin": 0.2,
+      "content_bbox_original": [
+        90,
+        118,
+        1611,
+        1171
+      ],
+      "content_bbox_after_preprocess": [
+        73,
+        142,
+        439,
+        375
+      ],
+      "final_canvas_margins_px": {
+        "left": 73,
+        "top": 142,
+        "right": 73,
+        "bottom": 137
+      },
+      "content_touches_edge": false,
+      "gt_node_count": 51,
+      "gt_edge_count": 43,
+      "node_count_bin": "51-80",
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40,
+      "max_new_starts": 2,
+      "stage_counts": {
+        "components_nodes": 36,
+        "components_edges": 42,
+        "merged_nodes": 34,
+        "merged_edges": 18,
+        "final_nodes": 30,
+        "final_edges": 18,
+        "nodes_removed_by_post_merge_filter": 4,
+        "edges_removed_by_post_merge_filter": 0
+      },
+      "hard_filters_per_attempt": {
+        "edges_removed_angle_filter": 17,
+        "components_removed_tiny": 2,
+        "points_removed_tiny_components": 4,
+        "edges_removed_tiny_components": 2,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 8
+      },
+      "light_post_merge_filter": {
+        "edges_removed_angle_filter": 0,
+        "duplicate_edges_removed": 0,
+        "self_loop_edges_removed": 0
+      },
+      "soft_scores": {
+        "wall_evidence_alignment_score": 0.3051,
+        "rectangle_cycle_count": 0,
+        "rectangle_cycle_score": 0.0,
+        "dangling_node_count": 24,
+        "dangling_penalty": 0.6923,
+        "unsupported_edge_ratio": 0.7222,
+        "small_component_count": 12,
+        "small_component_penalty": 1.0,
+        "candidate_score": -2.3675
+      },
+      "components_before_merge": 1,
+      "components_after_merge": 12,
+      "final_num_points": 30,
+      "final_num_edges": 18,
+      "empty": false,
+      "elapsed_s": 12.06
+    },
+    {
+      "sample_id": "10018",
+      "category": "normal",
+      "source_variant": "crop512_margin20_truepad",
+      "standardized_margin": 0.2,
+      "content_bbox_original": [
+        57,
+        36,
+        915,
+        918
+      ],
+      "content_bbox_after_preprocess": [
+        78,
+        73,
+        433,
+        439
+      ],
+      "final_canvas_margins_px": {
+        "left": 78,
+        "top": 73,
+        "right": 79,
+        "bottom": 73
+      },
+      "content_touches_edge": false,
+      "gt_node_count": 31,
+      "gt_edge_count": 22,
+      "node_count_bin": "10-50",
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40,
+      "max_new_starts": 2,
+      "stage_counts": {
+        "components_nodes": 21,
+        "components_edges": 24,
+        "merged_nodes": 18,
+        "merged_edges": 9,
+        "final_nodes": 13,
+        "final_edges": 9,
+        "nodes_removed_by_post_merge_filter": 5,
+        "edges_removed_by_post_merge_filter": 0
+      },
+      "hard_filters_per_attempt": {
+        "edges_removed_angle_filter": 2,
+        "components_removed_tiny": 0,
+        "points_removed_tiny_components": 0,
+        "edges_removed_tiny_components": 0,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 0
+      },
+      "light_post_merge_filter": {
+        "edges_removed_angle_filter": 0,
+        "duplicate_edges_removed": 0,
+        "self_loop_edges_removed": 0
+      },
+      "soft_scores": {
+        "wall_evidence_alignment_score": 0.4032,
+        "rectangle_cycle_count": 0,
+        "rectangle_cycle_score": 0.0,
+        "dangling_node_count": 8,
+        "dangling_penalty": 0.4083,
+        "unsupported_edge_ratio": 0.3333,
+        "small_component_count": 4,
+        "small_component_penalty": 0.75,
+        "candidate_score": -0.6194
+      },
+      "components_before_merge": 1,
+      "components_after_merge": 4,
+      "final_num_points": 13,
+      "final_num_edges": 9,
+      "empty": false,
+      "elapsed_s": 2.78
+    },
+    {
+      "sample_id": "10025",
+      "category": "normal",
+      "source_variant": "crop512_margin20_truepad",
+      "standardized_margin": 0.2,
+      "content_bbox_original": [
+        168,
+        79,
+        1436,
+        1398
+      ],
+      "content_bbox_after_preprocess": [
+        80,
+        73,
+        432,
+        439
+      ],
+      "final_canvas_margins_px": {
+        "left": 80,
+        "top": 73,
+        "right": 80,
+        "bottom": 73
+      },
+      "content_touches_edge": false,
+      "gt_node_count": 48,
+      "gt_edge_count": 31,
+      "node_count_bin": "10-50",
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40,
+      "max_new_starts": 2,
+      "stage_counts": {
+        "components_nodes": 27,
+        "components_edges": 35,
+        "merged_nodes": 23,
+        "merged_edges": 14,
+        "final_nodes": 19,
+        "final_edges": 14,
+        "nodes_removed_by_post_merge_filter": 4,
+        "edges_removed_by_post_merge_filter": 0
+      },
+      "hard_filters_per_attempt": {
+        "edges_removed_angle_filter": 1,
+        "components_removed_tiny": 0,
+        "points_removed_tiny_components": 0,
+        "edges_removed_tiny_components": 0,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 1
+      },
+      "light_post_merge_filter": {
+        "edges_removed_angle_filter": 0,
+        "duplicate_edges_removed": 0,
+        "self_loop_edges_removed": 0
+      },
+      "soft_scores": {
+        "wall_evidence_alignment_score": 0.4184,
+        "rectangle_cycle_count": 0,
+        "rectangle_cycle_score": 0.0,
+        "dangling_node_count": 10,
+        "dangling_penalty": 0.2713,
+        "unsupported_edge_ratio": 0.4286,
+        "small_component_count": 5,
+        "small_component_penalty": 1.0,
+        "candidate_score": -0.809
+      },
+      "components_before_merge": 1,
+      "components_after_merge": 5,
+      "final_num_points": 19,
+      "final_num_edges": 14,
+      "empty": false,
+      "elapsed_s": 5.06
+    },
+    {
+      "sample_id": "10026",
+      "category": "normal",
+      "source_variant": "crop512_margin20_truepad",
+      "standardized_margin": 0.2,
+      "content_bbox_original": [
+        18,
+        54,
+        1264,
+        1124
+      ],
+      "content_bbox_after_preprocess": [
+        73,
+        99,
+        439,
+        412
+      ],
+      "final_canvas_margins_px": {
+        "left": 73,
+        "top": 99,
+        "right": 73,
+        "bottom": 100
+      },
+      "content_touches_edge": false,
+      "gt_node_count": 34,
+      "gt_edge_count": 24,
+      "node_count_bin": "10-50",
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40,
+      "max_new_starts": 2,
+      "stage_counts": {
+        "components_nodes": 19,
+        "components_edges": 20,
+        "merged_nodes": 20,
+        "merged_edges": 13,
+        "final_nodes": 18,
+        "final_edges": 13,
+        "nodes_removed_by_post_merge_filter": 2,
+        "edges_removed_by_post_merge_filter": 0
+      },
+      "hard_filters_per_attempt": {
+        "edges_removed_angle_filter": 8,
+        "components_removed_tiny": 0,
+        "points_removed_tiny_components": 0,
+        "edges_removed_tiny_components": 0,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 2
+      },
+      "light_post_merge_filter": {
+        "edges_removed_angle_filter": 0,
+        "duplicate_edges_removed": 0,
+        "self_loop_edges_removed": 0
+      },
+      "soft_scores": {
+        "wall_evidence_alignment_score": 0.255,
+        "rectangle_cycle_count": 1,
+        "rectangle_cycle_score": 0.2,
+        "dangling_node_count": 10,
+        "dangling_penalty": 0.3162,
+        "unsupported_edge_ratio": 0.9231,
+        "small_component_count": 6,
+        "small_component_penalty": 1.0,
+        "candidate_score": -1.9555
+      },
+      "components_before_merge": 1,
+      "components_after_merge": 6,
+      "final_num_points": 18,
+      "final_num_edges": 13,
+      "empty": false,
+      "elapsed_s": 5.85
+    },
+    {
+      "sample_id": "10029",
+      "category": "normal",
+      "source_variant": "crop512_margin20_truepad",
+      "standardized_margin": 0.2,
+      "content_bbox_original": [
+        6,
+        55,
+        1302,
+        964
+      ],
+      "content_bbox_after_preprocess": [
+        73,
+        128,
+        439,
+        384
+      ],
+      "final_canvas_margins_px": {
+        "left": 73,
+        "top": 128,
+        "right": 73,
+        "bottom": 128
+      },
+      "content_touches_edge": false,
+      "gt_node_count": 55,
+      "gt_edge_count": 37,
+      "node_count_bin": "51-80",
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40,
+      "max_new_starts": 2,
+      "stage_counts": {
+        "components_nodes": 32,
+        "components_edges": 38,
+        "merged_nodes": 30,
+        "merged_edges": 17,
+        "final_nodes": 27,
+        "final_edges": 17,
+        "nodes_removed_by_post_merge_filter": 3,
+        "edges_removed_by_post_merge_filter": 0
+      },
+      "hard_filters_per_attempt": {
+        "edges_removed_angle_filter": 12,
+        "components_removed_tiny": 0,
+        "points_removed_tiny_components": 0,
+        "edges_removed_tiny_components": 0,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 3
+      },
+      "light_post_merge_filter": {
+        "edges_removed_angle_filter": 0,
+        "duplicate_edges_removed": 0,
+        "self_loop_edges_removed": 0
+      },
+      "soft_scores": {
+        "wall_evidence_alignment_score": 0.2719,
+        "rectangle_cycle_count": 0,
+        "rectangle_cycle_score": 0.0,
+        "dangling_node_count": 20,
+        "dangling_penalty": 0.6011,
+        "unsupported_edge_ratio": 0.7647,
+        "small_component_count": 10,
+        "small_component_penalty": 1.0,
+        "candidate_score": -2.4154
+      },
+      "components_before_merge": 1,
+      "components_after_merge": 10,
+      "final_num_points": 27,
+      "final_num_edges": 17,
+      "empty": false,
+      "elapsed_s": 6.02
+    }
+  ],
+  "summary": {
+    "task": "Task 30",
+    "generation_settings": {
+      "first_step_threshold": 0.02,
+      "later_step_threshold": 0.02,
+      "first_step_force_best": true,
+      "edge_search_threshold": 50,
+      "monte_times": 4,
+      "max_candidates_per_step": 40
+    },
+    "mask_rerun_settings": {
+      "covered_node_radius_px": 24,
+      "covered_edge_width_px": 30,
+      "covered_mask_dilation_px": 20,
+      "min_component_points": 3,
+      "min_component_edges": 2,
+      "max_new_starts": 2
+    },
+    "merge_settings": {
+      "node_snap_tolerance_px": 6,
+      "edge_intersection_tolerance_px": 8,
+      "collinear_overlap_tolerance_px": 8
+    },
+    "filter_settings": {
+      "angle_tol_deg": 10,
+      "min_component_points": 3,
+      "min_component_edges": 2,
+      "one_edge_min_length_px": 80,
+      "one_edge_min_evidence": 0.65,
+      "dangling_short_edge_max_px": 35,
+      "dangling_edge_min_evidence": 0.45,
+      "wall_evidence_band_px": 10,
+      "dark_pixel_threshold": 180
+    },
+    "scoring_settings": {
+      "wall_evidence_band_px": 10,
+      "dark_pixel_threshold": 180,
+      "min_cycle_area_px2": 400,
+      "max_cycle_aspect_ratio": 8.0,
+      "dangling_ratio_soft_limit": 0.35,
+      "unsupported_edge_threshold": 0.35,
+      "max_expected_cycles": 5.0,
+      "w_wall_evidence": 3.0,
+      "w_cycle_score": 2.0,
+      "w_dangling_penalty": 1.5,
+      "w_unsupported": 2.0,
+      "w_small_comp": 1.0,
+      "w_edge_count": 0.2
+    },
+    "total_samples": 8,
+    "non_empty": 8,
+    "empty": 0,
+    "non_empty_rate": 1.0,
+    "avg_final_nodes": 20.5,
+    "avg_final_edges": 14.0,
+    "avg_wall_evidence": 0.316,
+    "avg_cycle_score": 0.05,
+    "avg_dangling_penalty": 0.389,
+    "avg_unsupported_ratio": 0.669,
+    "samples_content_touches_edge": 0,
+    "by_node_count_bin": {
+      "10-50": {
+        "total": 5,
+        "empty": 0,
+        "avg_nodes": 14.8,
+        "avg_wall": 0.343
+      },
+      "51-80": {
+        "total": 3,
+        "empty": 0,
+        "avg_nodes": 30.0,
+        "avg_wall": 0.27
+      }
+    }
+  }
+}

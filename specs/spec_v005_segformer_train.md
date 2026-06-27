@@ -123,7 +123,7 @@ The exact palette can be adjusted only if all related code and tests are updated
 A sample source file was inspected:
 
 ```txt
-docs/original_vector/cubicasa5k/cubicasa5k/high_quality_architectural/2/model.svg
+docs/high_quality_architectural/2/model.svg
 ```
 
 Relevant observed structure:

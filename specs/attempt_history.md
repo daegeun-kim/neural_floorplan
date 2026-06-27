@@ -456,7 +456,67 @@ If one evidence type is missing, the point should still be inferred from the str
 
 This is still part of the current Phase 5 point-inference direction. It does not change the overall vectorization concept. It clarifies that door objects begin from red clusters first, and point inference follows from that door object.
 
-## 7. Summary Of Intention Changes
+## 7. Phase 6: Settled Raster-To-Graph Inference
+
+### Intention
+
+The next vectorization direction after the point-graph restart was to use the external Raster-to-Graph checkpoint instead of continuing to hand-build wall topology from semantic masks.
+
+The input should be:
+
+```txt
+model_clean.png
+```
+
+The original possible supervised graph target was:
+
+```txt
+masks/wall_graph.json
+```
+
+The first direct inference attempts often produced either a very accurate graph or no graph at all. The project therefore shifted from training first to adapting the inference process around this dataset.
+
+### What Changed In Phase 4
+
+```txt
+model_clean.png
+-> content bbox crop
+-> true 20% white padding around content
+-> long edge scaled to 512 px
+-> centered on a white 512x512 canvas
+-> original Raster-to-Graph mean/std normalization
+-> pretrained checkpoint0299.pth
+-> generous autoregressive inference
+-> hard/soft validity scoring and reranking
+-> mask-and-rerun multistart recovery
+-> merge-on-intersection
+-> light post-merge cleanup
+```
+
+Important local changes:
+
+- standardized input as `crop512_margin20_truepad`
+- lowered graph-generation thresholds enough to reduce empty outputs
+- increased pixel tolerance so geometry is judged by architectural logic, not pixel-perfect matching
+- added hard angle filtering to keep only near-horizontal or near-vertical edges
+- added soft scoring for wall evidence, rectangle cycles, dangling penalties, and unsupported-edge penalties
+- added mask-and-rerun multistart so disconnected graph regions can be generated
+- merged components by node snapping, H/V intersection insertion, edge splitting, and collinear merge
+- reduced final filtering so valid fragments created during merge are not deleted
+
+### Current Status
+
+The current Raster-to-Graph method is satisfactory enough that no fine-tuning is needed for now. Fine-tuning remains a future fallback, not the active plan.
+
+Current output organization:
+
+```txt
+outputs/vectorization/phase4_raster2graph_generous_inference/<sample>/
+```
+
+Each sample folder contains the preprocessed input, predicted graph JSON/SVG, overlays, metrics, and component diagnostics. The testing-only `outputs/raster2graph/` folder is retired.
+
+## 8. Summary Of Intention Changes
 
 | Phase | CNN Intention | Vectorization Intention | Main Failure | Resulting Change |
 |---|---|---|---|---|
@@ -464,28 +524,31 @@ This is still part of the current Phase 5 point-inference direction. It does not
 | 7-class segmentation | predict vectorization-useful wall/window/door evidence | convert richer masks into vectors | geometry still failed because topology was implicit | redesign vectorization rules |
 | early semantic vectorization | keep class-to-object mapping simple | convert masks into walls/floor/openings | output looked contour-like and disconnected | add architectural primitive rules |
 | wall/opening refinement | keep 7-class CNN | fix wall connectivity and hosted openings | component heuristics still unstable | restart vectorization from graph points |
-| point-graph restart | keep 7-class CNN as evidence source | detect points, align, connect | current open challenge is robust point/scale detection | continue improving point graph and diagnostics |
+| point-graph restart | keep 7-class CNN as evidence source | detect points, align, connect | point/scale detection remained brittle | move to Raster-to-Graph wall graph prediction |
+| Raster-to-Graph inference | use clean SVG-rendered raster as graph-model input | adapt pretrained checkpoint with preprocessing, thresholds, multistart, scoring, and merge cleanup | direct checkpoint inference was too often empty | settled on generous inference from `model_clean.png`; no fine-tuning needed for now |
 
-## 8. Current Project Position
+## 9. Current Project Position
 
 The current best understanding is:
 
 ```txt
 The CNN should predict semantic evidence.
-The vectorizer should build architectural topology.
+Raster-to-Graph should produce the wall topology.
+The vectorizer/CAD stage should attach classification and openings later.
 ```
 
-The CNN is not expected to solve vectorization by itself.
+The CNN is not expected to solve wall graph vectorization by itself.
 
-The active 7-class CNN is still useful because it provides wall/window/door evidence. However, the vectorizer must now treat that evidence as input to a graph-building process, not as final geometry.
+The active 7-class CNN is still useful because it provides wall/window/door evidence. However, the current Phase 4 wall graph comes from the pretrained Raster-to-Graph inference pipeline, not from semantic-mask point extraction.
 
 The current vectorization direction is therefore:
 
 ```txt
-semantic evidence
--> architectural points
--> orthogonal graph
--> clean SVG
+model_clean.png
+-> pretrained Raster-to-Graph inference
+-> orthogonal wall graph
+-> later attach door/window evidence
+-> clean CAD-like SVG / JSON
 ```
 
-This is the main conceptual restart from the earlier attempts.
+This is the current settled direction. The earlier semantic and point-graph attempts remain important history because they explain why the project moved toward graph prediction.

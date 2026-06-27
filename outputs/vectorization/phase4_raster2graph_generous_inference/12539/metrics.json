@@ -1,0 +1,76 @@
+{
+  "sample_id": "12539",
+  "category": "normal",
+  "source_variant": "crop512_margin20_truepad",
+  "standardized_margin": 0.2,
+  "content_bbox_original": [
+    218,
+    340,
+    1858,
+    1717
+  ],
+  "content_bbox_after_preprocess": [
+    73,
+    102,
+    439,
+    400
+  ],
+  "final_canvas_margins_px": {
+    "left": 73,
+    "top": 102,
+    "right": 73,
+    "bottom": 112
+  },
+  "content_touches_edge": false,
+  "gt_node_count": 68,
+  "gt_edge_count": 49,
+  "node_count_bin": "51-80",
+  "first_step_threshold": 0.02,
+  "later_step_threshold": 0.02,
+  "first_step_force_best": true,
+  "edge_search_threshold": 50,
+  "monte_times": 4,
+  "max_candidates_per_step": 40,
+  "max_new_starts": 2,
+  "stage_counts": {
+    "components_nodes": 47,
+    "components_edges": 48,
+    "merged_nodes": 39,
+    "merged_edges": 23,
+    "final_nodes": 33,
+    "final_edges": 23,
+    "nodes_removed_by_post_merge_filter": 6,
+    "edges_removed_by_post_merge_filter": 0
+  },
+  "hard_filters_per_attempt": {
+    "edges_removed_angle_filter": 30,
+    "components_removed_tiny": 2,
+    "points_removed_tiny_components": 4,
+    "edges_removed_tiny_components": 2,
+    "one_edge_components_removed": 0,
+    "one_edge_components_kept_by_evidence": 0,
+    "dangling_edges_removed": 8
+  },
+  "light_post_merge_filter": {
+    "edges_removed_angle_filter": 0,
+    "duplicate_edges_removed": 0,
+    "self_loop_edges_removed": 0
+  },
+  "soft_scores": {
+    "wall_evidence_alignment_score": 0.2341,
+    "rectangle_cycle_count": 0,
+    "rectangle_cycle_score": 0.0,
+    "dangling_node_count": 20,
+    "dangling_penalty": 0.3939,
+    "unsupported_edge_ratio": 0.8261,
+    "small_component_count": 10,
+    "small_component_penalty": 1.0,
+    "candidate_score": -2.3407
+  },
+  "components_before_merge": 1,
+  "components_after_merge": 10,
+  "final_num_points": 33,
+  "final_num_edges": 23,
+  "empty": false,
+  "elapsed_s": 13.79
+}
