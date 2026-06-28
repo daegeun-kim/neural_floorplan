@@ -1,4 +1,4 @@
-# Task 18 - Door Bbox Aspect-Ratio Acceptance Floor
+﻿# Task 18 - Door Bbox Aspect-Ratio Acceptance Floor
 
 ## Objective
 
@@ -9,7 +9,7 @@ Add one more condition for door bbox acceptance: only bboxes with aspect ratio s
 - `point_detection.py` `_detect_door_points`: before vertex selection runs at all, compute `long_side / short_side` for the red `door_arc` bbox; reject (`RejectedEvidence(kind="unresolved_door_arc_aspect_ratio")`) when it exceeds `max_door_bbox_aspect_ratio` (default `2.0`, boundary inclusive). This is a shape floor on the red cluster itself - the same class of check as the existing minimum-component-area floor, not an evidence-based rejection.
 - `configs/vectorization_v008.yaml` / `run_mask_to_vector.py`: new `doors.max_bbox_aspect_ratio` config key (default `2.0`), wired into `detect_cfg["max_door_bbox_aspect_ratio"]`.
 - `specs/vectorization_must_rules.md`: rule 51 extended, new rule 53.
-- `specs/spec_v008_mask_to_vector.md`: ## 9.3 updated, new validation item 53, new "Task18 Debugging Notes" section.
+- `specs/spec_v008_phase3_mask_to_vector.md`: ## 9.3 updated, new validation item 53, new "Task18 Debugging Notes" section.
 - `tests/test_vectorization_v008.py`: widened several synthetic door-arc fixtures that were deliberately elongated (~3.5:1, a stand-in shape never meant to model the new floor) to a realistic, roughly-square shape; one test using extreme elongation to represent a "weak" cluster was changed to represent weakness via smaller area instead.
 
 ## Verification

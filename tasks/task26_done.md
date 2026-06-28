@@ -1,4 +1,4 @@
-# Task 26 - Raster-to-Graph Generous Single-Output Phase 4 Run
+﻿# Task 26 - Raster-to-Graph Generous Single-Output Phase 4 Run
 
 ## Objective
 
@@ -394,7 +394,7 @@ Did mask-and-rerun produce real missing regions or duplicate the same region?
 After implementation, update:
 
 ```txt
-specs/spec_v010_raster2graph_modifications.md
+specs/spec_v010_phase4_raster2graph_modifications.md
 ```
 
 Add this task's final settings and whether they are:
@@ -430,6 +430,6 @@ single output folder per sample
 7. Additional starts are capped at `max_new_starts = 4`.
 8. Components can merge when they intersect or nearly touch.
 9. `summary.md` reports production rate and qualitative graph quality.
-10. `specs/spec_v010_raster2graph_modifications.md` is updated.
+10. `specs/spec_v010_phase4_raster2graph_modifications.md` is updated.
 11. No training, fine-tuning, or checkpoint modification happens in this task.
 

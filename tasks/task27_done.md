@@ -1,4 +1,4 @@
-# Task 27 - Raster-to-Graph Very Generous Generation With Graph Validity Reranking
+﻿# Task 27 - Raster-to-Graph Very Generous Generation With Graph Validity Reranking
 
 ## Objective
 
@@ -536,7 +536,7 @@ recommended next threshold adjustment
 Update:
 
 ```txt
-specs/spec_v010_raster2graph_modifications.md
+specs/spec_v010_phase4_raster2graph_modifications.md
 ```
 
 Add Task 27 details:
@@ -567,6 +567,6 @@ outputs replace phase4_raster2graph_generous_inference/run001
 10. Junction support score is not implemented.
 11. Candidate selection uses graph validity reranking, not raw node/edge count alone.
 12. `summary.md` reports hard-filter removals and soft scores.
-13. `specs/spec_v010_raster2graph_modifications.md` is updated.
+13. `specs/spec_v010_phase4_raster2graph_modifications.md` is updated.
 14. No training, fine-tuning, or checkpoint modification happens in this task.
 

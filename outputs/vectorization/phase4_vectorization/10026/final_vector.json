@@ -1,0 +1,2997 @@
+{
+  "coordinate_space": "preprocessed_512",
+  "preprocessing": {
+    "source_image": "C:\\Users\\kdgki\\Desktop\\MSCDP\\Projects\\neural_floorplan\\outputs\\vectorization\\phase4_vectorization\\10026\\image.png",
+    "source_width": 0,
+    "source_height": 0,
+    "content_bbox_original": [
+      73,
+      99,
+      439,
+      412
+    ],
+    "padding_fraction": 0.2,
+    "padded_width": 0,
+    "padded_height": 0,
+    "scale_to_512": 1.0,
+    "canvas_offset_x": 0,
+    "canvas_offset_y": 0,
+    "coordinate_space": "preprocessed_512",
+    "source_variant": "crop512_margin20_truepad",
+    "content_touches_edge": false,
+    "final_canvas_margins_px": {
+      "left": 73,
+      "top": 99,
+      "right": 73,
+      "bottom": 100
+    },
+    "content_bbox_after_preprocess": [
+      73,
+      99,
+      439,
+      412
+    ]
+  },
+  "scale": {
+    "status": "estimated",
+    "px_to_mm": 26.424501424501425,
+    "source": "door_arc_bbox_long_edge_clustering",
+    "confidence": 0.8889,
+    "evidence": {
+      "red_arc_bbox_long_edges_px": [
+        24.0,
+        39.0,
+        24.0,
+        23.0,
+        4.0,
+        27.0,
+        26.0,
+        27.0,
+        28.0
+      ],
+      "red_arc_px_to_mm_candidates": [
+        17.94871794871795,
+        23.076923076923077,
+        25.0,
+        25.925925925925927,
+        26.923076923076923,
+        29.166666666666668,
+        30.434782608695652,
+        32.142857142857146,
+        33.333333333333336,
+        34.61538461538461,
+        37.5,
+        39.130434782608695,
+        175.0,
+        225.0
+      ],
+      "red_arc_selected_modules_mm": [
+        700.0,
+        900.0
+      ],
+      "selected_px_to_mm": 26.424501424501425,
+      "scale_rejected_outliers": [
+        4.0
+      ],
+      "door_origin_check_px_to_mm": 33.16898072939827,
+      "wall_thickness_check_px_to_mm": 2.5641025641025643,
+      "scale_source": "door_arc_bbox_long_edge_clustering"
+    }
+  },
+  "wall_graph": {
+    "raw": {
+      "nodes": [
+        [
+          327,
+          320
+        ],
+        [
+          286,
+          383
+        ],
+        [
+          436,
+          100
+        ],
+        [
+          328,
+          214
+        ],
+        [
+          400,
+          320
+        ],
+        [
+          327,
+          383
+        ],
+        [
+          400,
+          275
+        ],
+        [
+          328,
+          206
+        ],
+        [
+          437,
+          383
+        ],
+        [
+          121,
+          214
+        ],
+        [
+          438,
+          296
+        ],
+        [
+          326,
+          226
+        ],
+        [
+          286,
+          214
+        ],
+        [
+          121,
+          100
+        ],
+        [
+          400,
+          299
+        ],
+        [
+          338,
+          277
+        ],
+        [
+          328,
+          100
+        ],
+        [
+          437,
+          214
+        ]
+      ],
+      "edges": [
+        [
+          327,
+          320,
+          400,
+          320
+        ],
+        [
+          286,
+          383,
+          437,
+          383
+        ],
+        [
+          286,
+          383,
+          286,
+          214
+        ],
+        [
+          436,
+          100,
+          437,
+          383
+        ],
+        [
+          436,
+          100,
+          121,
+          100
+        ],
+        [
+          328,
+          214,
+          437,
+          214
+        ],
+        [
+          400,
+          320,
+          400,
+          299
+        ],
+        [
+          327,
+          383,
+          326,
+          226
+        ],
+        [
+          400,
+          275,
+          338,
+          277
+        ],
+        [
+          328,
+          206,
+          328,
+          100
+        ],
+        [
+          121,
+          214,
+          286,
+          214
+        ],
+        [
+          121,
+          214,
+          121,
+          100
+        ],
+        [
+          438,
+          296,
+          400,
+          299
+        ]
+      ]
+    },
+    "aligned": {
+      "nodes": [
+        [
+          327.0,
+          320.0
+        ],
+        [
+          400.0,
+          320.0
+        ],
+        [
+          286.0,
+          383.0
+        ],
+        [
+          327.25,
+          383.0
+        ],
+        [
+          437.0,
+          383.0
+        ],
+        [
+          121.0,
+          100.0
+        ],
+        [
+          327.25,
+          100.0
+        ],
+        [
+          436.0,
+          100.0
+        ],
+        [
+          121.0,
+          214.0
+        ],
+        [
+          286.0,
+          214.0
+        ],
+        [
+          328.0,
+          214.0
+        ],
+        [
+          437.0,
+          214.0
+        ],
+        [
+          338.0,
+          276.0
+        ],
+        [
+          400.0,
+          276.0
+        ],
+        [
+          400.0,
+          297.5
+        ],
+        [
+          436.5,
+          297.5
+        ],
+        [
+          327.25,
+          206.0
+        ],
+        [
+          327.25,
+          226.0
+        ]
+      ],
+      "edges": [
+        [
+          327.0,
+          320.0,
+          400.0,
+          320.0
+        ],
+        [
+          286.0,
+          383.0,
+          327.25,
+          383.0
+        ],
+        [
+          327.25,
+          383.0,
+          437.0,
+          383.0
+        ],
+        [
+          121.0,
+          100.0,
+          327.25,
+          100.0
+        ],
+        [
+          327.25,
+          100.0,
+          436.0,
+          100.0
+        ],
+        [
+          121.0,
+          214.0,
+          286.0,
+          214.0
+        ],
+        [
+          328.0,
+          214.0,
+          437.0,
+          214.0
+        ],
+        [
+          338.0,
+          276.0,
+          400.0,
+          276.0
+        ],
+        [
+          400.0,
+          297.5,
+          436.5,
+          297.5
+        ],
+        [
+          286.0,
+          214.0,
+          286.0,
+          383.0
+        ],
+        [
+          436.5,
+          100.0,
+          436.5,
+          214.0
+        ],
+        [
+          436.5,
+          214.0,
+          436.5,
+          297.5
+        ],
+        [
+          436.5,
+          297.5,
+          436.5,
+          383.0
+        ],
+        [
+          400.0,
+          299.0,
+          400.0,
+          320.0
+        ],
+        [
+          327.25,
+          100.0,
+          327.25,
+          206.0
+        ],
+        [
+          327.25,
+          226.0,
+          327.25,
+          320.0
+        ],
+        [
+          327.25,
+          320.0,
+          327.25,
+          383.0
+        ],
+        [
+          121.0,
+          100.0,
+          121.0,
+          214.0
+        ]
+      ]
+    },
+    "trimmed": {
+      "edges": [
+        [
+          327.0,
+          320.0,
+          400.0,
+          320.0
+        ],
+        [
+          286.0,
+          383.0,
+          301.0,
+          383.0
+        ],
+        [
+          327.25,
+          383.0,
+          437.0,
+          383.0
+        ],
+        [
+          121.0,
+          100.0,
+          327.25,
+          100.0
+        ],
+        [
+          327.25,
+          100.0,
+          436.0,
+          100.0
+        ],
+        [
+          121.0,
+          214.0,
+          286.0,
+          214.0
+        ],
+        [
+          328.0,
+          214.0,
+          380.0,
+          214.0
+        ],
+        [
+          402.0,
+          214.0,
+          437.0,
+          214.0
+        ],
+        [
+          338.0,
+          276.0,
+          400.0,
+          276.0
+        ],
+        [
+          400.0,
+          297.5,
+          436.5,
+          297.5
+        ],
+        [
+          286.0,
+          214.0,
+          286.0,
+          383.0
+        ],
+        [
+          436.5,
+          100.0,
+          436.5,
+          139.38662790697674
+        ],
+        [
+          436.5,
+          181.38662790697674,
+          436.5,
+          214.0
+        ],
+        [
+          436.5,
+          214.0,
+          436.5,
+          230.29754601226995
+        ],
+        [
+          436.5,
+          271.29754601226995,
+          436.5,
+          297.5
+        ],
+        [
+          436.5,
+          297.5,
+          436.5,
+          316.6588235294118
+        ],
+        [
+          436.5,
+          358.6588235294118,
+          436.5,
+          383.0
+        ],
+        [
+          400.0,
+          299.0,
+          400.0,
+          320.0
+        ],
+        [
+          327.25,
+          100.0,
+          327.25,
+          161.0
+        ],
+        [
+          327.25,
+          187.49056603773585,
+          327.25,
+          206.0
+        ],
+        [
+          327.25,
+          226.0,
+          327.25,
+          228.0
+        ],
+        [
+          327.25,
+          249.0,
+          327.25,
+          292.0
+        ],
+        [
+          327.25,
+          318.49056603773585,
+          327.25,
+          320.0
+        ],
+        [
+          327.25,
+          320.0,
+          327.25,
+          326.0
+        ],
+        [
+          327.25,
+          352.49056603773585,
+          327.25,
+          354.0
+        ],
+        [
+          327.25,
+          380.49056603773585,
+          327.25,
+          383.0
+        ],
+        [
+          121.0,
+          100.0,
+          121.0,
+          104.232139898432
+        ],
+        [
+          121.0,
+          203.0592991913747,
+          121.0,
+          214.0
+        ]
+      ],
+      "opening_gaps": [
+        {
+          "opening_type": "door",
+          "source_component_id": 10,
+          "host_edge_idx": 1,
+          "host_edge_raw": [
+            286.0,
+            383.0,
+            327.25,
+            383.0
+          ],
+          "snapped_points": [
+            [
+              301.0,
+              383.0
+            ],
+            [
+              327.25,
+              383.0
+            ]
+          ],
+          "original_interval": [
+            0.36363636363636365,
+            1.0
+          ],
+          "adjusted_interval": [
+            0.36363636363636365,
+            1.0
+          ],
+          "t_start": 0.36363636363636365,
+          "t_end": 1.0,
+          "width_px": 26.25,
+          "width_mm": 700.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 3,
+          "host_edge_idx": 6,
+          "host_edge_raw": [
+            328.0,
+            214.0,
+            437.0,
+            214.0
+          ],
+          "snapped_points": [
+            [
+              380.0,
+              214.0
+            ],
+            [
+              402.0,
+              214.0
+            ]
+          ],
+          "original_interval": [
+            0.47706422018348627,
+            0.6788990825688074
+          ],
+          "adjusted_interval": [
+            0.47706422018348627,
+            0.6788990825688074
+          ],
+          "t_start": 0.47706422018348627,
+          "t_end": 0.6788990825688074,
+          "width_px": 22.0,
+          "width_mm": 581.3390313390314,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "window",
+          "source_component_id": 3,
+          "host_edge_idx": 10,
+          "host_edge_raw": [
+            436.5,
+            100.0,
+            436.5,
+            214.0
+          ],
+          "snapped_points": [
+            [
+              436.5,
+              139.38662790697674
+            ],
+            [
+              436.5,
+              181.38662790697674
+            ]
+          ],
+          "original_interval": [
+            0.34549673602611175,
+            0.7139177886576907
+          ],
+          "adjusted_interval": [
+            0.34549673602611175,
+            0.7139177886576907
+          ],
+          "t_start": 0.34549673602611175,
+          "t_end": 0.7139177886576907,
+          "width_px": 42.0,
+          "width_mm": 1109.8290598290598,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "window",
+          "source_component_id": 4,
+          "host_edge_idx": 11,
+          "host_edge_raw": [
+            436.5,
+            214.0,
+            436.5,
+            297.5
+          ],
+          "snapped_points": [
+            [
+              436.5,
+              230.29754601226995
+            ],
+            [
+              436.5,
+              271.29754601226995
+            ]
+          ],
+          "original_interval": [
+            0.19518019176371196,
+            0.6861981558355682
+          ],
+          "adjusted_interval": [
+            0.19518019176371196,
+            0.6861981558355682
+          ],
+          "t_start": 0.19518019176371196,
+          "t_end": 0.6861981558355682,
+          "width_px": 41.0,
+          "width_mm": 1083.4045584045584,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "window",
+          "source_component_id": 5,
+          "host_edge_idx": 12,
+          "host_edge_raw": [
+            436.5,
+            297.5,
+            436.5,
+            383.0
+          ],
+          "snapped_points": [
+            [
+              436.5,
+              316.6588235294118
+            ],
+            [
+              436.5,
+              358.6588235294118
+            ]
+          ],
+          "original_interval": [
+            0.2240798073615414,
+            0.71530787753698
+          ],
+          "adjusted_interval": [
+            0.2240798073615414,
+            0.71530787753698
+          ],
+          "t_start": 0.2240798073615414,
+          "t_end": 0.71530787753698,
+          "width_px": 42.0,
+          "width_mm": 1109.8290598290598,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 1,
+          "host_edge_idx": 14,
+          "host_edge_raw": [
+            327.25,
+            100.0,
+            327.25,
+            206.0
+          ],
+          "snapped_points": [
+            [
+              327.25,
+              161.0
+            ],
+            [
+              327.25,
+              187.49056603773585
+            ]
+          ],
+          "original_interval": [
+            0.5754716981132075,
+            0.8253826984692061
+          ],
+          "adjusted_interval": [
+            0.5754716981132075,
+            0.8253826984692061
+          ],
+          "t_start": 0.5754716981132075,
+          "t_end": 0.8253826984692061,
+          "width_px": 26.490566037735846,
+          "width_mm": 700.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 4,
+          "host_edge_idx": 15,
+          "host_edge_raw": [
+            327.25,
+            226.0,
+            327.25,
+            320.0
+          ],
+          "snapped_points": [
+            [
+              327.25,
+              228.0
+            ],
+            [
+              327.25,
+              249.0
+            ]
+          ],
+          "original_interval": [
+            0.02127659574468085,
+            0.24468085106382978
+          ],
+          "adjusted_interval": [
+            0.02127659574468085,
+            0.24468085106382978
+          ],
+          "t_start": 0.02127659574468085,
+          "t_end": 0.24468085106382978,
+          "width_px": 21.0,
+          "width_mm": 554.9145299145299,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 7,
+          "host_edge_idx": 15,
+          "host_edge_raw": [
+            327.25,
+            226.0,
+            327.25,
+            320.0
+          ],
+          "snapped_points": [
+            [
+              327.25,
+              292.0
+            ],
+            [
+              327.25,
+              318.49056603773585
+            ]
+          ],
+          "original_interval": [
+            0.7021276595744681,
+            0.9839421918908068
+          ],
+          "adjusted_interval": [
+            0.7021276595744681,
+            0.9839421918908068
+          ],
+          "t_start": 0.7021276595744681,
+          "t_end": 0.9839421918908068,
+          "width_px": 26.490566037735846,
+          "width_mm": 700.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 8,
+          "host_edge_idx": 16,
+          "host_edge_raw": [
+            327.25,
+            320.0,
+            327.25,
+            383.0
+          ],
+          "snapped_points": [
+            [
+              327.25,
+              326.0
+            ],
+            [
+              327.25,
+              352.49056603773585
+            ]
+          ],
+          "original_interval": [
+            0.09523809523809523,
+            0.5157232704402516
+          ],
+          "adjusted_interval": [
+            0.09523809523809523,
+            0.5157232704402516
+          ],
+          "t_start": 0.09523809523809523,
+          "t_end": 0.5157232704402516,
+          "width_px": 26.490566037735846,
+          "width_mm": 700.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 9,
+          "host_edge_idx": 16,
+          "host_edge_raw": [
+            327.25,
+            320.0,
+            327.25,
+            383.0
+          ],
+          "snapped_points": [
+            [
+              327.25,
+              354.0
+            ],
+            [
+              327.25,
+              380.49056603773585
+            ]
+          ],
+          "original_interval": [
+            0.5396825396825397,
+            0.960167714884696
+          ],
+          "adjusted_interval": [
+            0.5396825396825397,
+            0.960167714884696
+          ],
+          "t_start": 0.5396825396825397,
+          "t_end": 0.960167714884696,
+          "width_px": 26.490566037735846,
+          "width_mm": 700.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "window",
+          "source_component_id": 1,
+          "host_edge_idx": 17,
+          "host_edge_raw": [
+            121.0,
+            100.0,
+            121.0,
+            214.0
+          ],
+          "snapped_points": [
+            [
+              121.0,
+              104.232139898432
+            ],
+            [
+              121.0,
+              172.30770585992278
+            ]
+          ],
+          "original_interval": [
+            0.03712403419677189,
+            0.63427812157827
+          ],
+          "adjusted_interval": [
+            0.03712403419677189,
+            0.63427812157827
+          ],
+          "t_start": 0.03712403419677189,
+          "t_end": 0.63427812157827,
+          "width_px": 68.07556596149078,
+          "width_mm": 1798.8628897231538,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 2,
+          "host_edge_idx": 17,
+          "host_edge_raw": [
+            121.0,
+            100.0,
+            121.0,
+            214.0
+          ],
+          "snapped_points": [
+            [
+              121.0,
+              169.0
+            ],
+            [
+              121.0,
+              203.0592991913747
+            ]
+          ],
+          "original_interval": [
+            0.6052631578947368,
+            0.9040289402752166
+          ],
+          "adjusted_interval": [
+            0.6052631578947368,
+            0.9040289402752166
+          ],
+          "t_start": 0.6052631578947368,
+          "t_end": 0.9040289402752166,
+          "width_px": 34.05929919137469,
+          "width_mm": 900.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        }
+      ]
+    }
+  },
+  "openings": {
+    "doors": [
+      {
+        "source_component_id": 1,
+        "opening_type": "door",
+        "host_edge_idx": 14,
+        "host_edge_raw": [
+          327.25,
+          100.0,
+          327.25,
+          206.0
+        ],
+        "raw_points": [
+          [
+            327.0,
+            161.0
+          ],
+          [
+            327.0,
+            185.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            161.0
+          ],
+          [
+            327.25,
+            187.49
+          ]
+        ],
+        "final_points": [
+          [
+            327.25,
+            161.0
+          ],
+          [
+            327.25,
+            187.49
+          ]
+        ],
+        "width_px": 26.49,
+        "width_mm": 700.0,
+        "snapped_module_mm": 700.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.5754716981132075,
+          0.8253826984692061
+        ],
+        "adjusted_interval": [
+          0.5754716981132075,
+          0.8253826984692061
+        ],
+        "snapped_points_adjusted": [
+          [
+            327.25,
+            161.0
+          ],
+          [
+            327.25,
+            187.49
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            327.25,
+            161.0
+          ],
+          [
+            327.25,
+            187.49
+          ]
+        ]
+      },
+      {
+        "source_component_id": 2,
+        "opening_type": "door",
+        "host_edge_idx": 17,
+        "host_edge_raw": [
+          121.0,
+          100.0,
+          121.0,
+          214.0
+        ],
+        "raw_points": [
+          [
+            123.0,
+            169.0
+          ],
+          [
+            123.0,
+            208.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            121.0,
+            169.0
+          ],
+          [
+            121.0,
+            203.06
+          ]
+        ],
+        "final_points": [
+          [
+            121.0,
+            169.0
+          ],
+          [
+            121.0,
+            203.06
+          ]
+        ],
+        "width_px": 34.06,
+        "width_mm": 900.0,
+        "snapped_module_mm": 900.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.6052631578947368,
+          0.9040289402752166
+        ],
+        "adjusted_interval": [
+          0.6052631578947368,
+          0.9040289402752166
+        ],
+        "snapped_points_adjusted": [
+          [
+            121.0,
+            169.0
+          ],
+          [
+            121.0,
+            203.06
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            121.0,
+            169.0
+          ],
+          [
+            121.0,
+            203.06
+          ]
+        ]
+      },
+      {
+        "source_component_id": 3,
+        "opening_type": "door",
+        "host_edge_idx": 6,
+        "host_edge_raw": [
+          328.0,
+          214.0,
+          437.0,
+          214.0
+        ],
+        "raw_points": [
+          [
+            380.0,
+            204.0
+          ],
+          [
+            402.0,
+            204.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            380.0,
+            214.0
+          ],
+          [
+            402.0,
+            214.0
+          ]
+        ],
+        "final_points": [
+          [
+            380.0,
+            214.0
+          ],
+          [
+            402.0,
+            214.0
+          ]
+        ],
+        "width_px": 22.0,
+        "width_mm": 581.3,
+        "snapped_module_mm": 581.3390313390314,
+        "confidence": 1.0,
+        "original_interval": [
+          0.47706422018348627,
+          0.6788990825688074
+        ],
+        "adjusted_interval": [
+          0.47706422018348627,
+          0.6788990825688074
+        ],
+        "snapped_points_adjusted": [
+          [
+            380.0,
+            214.0
+          ],
+          [
+            402.0,
+            214.0
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            380.0,
+            214.0
+          ],
+          [
+            402.0,
+            214.0
+          ]
+        ]
+      },
+      {
+        "source_component_id": 4,
+        "opening_type": "door",
+        "host_edge_idx": 15,
+        "host_edge_raw": [
+          327.25,
+          226.0,
+          327.25,
+          320.0
+        ],
+        "raw_points": [
+          [
+            327.0,
+            228.0
+          ],
+          [
+            327.0,
+            249.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            228.0
+          ],
+          [
+            327.25,
+            249.0
+          ]
+        ],
+        "final_points": [
+          [
+            327.25,
+            228.0
+          ],
+          [
+            327.25,
+            249.0
+          ]
+        ],
+        "width_px": 21.0,
+        "width_mm": 554.9,
+        "snapped_module_mm": 554.9145299145299,
+        "confidence": 1.0,
+        "original_interval": [
+          0.02127659574468085,
+          0.24468085106382978
+        ],
+        "adjusted_interval": [
+          0.02127659574468085,
+          0.24468085106382978
+        ],
+        "snapped_points_adjusted": [
+          [
+            327.25,
+            228.0
+          ],
+          [
+            327.25,
+            249.0
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            327.25,
+            228.0
+          ],
+          [
+            327.25,
+            249.0
+          ]
+        ]
+      },
+      {
+        "source_component_id": 7,
+        "opening_type": "door",
+        "host_edge_idx": 15,
+        "host_edge_raw": [
+          327.25,
+          226.0,
+          327.25,
+          320.0
+        ],
+        "raw_points": [
+          [
+            327.0,
+            292.0
+          ],
+          [
+            327.0,
+            319.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            292.0
+          ],
+          [
+            327.25,
+            318.49
+          ]
+        ],
+        "final_points": [
+          [
+            327.25,
+            292.0
+          ],
+          [
+            327.25,
+            318.49
+          ]
+        ],
+        "width_px": 26.49,
+        "width_mm": 700.0,
+        "snapped_module_mm": 700.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.7021276595744681,
+          0.9839421918908068
+        ],
+        "adjusted_interval": [
+          0.7021276595744681,
+          0.9839421918908068
+        ],
+        "snapped_points_adjusted": [
+          [
+            327.25,
+            292.0
+          ],
+          [
+            327.25,
+            318.49
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            327.25,
+            292.0
+          ],
+          [
+            327.25,
+            318.49
+          ]
+        ]
+      },
+      {
+        "source_component_id": 8,
+        "opening_type": "door",
+        "host_edge_idx": 16,
+        "host_edge_raw": [
+          327.25,
+          320.0,
+          327.25,
+          383.0
+        ],
+        "raw_points": [
+          [
+            329.0,
+            326.0
+          ],
+          [
+            329.0,
+            350.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            326.0
+          ],
+          [
+            327.25,
+            352.49
+          ]
+        ],
+        "final_points": [
+          [
+            327.25,
+            326.0
+          ],
+          [
+            327.25,
+            352.49
+          ]
+        ],
+        "width_px": 26.49,
+        "width_mm": 700.0,
+        "snapped_module_mm": 700.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.09523809523809523,
+          0.5157232704402516
+        ],
+        "adjusted_interval": [
+          0.09523809523809523,
+          0.5157232704402516
+        ],
+        "snapped_points_adjusted": [
+          [
+            327.25,
+            326.0
+          ],
+          [
+            327.25,
+            352.49
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            327.25,
+            326.0
+          ],
+          [
+            327.25,
+            352.49
+          ]
+        ]
+      },
+      {
+        "source_component_id": 9,
+        "opening_type": "door",
+        "host_edge_idx": 16,
+        "host_edge_raw": [
+          327.25,
+          320.0,
+          327.25,
+          383.0
+        ],
+        "raw_points": [
+          [
+            326.0,
+            354.0
+          ],
+          [
+            326.0,
+            381.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            354.0
+          ],
+          [
+            327.25,
+            380.49
+          ]
+        ],
+        "final_points": [
+          [
+            327.25,
+            354.0
+          ],
+          [
+            327.25,
+            380.49
+          ]
+        ],
+        "width_px": 26.49,
+        "width_mm": 700.0,
+        "snapped_module_mm": 700.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.5396825396825397,
+          0.960167714884696
+        ],
+        "adjusted_interval": [
+          0.5396825396825397,
+          0.960167714884696
+        ],
+        "snapped_points_adjusted": [
+          [
+            327.25,
+            354.0
+          ],
+          [
+            327.25,
+            380.49
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            327.25,
+            354.0
+          ],
+          [
+            327.25,
+            380.49
+          ]
+        ]
+      },
+      {
+        "source_component_id": 10,
+        "opening_type": "door",
+        "host_edge_idx": 1,
+        "host_edge_raw": [
+          286.0,
+          383.0,
+          327.25,
+          383.0
+        ],
+        "raw_points": [
+          [
+            301.0,
+            385.0
+          ],
+          [
+            327.0,
+            385.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            301.0,
+            383.0
+          ],
+          [
+            327.25,
+            383.0
+          ]
+        ],
+        "final_points": [
+          [
+            301.0,
+            383.0
+          ],
+          [
+            327.25,
+            383.0
+          ]
+        ],
+        "width_px": 26.25,
+        "width_mm": 700.0,
+        "snapped_module_mm": 700.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.36363636363636365,
+          1.0
+        ],
+        "adjusted_interval": [
+          0.36363636363636365,
+          1.0
+        ],
+        "snapped_points_adjusted": [
+          [
+            301.0,
+            383.0
+          ],
+          [
+            327.25,
+            383.0
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            301.0,
+            383.0
+          ],
+          [
+            327.25,
+            383.0
+          ]
+        ]
+      }
+    ],
+    "windows": [
+      {
+        "source_component_id": 1,
+        "opening_type": "window",
+        "host_edge_idx": 17,
+        "host_edge_raw": [
+          121.0,
+          100.0,
+          121.0,
+          214.0
+        ],
+        "raw_points": [
+          [
+            123.32,
+            104.23
+          ],
+          [
+            124.77,
+            172.31
+          ]
+        ],
+        "snapped_points": [
+          [
+            121.0,
+            104.23
+          ],
+          [
+            121.0,
+            172.31
+          ]
+        ],
+        "final_points": [
+          [
+            121.0,
+            104.23
+          ],
+          [
+            121.0,
+            172.31
+          ]
+        ],
+        "width_px": 68.08,
+        "width_mm": 1798.9,
+        "snapped_module_mm": null,
+        "confidence": 1.0,
+        "original_interval": [
+          0.03712403419677189,
+          0.63427812157827
+        ],
+        "adjusted_interval": [
+          0.03712403419677189,
+          0.63427812157827
+        ],
+        "snapped_points_adjusted": [
+          [
+            121.0,
+            104.23
+          ],
+          [
+            121.0,
+            172.31
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            121.0,
+            104.23
+          ],
+          [
+            121.0,
+            172.31
+          ]
+        ]
+      },
+      {
+        "source_component_id": 3,
+        "opening_type": "window",
+        "host_edge_idx": 10,
+        "host_edge_raw": [
+          436.5,
+          100.0,
+          436.5,
+          214.0
+        ],
+        "raw_points": [
+          [
+            435.36,
+            181.39
+          ],
+          [
+            435.36,
+            139.39
+          ]
+        ],
+        "snapped_points": [
+          [
+            436.5,
+            139.39
+          ],
+          [
+            436.5,
+            181.39
+          ]
+        ],
+        "final_points": [
+          [
+            436.5,
+            139.39
+          ],
+          [
+            436.5,
+            181.39
+          ]
+        ],
+        "width_px": 42.0,
+        "width_mm": 1109.8,
+        "snapped_module_mm": null,
+        "confidence": 1.0,
+        "original_interval": [
+          0.34549673602611175,
+          0.7139177886576907
+        ],
+        "adjusted_interval": [
+          0.34549673602611175,
+          0.7139177886576907
+        ],
+        "snapped_points_adjusted": [
+          [
+            436.5,
+            139.39
+          ],
+          [
+            436.5,
+            181.39
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            436.5,
+            139.39
+          ],
+          [
+            436.5,
+            181.39
+          ]
+        ]
+      },
+      {
+        "source_component_id": 4,
+        "opening_type": "window",
+        "host_edge_idx": 11,
+        "host_edge_raw": [
+          436.5,
+          214.0,
+          436.5,
+          297.5
+        ],
+        "raw_points": [
+          [
+            435.2,
+            271.3
+          ],
+          [
+            435.2,
+            230.3
+          ]
+        ],
+        "snapped_points": [
+          [
+            436.5,
+            230.3
+          ],
+          [
+            436.5,
+            271.3
+          ]
+        ],
+        "final_points": [
+          [
+            436.5,
+            230.3
+          ],
+          [
+            436.5,
+            271.3
+          ]
+        ],
+        "width_px": 41.0,
+        "width_mm": 1083.4,
+        "snapped_module_mm": null,
+        "confidence": 1.0,
+        "original_interval": [
+          0.19518019176371196,
+          0.6861981558355682
+        ],
+        "adjusted_interval": [
+          0.19518019176371196,
+          0.6861981558355682
+        ],
+        "snapped_points_adjusted": [
+          [
+            436.5,
+            230.3
+          ],
+          [
+            436.5,
+            271.3
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            436.5,
+            230.3
+          ],
+          [
+            436.5,
+            271.3
+          ]
+        ]
+      },
+      {
+        "source_component_id": 5,
+        "opening_type": "window",
+        "host_edge_idx": 12,
+        "host_edge_raw": [
+          436.5,
+          297.5,
+          436.5,
+          383.0
+        ],
+        "raw_points": [
+          [
+            435.36,
+            358.66
+          ],
+          [
+            435.36,
+            316.66
+          ]
+        ],
+        "snapped_points": [
+          [
+            436.5,
+            316.66
+          ],
+          [
+            436.5,
+            358.66
+          ]
+        ],
+        "final_points": [
+          [
+            436.5,
+            316.66
+          ],
+          [
+            436.5,
+            358.66
+          ]
+        ],
+        "width_px": 42.0,
+        "width_mm": 1109.8,
+        "snapped_module_mm": null,
+        "confidence": 1.0,
+        "original_interval": [
+          0.2240798073615414,
+          0.71530787753698
+        ],
+        "adjusted_interval": [
+          0.2240798073615414,
+          0.71530787753698
+        ],
+        "snapped_points_adjusted": [
+          [
+            436.5,
+            316.66
+          ],
+          [
+            436.5,
+            358.66
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            436.5,
+            316.66
+          ],
+          [
+            436.5,
+            358.66
+          ]
+        ]
+      }
+    ],
+    "rejected": [
+      {
+        "opening_type": "window",
+        "source_component_id": 2,
+        "raw_points": [],
+        "rejection_reason": "major axis 3.0px < 5.0px",
+        "debug_confidence": 1.0
+      },
+      {
+        "opening_type": "door",
+        "source_component_id": 5,
+        "raw_points": [
+          [
+            417.0,
+            283.0
+          ],
+          [
+            419.0,
+            283.0
+          ]
+        ],
+        "rejection_reason": "no single wall edge could host both endpoints within 20px",
+        "debug_confidence": 1.0
+      }
+    ]
+  },
+  "geometry": {
+    "walls": [
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            331.03,
+            103.78
+          ],
+          [
+            432.49,
+            103.78
+          ],
+          [
+            432.72,
+            139.41
+          ],
+          [
+            440.28,
+            139.36
+          ],
+          [
+            440.01,
+            96.22
+          ],
+          [
+            327.25,
+            96.22
+          ],
+          [
+            117.22,
+            96.22
+          ],
+          [
+            117.22,
+            104.23
+          ],
+          [
+            124.78,
+            104.23
+          ],
+          [
+            124.78,
+            103.78
+          ],
+          [
+            323.47,
+            103.78
+          ],
+          [
+            323.47,
+            161.0
+          ],
+          [
+            331.03,
+            161.0
+          ],
+          [
+            331.03,
+            103.78
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            323.47,
+            206.0
+          ],
+          [
+            331.03,
+            206.0
+          ],
+          [
+            331.03,
+            187.49
+          ],
+          [
+            323.47,
+            187.49
+          ],
+          [
+            323.47,
+            206.0
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            380.0,
+            217.78
+          ],
+          [
+            380.0,
+            210.22
+          ],
+          [
+            328.0,
+            210.22
+          ],
+          [
+            328.0,
+            217.78
+          ],
+          [
+            380.0,
+            217.78
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            323.47,
+            228.0
+          ],
+          [
+            331.03,
+            228.0
+          ],
+          [
+            331.03,
+            226.0
+          ],
+          [
+            323.47,
+            226.0
+          ],
+          [
+            323.47,
+            228.0
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            323.47,
+            292.0
+          ],
+          [
+            331.03,
+            292.0
+          ],
+          [
+            331.03,
+            249.0
+          ],
+          [
+            323.47,
+            249.0
+          ],
+          [
+            323.47,
+            292.0
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            301.0,
+            379.22
+          ],
+          [
+            289.78,
+            379.22
+          ],
+          [
+            289.78,
+            210.22
+          ],
+          [
+            124.78,
+            210.22
+          ],
+          [
+            124.78,
+            203.06
+          ],
+          [
+            117.22,
+            203.06
+          ],
+          [
+            117.22,
+            217.78
+          ],
+          [
+            282.22,
+            217.78
+          ],
+          [
+            282.22,
+            386.78
+          ],
+          [
+            301.0,
+            386.78
+          ],
+          [
+            301.0,
+            379.22
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            331.0,
+            323.78
+          ],
+          [
+            403.78,
+            323.78
+          ],
+          [
+            403.78,
+            301.96
+          ],
+          [
+            432.72,
+            301.36
+          ],
+          [
+            432.72,
+            316.66
+          ],
+          [
+            440.28,
+            316.66
+          ],
+          [
+            440.28,
+            297.5
+          ],
+          [
+            440.28,
+            271.3
+          ],
+          [
+            432.72,
+            271.3
+          ],
+          [
+            432.72,
+            293.79
+          ],
+          [
+            396.22,
+            294.54
+          ],
+          [
+            396.22,
+            316.22
+          ],
+          [
+            327.17,
+            316.22
+          ],
+          [
+            327.17,
+            318.49
+          ],
+          [
+            323.47,
+            318.28
+          ],
+          [
+            323.39,
+            319.79
+          ],
+          [
+            327.17,
+            320.0
+          ],
+          [
+            323.38,
+            320.05
+          ],
+          [
+            323.47,
+            326.05
+          ],
+          [
+            331.03,
+            325.95
+          ],
+          [
+            331.0,
+            323.78
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            323.47,
+            354.0
+          ],
+          [
+            331.03,
+            354.0
+          ],
+          [
+            331.03,
+            352.49
+          ],
+          [
+            323.47,
+            352.49
+          ],
+          [
+            323.47,
+            354.0
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            432.86,
+            210.22
+          ],
+          [
+            402.0,
+            210.22
+          ],
+          [
+            402.0,
+            217.78
+          ],
+          [
+            432.84,
+            217.78
+          ],
+          [
+            432.72,
+            230.26
+          ],
+          [
+            440.28,
+            230.34
+          ],
+          [
+            440.45,
+            214.04
+          ],
+          [
+            436.67,
+            214.0
+          ],
+          [
+            440.45,
+            213.98
+          ],
+          [
+            440.28,
+            181.37
+          ],
+          [
+            432.72,
+            181.41
+          ],
+          [
+            432.86,
+            210.22
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            400.0,
+            279.78
+          ],
+          [
+            400.0,
+            272.22
+          ],
+          [
+            338.0,
+            272.22
+          ],
+          [
+            338.0,
+            279.78
+          ],
+          [
+            400.0,
+            279.78
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            327.25,
+            379.22
+          ],
+          [
+            327.25,
+            380.49
+          ],
+          [
+            323.47,
+            380.49
+          ],
+          [
+            323.47,
+            386.78
+          ],
+          [
+            440.57,
+            386.78
+          ],
+          [
+            440.28,
+            358.62
+          ],
+          [
+            432.72,
+            358.7
+          ],
+          [
+            432.93,
+            379.22
+          ],
+          [
+            327.25,
+            379.22
+          ]
+        ],
+        "interiors": []
+      }
+    ],
+    "doors": [
+      {
+        "source_component_id": 1,
+        "final_points": [
+          [
+            327.25,
+            161.0
+          ],
+          [
+            327.25,
+            187.49
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            161.0
+          ],
+          [
+            327.25,
+            187.49
+          ]
+        ],
+        "width_px": 26.49,
+        "width_mm": 700.0,
+        "door_geometry": {
+          "hinge_point": [
+            327.25,
+            187.49
+          ],
+          "origin_far_point": [
+            327.25,
+            161.0
+          ],
+          "leaf_end": [
+            300.76,
+            187.49
+          ],
+          "swing_side": "right",
+          "width_px": 26.49,
+          "width_mm": 700.0,
+          "orientation_angle_deg": -90.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 2,
+        "final_points": [
+          [
+            121.0,
+            169.0
+          ],
+          [
+            121.0,
+            203.06
+          ]
+        ],
+        "snapped_points": [
+          [
+            121.0,
+            169.0
+          ],
+          [
+            121.0,
+            203.06
+          ]
+        ],
+        "width_px": 34.06,
+        "width_mm": 900.0,
+        "door_geometry": {
+          "hinge_point": [
+            121.0,
+            169.0
+          ],
+          "origin_far_point": [
+            121.0,
+            203.06
+          ],
+          "leaf_end": [
+            86.94,
+            169.0
+          ],
+          "swing_side": "left",
+          "width_px": 34.06,
+          "width_mm": 900.0,
+          "orientation_angle_deg": 90.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 3,
+        "final_points": [
+          [
+            380.0,
+            214.0
+          ],
+          [
+            402.0,
+            214.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            380.0,
+            214.0
+          ],
+          [
+            402.0,
+            214.0
+          ]
+        ],
+        "width_px": 22.0,
+        "width_mm": 581.3,
+        "door_geometry": {
+          "hinge_point": [
+            380.0,
+            214.0
+          ],
+          "origin_far_point": [
+            402.0,
+            214.0
+          ],
+          "leaf_end": [
+            380.0,
+            192.0
+          ],
+          "swing_side": "right",
+          "width_px": 22.0,
+          "width_mm": 581.3,
+          "orientation_angle_deg": 0.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 4,
+        "final_points": [
+          [
+            327.25,
+            228.0
+          ],
+          [
+            327.25,
+            249.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            228.0
+          ],
+          [
+            327.25,
+            249.0
+          ]
+        ],
+        "width_px": 21.0,
+        "width_mm": 554.9,
+        "door_geometry": {
+          "hinge_point": [
+            327.25,
+            249.0
+          ],
+          "origin_far_point": [
+            327.25,
+            228.0
+          ],
+          "leaf_end": [
+            306.25,
+            249.0
+          ],
+          "swing_side": "right",
+          "width_px": 21.0,
+          "width_mm": 554.9,
+          "orientation_angle_deg": -90.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 7,
+        "final_points": [
+          [
+            327.25,
+            292.0
+          ],
+          [
+            327.25,
+            318.49
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            292.0
+          ],
+          [
+            327.25,
+            318.49
+          ]
+        ],
+        "width_px": 26.49,
+        "width_mm": 700.0,
+        "door_geometry": {
+          "hinge_point": [
+            327.25,
+            292.0
+          ],
+          "origin_far_point": [
+            327.25,
+            318.49
+          ],
+          "leaf_end": [
+            300.76,
+            292.0
+          ],
+          "swing_side": "left",
+          "width_px": 26.49,
+          "width_mm": 700.0,
+          "orientation_angle_deg": 90.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 8,
+        "final_points": [
+          [
+            327.25,
+            326.0
+          ],
+          [
+            327.25,
+            352.49
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            326.0
+          ],
+          [
+            327.25,
+            352.49
+          ]
+        ],
+        "width_px": 26.49,
+        "width_mm": 700.0,
+        "door_geometry": {
+          "hinge_point": [
+            327.25,
+            352.49
+          ],
+          "origin_far_point": [
+            327.25,
+            326.0
+          ],
+          "leaf_end": [
+            353.74,
+            352.49
+          ],
+          "swing_side": "left",
+          "width_px": 26.49,
+          "width_mm": 700.0,
+          "orientation_angle_deg": -90.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 9,
+        "final_points": [
+          [
+            327.25,
+            354.0
+          ],
+          [
+            327.25,
+            380.49
+          ]
+        ],
+        "snapped_points": [
+          [
+            327.25,
+            354.0
+          ],
+          [
+            327.25,
+            380.49
+          ]
+        ],
+        "width_px": 26.49,
+        "width_mm": 700.0,
+        "door_geometry": {
+          "hinge_point": [
+            327.25,
+            354.0
+          ],
+          "origin_far_point": [
+            327.25,
+            380.49
+          ],
+          "leaf_end": [
+            300.76,
+            354.0
+          ],
+          "swing_side": "left",
+          "width_px": 26.49,
+          "width_mm": 700.0,
+          "orientation_angle_deg": 90.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 10,
+        "final_points": [
+          [
+            301.0,
+            383.0
+          ],
+          [
+            327.25,
+            383.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            301.0,
+            383.0
+          ],
+          [
+            327.25,
+            383.0
+          ]
+        ],
+        "width_px": 26.25,
+        "width_mm": 700.0,
+        "door_geometry": {
+          "hinge_point": [
+            301.0,
+            383.0
+          ],
+          "origin_far_point": [
+            327.25,
+            383.0
+          ],
+          "leaf_end": [
+            301.0,
+            409.25
+          ],
+          "swing_side": "left",
+          "width_px": 26.25,
+          "width_mm": 700.0,
+          "orientation_angle_deg": 0.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      }
+    ],
+    "windows": [
+      {
+        "source_component_id": 1,
+        "final_points": [
+          [
+            121.0,
+            104.23
+          ],
+          [
+            121.0,
+            172.31
+          ]
+        ],
+        "points": [
+          [
+            121.0,
+            104.23
+          ],
+          [
+            121.0,
+            172.31
+          ]
+        ],
+        "width_px": 68.08,
+        "width_mm": 1798.9
+      },
+      {
+        "source_component_id": 3,
+        "final_points": [
+          [
+            436.5,
+            139.39
+          ],
+          [
+            436.5,
+            181.39
+          ]
+        ],
+        "points": [
+          [
+            436.5,
+            139.39
+          ],
+          [
+            436.5,
+            181.39
+          ]
+        ],
+        "width_px": 42.0,
+        "width_mm": 1109.8
+      },
+      {
+        "source_component_id": 4,
+        "final_points": [
+          [
+            436.5,
+            230.3
+          ],
+          [
+            436.5,
+            271.3
+          ]
+        ],
+        "points": [
+          [
+            436.5,
+            230.3
+          ],
+          [
+            436.5,
+            271.3
+          ]
+        ],
+        "width_px": 41.0,
+        "width_mm": 1083.4
+      },
+      {
+        "source_component_id": 5,
+        "final_points": [
+          [
+            436.5,
+            316.66
+          ],
+          [
+            436.5,
+            358.66
+          ]
+        ],
+        "points": [
+          [
+            436.5,
+            316.66
+          ],
+          [
+            436.5,
+            358.66
+          ]
+        ],
+        "width_px": 42.0,
+        "width_mm": 1109.8
+      }
+    ]
+  },
+  "metrics": {
+    "elapsed_s": 6.33,
+    "r2g_nodes": 18,
+    "r2g_edges": 13,
+    "aligned_edges": 18,
+    "trimmed_wall_edges": 28,
+    "opening_gaps": 12,
+    "hosted_doors": 8,
+    "hosted_windows": 4,
+    "rejected_total": 2,
+    "wall_chains": 19,
+    "scale_status": "estimated",
+    "px_to_mm": 26.424501424501425,
+    "wall_thickness_mm": 200.0,
+    "scale_blocked": false,
+    "pre_buffer_node_count": 44,
+    "post_snap_node_count": 39,
+    "pre_buffer_edge_count": 28,
+    "wall_chain_count": 19,
+    "disconnected_endpoint_count": 26
+  }
+}

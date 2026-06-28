@@ -1,4 +1,4 @@
-# Task 28 - Raster-to-Graph Standardized 10 Percent Margin And Extreme Threshold Rerun
+﻿# Task 28 - Raster-to-Graph Standardized 10 Percent Margin And Extreme Threshold Rerun
 
 ## Objective
 
@@ -141,7 +141,7 @@ whether extreme thresholds added useful graph content or too much noise
 Update:
 
 ```txt
-specs/spec_v010_raster2graph_modifications.md
+specs/spec_v010_phase4_raster2graph_modifications.md
 ```
 
 Add:
@@ -165,6 +165,6 @@ max_candidates_per_step = 40
 6. No junction support score is added.
 7. Each sample has only one direct output folder.
 8. `summary.md` reports margin and production-rate effects.
-9. `spec_v010_raster2graph_modifications.md` is updated.
+9. `spec_v010_phase4_raster2graph_modifications.md` is updated.
 10. No training, fine-tuning, or checkpoint modification happens.
 

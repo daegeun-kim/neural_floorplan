@@ -1,4 +1,4 @@
-# Spec v008: Orthogonal Point-Graph Mask-to-Vector Reconstruction
+﻿# Spec v008: Orthogonal Point-Graph Mask-to-Vector Reconstruction
 
 ## 0. Purpose
 
@@ -21,7 +21,7 @@ Pipeline:
 -> SVG output
 ```
 
-Component primitive definitions are in `spec_v007_component_primitives.md`. This v008 spec controls reconstruction order, topology, validation, and implementation behavior under `src/vectorization`.
+Component primitive definitions are in `spec_v007_phase3_component_primitives.md`. This v008 spec controls reconstruction order, topology, validation, and implementation behavior under `src/vectorization`.
 
 JSON, DXF, room graph inference, Grasshopper export, and interactive correction are out of scope.
 

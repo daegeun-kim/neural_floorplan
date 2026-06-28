@@ -1,4 +1,4 @@
-# Vectorization Outputs
+﻿# Vectorization Outputs
 
 Outputs here are organized by **phase** - the conceptual family of vectorization approach used to produce them. See `specs/vectorization_phase_history.md` for the full history; this file is a short pointer.
 
@@ -34,7 +34,7 @@ outputs/vectorization/v008/iteration4_run3_failed -> outputs/vectorization/phase
 outputs/vectorization/v008/iteration5_run3        -> outputs/vectorization/phase3_7class_point_vectorization/iteration5_run3
 ```
 
-Mentions of the old `outputs/vectorization/v008/iteration5_run3` path in `specs/spec_v008_mask_to_vector.md`'s Task14/15/17/18/19 Debugging Notes are historical narrative (accurate at the time they were written) and were intentionally left as-is rather than rewritten - use the mapping above if you need to resolve one of those paths today.
+Mentions of the old `outputs/vectorization/v008/iteration5_run3` path in `specs/spec_v008_phase3_mask_to_vector.md`'s Task14/15/17/18/19 Debugging Notes are historical narrative (accurate at the time they were written) and were intentionally left as-is rather than rewritten - use the mapping above if you need to resolve one of those paths today.
 
 **Known drift, not fixed by this reorganization** (out of scope - task20 is organization only, and these are vectorization/inference source code, not config or docs):
 

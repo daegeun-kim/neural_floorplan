@@ -1,4 +1,4 @@
-# Neural Floorplan To Classified CAD
+﻿# Neural Floorplan To Classified CAD
 
 This project explores how to convert raster floor plans into clean, classified, CAD-like geometry.
 
@@ -12,13 +12,13 @@ The current work has two major tracks:
    semantic mask or SVG-derived raster -> wall graph / CAD-like geometry
 ```
 
-The segmentation track is working reasonably well. The vectorization track has now settled on a pretrained Raster-to-Graph inference pipeline for Phase 4 wall graph extraction.
+The segmentation track is working reasonably well. The vectorization track has now settled on a pretrained Raster-to-Graph inference pipeline for Phase 4 wall graph extraction, followed by a graph-to-vector stage that attaches doors/windows from the 7-class segmentation output.
 
 ---
 
 ## Current Direction
 
-The project is currently settled on **Phase 4 Raster-to-Graph inference**:
+The project is currently settled on **Phase 4 Raster-to-Graph wall graph inference plus graph-to-vector reconstruction**:
 
 ```txt
 CubiCasa model_clean.png
@@ -27,7 +27,11 @@ CubiCasa model_clean.png
 -> generous graph generation + validity scoring/filtering
 -> mask-and-rerun multistart recovery
 -> merged orthogonal wall graph
--> later door/window attachment and CAD-like output
+-> 7-class segmentation evidence on the same preprocessed input
+-> door/window attachment on the wall graph
+-> wall interval trimming
+-> connected wall-chain buffering
+-> CAD-like SVG/JSON output
 ```
 
 No Raster-to-Graph fine-tuning is planned for the current version because the adjusted inference method is producing satisfactory wall graphs.
@@ -35,8 +39,9 @@ No Raster-to-Graph fine-tuning is planned for the current version because the ad
 This direction is documented in:
 
 ```txt
-specs/spec_v005_raster2graph.md
-specs/spec_v010_raster2graph_modifications.md
+specs/spec_v005_phase4_raster2graph.md
+specs/spec_v010_phase4_raster2graph_modifications.md
+specs/spec_v008_phase4_vectorization.md
 specs/vectorization_phase_history.md
 ```
 
@@ -56,7 +61,7 @@ specs/vectorization_phase_history.md
 | 8 | Mask-to-vector experiments | phase history, still useful for lessons learned |
 | 9 | SVG-derived wall graph label generation (`masks/wall_graph.json`) for QA/reference | available / optional |
 | 10 | Pretrained Raster-to-Graph inference from preprocessed `model_clean.png` | current / settled |
-| 11 | Classified CAD-like JSON/SVG export from graph + openings | future |
+| 11 | Phase 4 graph-to-vector export from R2G wall graph + 7-class openings | current spec / implementation target |
 
 ---
 
@@ -131,7 +136,7 @@ Related output folder:
 outputs/vectorization/v008/iteration5_run3
 ```
 
-### Phase 4 - Pretrained Raster-To-Graph Inference
+### Phase 4 - Pretrained Raster-To-Graph Inference And Graph-To-Vector Output
 
 ```txt
 -> model_clean.png
@@ -144,6 +149,12 @@ outputs/vectorization/v008/iteration5_run3
 -> mask-and-rerun multistart recovery
 -> merge-on-intersection and light post-merge filtering
 -> wall graph JSON/SVG/overlays
+-> 7-class segmentation evidence on the same preprocessed image
+-> scale inference from red door_arc components
+-> door/window endpoints hosted onto the wall graph
+-> wall graph intervals trimmed at openings
+-> connected wall chains buffered into 200mm walls
+-> final_vector.svg / final_vector.json
 ```
 
 This is the current settled direction. Instead of training a new model, the project uses the official Raster-to-Graph checkpoint and adapts preprocessing, thresholds, candidate scoring, recovery, and graph cleanup around this project's `model_clean.png` inputs.
@@ -155,7 +166,7 @@ nodes = wall endpoints / wall junctions
 edges = orthogonal wall segments
 ```
 
-Phase 4 currently predicts wall graph only. Doors and windows can be attached later using the existing 7-class semantic evidence.
+Phase 4 wall graph inference is settled. The next active implementation target is graph-to-vector reconstruction: attach doors/windows using the existing 7-class semantic evidence, trim the hosted wall intervals, and buffer the remaining connected wall graph into final CAD-like geometry.
 
 ---
 
@@ -239,17 +250,18 @@ Vectorization history and current/future specs:
 ```txt
 specs/vectorization_phase_history.md
 specs/vectorization_must_rules.md
-specs/spec_v003-1_graph_generation.md
-specs/spec_v005_raster2graph.md
-specs/spec_v010_raster2graph_modifications.md
+specs/spec_v003-1_phase4_graph_generation.md
+specs/spec_v005_phase4_raster2graph.md
+specs/spec_v008_phase4_vectorization.md
+specs/spec_v010_phase4_raster2graph_modifications.md
 ```
 
 Historical vectorization specs:
 
 ```txt
-specs/spec_v007_component_primitives.md
-specs/spec_v008_mask_to_vector.md
-specs/spec_v009_cad_json.md
+specs/spec_v007_phase3_component_primitives.md
+specs/spec_v008_phase3_mask_to_vector.md
+specs/spec_v009_phase4_cad_json.md
 ```
 
 ---

@@ -1,5 +1,5 @@
-# Config for the v008 orthogonal point-graph mask-to-vector pipeline.
-# Shape follows spec_v008_mask_to_vector.md SS16; batch-mode fields
+﻿# Config for the v008 orthogonal point-graph mask-to-vector pipeline.
+# Shape follows spec_v008_phase3_mask_to_vector.md SS16; batch-mode fields
 # (preview_dir/filename_contains/output_dir) are additive, needed because
 # run_mask_to_vector.py processes a directory of prediction images, not one.
 

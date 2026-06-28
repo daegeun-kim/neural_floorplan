@@ -1,4 +1,4 @@
-# Task 30 - Raster-to-Graph True 20 Percent Padding And Less Destructive Final Filtering
+﻿# Task 30 - Raster-to-Graph True 20 Percent Padding And Less Destructive Final Filtering
 
 ## Objective
 
@@ -275,7 +275,7 @@ whether final filtering is still too destructive
 Update:
 
 ```txt
-specs/spec_v010_raster2graph_modifications.md
+specs/spec_v010_phase4_raster2graph_modifications.md
 ```
 
 Add:
@@ -300,6 +300,6 @@ graph_overlay_merged.png if implemented
 7. Stage-by-stage node/edge counts are recorded.
 8. Junction support score is not added.
 9. `summary.md` explains whether preprocessing or filtering was the main improvement.
-10. `spec_v010_raster2graph_modifications.md` is updated.
+10. `spec_v010_phase4_raster2graph_modifications.md` is updated.
 11. No training, fine-tuning, or checkpoint modification happens.
 

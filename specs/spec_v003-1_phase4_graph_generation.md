@@ -1,4 +1,4 @@
-# Spec v003-1: SVG To Orthogonal Wall Graph Generation
+﻿# Spec v003-1: SVG To Orthogonal Wall Graph Generation
 
 ## 0. Purpose
 
@@ -311,12 +311,12 @@ This spec is between:
 
 ```txt
 spec_v003_semantic_mask_generation.md
-spec_v005_raster2graph.md
+spec_v005_phase4_raster2graph.md
 ```
 
 It uses the original SVG source to create graph labels.
 
-`spec_v005_raster2graph.md` uses those graph labels to train a model.
+`spec_v005_phase4_raster2graph.md` uses those graph labels to train a model.
 
 This stage does not replace semantic mask generation. It adds graph labels alongside masks.
 
@@ -350,7 +350,7 @@ directly:
   `_link_skeleton_edges_to_points` for the skeleton walk, corner-splitting, and
   junction/free-end classification.
 
-`point_connection.build_wall_edges` was **not** reused — it deliberately splits a wall chain at
+`point_connection.build_wall_edges` was **not** reused â€” it deliberately splits a wall chain at
 hosted window/door points, which this spec explicitly forbids (SS9: opening-center nodes must
 never be edge endpoints). A dedicated, simpler edge builder connects each skeleton chain's two
 endpoints directly instead.
@@ -366,7 +366,7 @@ skeleton passes straight through every opening as one continuous chain.
 ### Door swing-arc contamination (judgment call)
 
 The original SVG's `Door > Panel > path` (the swing-arc/leaf visual) has no fill/stroke of its
-own — it inherits `stroke="#000000"` from the `Wall`/`Door` ancestor groups — so
+own â€” it inherits `stroke="#000000"` from the `Wall`/`Door` ancestor groups â€” so
 `generate_semantic_masks`'s "wall" category render (which keeps the whole `Wall` subtree as-is)
 picks up that curved stroke as wall evidence. Left in, the skeleton walk orthogonalizes the
 curve into spurious stair-step loops next to every door. Fixed by `strip_door_swing_evidence`,
@@ -377,7 +377,7 @@ copies of that same geometry, spec_v005 run3) from the wall mask before bridging
 
 Skeletonize commonly leaves a handful of separate junction/free-end pixels within a couple of
 pixels of each other at an ordinary corner (most often where two wall bands of equal thickness
-meet, e.g. a partition meeting an exterior wall) — left alone these become spurious
+meet, e.g. a partition meeting an exterior wall) â€” left alone these become spurious
 near-duplicate nodes joined only by short, non-cardinal "spur" chains that get rejected as
 diagonal, fragmenting the graph. `merge_near_duplicate_points` collapses these via a simple
 distance-based union-find before edges are built.
@@ -393,7 +393,7 @@ shared x.
 
 `wall_graph_metrics.json`'s `too_many_diagonal_chains` check budgets the harmless per-corner
 "spur" noise above (`diagonal_chains_per_node_budget` x node_count + `diagonal_chains_absolute_floor`)
-rather than a flat ratio of rejected-to-accepted chains — that noise scales with junction count,
+rather than a flat ratio of rejected-to-accepted chains â€” that noise scales with junction count,
 not with how clean the wall evidence actually is, so a flat ratio over-flagged small/simple floor
 plans in testing.
 

@@ -1,0 +1,50 @@
+{
+  "sample_id": "sample_001",
+  "source_image": "C:\\Users\\kdgki\\Desktop\\MSCDP\\Projects\\neural_floorplan\\outputs\\vectorization\\phase4_raster2graph_generous_inference\\sample_001\\image.png",
+  "source_variant": "crop512_margin20_truepad",
+  "standardized_margin": 0.2,
+  "content_bbox_original": [
+    5,
+    8,
+    1099,
+    864
+  ],
+  "content_bbox_after_preprocess": [
+    73,
+    113,
+    438,
+    399
+  ],
+  "final_canvas_margins_px": {
+    "left": 73,
+    "top": 113,
+    "right": 74,
+    "bottom": 113
+  },
+  "content_touches_edge": false,
+  "stage_counts": {
+    "components_nodes": 20,
+    "components_edges": 21,
+    "merged_nodes": 18,
+    "merged_edges": 11,
+    "final_nodes": 15,
+    "final_edges": 11
+  },
+  "soft_scores": {
+    "wall_evidence_alignment_score": 0.3579,
+    "rectangle_cycle_count": 0,
+    "rectangle_cycle_score": 0.0,
+    "dangling_node_count": 8,
+    "dangling_penalty": 0.2821,
+    "unsupported_edge_ratio": 0.5455,
+    "small_component_count": 4,
+    "small_component_penalty": 0.75,
+    "candidate_score": -0.9904
+  },
+  "components_before_merge": 1,
+  "components_after_merge": 4,
+  "final_num_points": 15,
+  "final_num_edges": 11,
+  "empty": false,
+  "elapsed_s": 5.09
+}

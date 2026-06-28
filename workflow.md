@@ -1,4 +1,4 @@
-# Neural Floorplan Workflow
+﻿# Neural Floorplan Workflow
 
 ## 0. Purpose
 
@@ -26,7 +26,7 @@ The project has learned that semantic segmentation alone is not enough. The diff
 
 ## 2. Current Active Direction
 
-The current active direction is **Phase 4 pretrained Raster-to-Graph inference**.
+The current active direction is **Phase 4 pretrained Raster-to-Graph inference plus graph-to-vector reconstruction**.
 
 Instead of continuing to add more OpenCV/rule-based vectorization logic, Phase 4 now uses the official Raster-to-Graph checkpoint with local preprocessing, generous inference thresholds, multistart recovery, and graph validity filtering.
 
@@ -40,6 +40,10 @@ model:
 
 output:
   graph_pred.json / graph_pred.svg / graph overlays / metrics
+
+next output:
+  final_vector.svg / final_vector.json from the R2G wall graph plus 7-class
+  segmentation evidence for doors, windows, and scale
 ```
 
 The graph target remains intentionally minimal:
@@ -49,7 +53,7 @@ nodes = wall endpoints / wall junctions
 edges = orthogonal wall segments
 ```
 
-Doors, windows, wall thickness, and rooms are not part of the current Phase 4 graph output.
+Doors, windows, and wall thickness are not predicted by Raster-to-Graph itself. They are attached in the Phase 4 graph-to-vector stage using the 7-class segmentation output on the same preprocessed image.
 
 ---
 
@@ -64,7 +68,9 @@ CubiCasa model.svg
 -> optional wall_graph.json for QA/reference
 -> Phase 4 Raster-to-Graph inference from model_clean.png
 -> predicted wall graph JSON/SVG
--> later attach doors/windows from semantic masks
+-> attach doors/windows from semantic masks on the same preprocessed canvas
+-> trim wall intervals at openings
+-> buffer connected wall chains into 200mm wall polygons
 -> CAD-like SVG / JSON
 ```
 
@@ -168,7 +174,7 @@ Output:
 outputs/vectorization/v008/iteration5_run3
 ```
 
-### Phase 4 - Pretrained Raster-To-Graph Wall Extraction
+### Phase 4 - Pretrained Raster-To-Graph Wall Extraction And Vector Output
 
 Pipeline:
 
@@ -183,6 +189,12 @@ model_clean.png
 -> mask-and-rerun multistart recovery
 -> merge-on-intersection
 -> predicted orthogonal wall graph
+-> 7-class segmentation on the same preprocessed image
+-> scale inference from red door_arc components
+-> door/window graph hosting
+-> opening interval trimming
+-> connected wall-chain buffering
+-> final_vector.svg / final_vector.json
 ```
 
 Goal:
@@ -194,9 +206,10 @@ replace rule-only wall graph extraction with an adapted pretrained graph predict
 Main specs:
 
 ```txt
-specs/spec_v003-1_graph_generation.md
-specs/spec_v005_raster2graph.md
-specs/spec_v010_raster2graph_modifications.md
+specs/spec_v003-1_phase4_graph_generation.md
+specs/spec_v005_phase4_raster2graph.md
+specs/spec_v008_phase4_vectorization.md
+specs/spec_v010_phase4_raster2graph_modifications.md
 ```
 
 ---

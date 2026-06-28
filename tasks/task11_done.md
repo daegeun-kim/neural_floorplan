@@ -1,4 +1,4 @@
-# Task 11 - Replace Vectorization From Scratch
+﻿# Task 11 - Replace Vectorization From Scratch
 
 ## Objective
 
@@ -11,10 +11,10 @@ Do not patch, preserve, or incrementally repair the existing vectorization flow.
 Use this spec as the implementation source of truth:
 
 ```txt
-specs/spec_v008_mask_to_vector.md
+specs/spec_v008_phase3_mask_to_vector.md
 ```
 
-Use `specs/spec_v007_component_primitives.md` only for shared primitive definitions that do not conflict with v008.
+Use `specs/spec_v007_phase3_component_primitives.md` only for shared primitive definitions that do not conflict with v008.
 
 ## Required Work
 
@@ -57,5 +57,5 @@ write debug overlay and metrics
 
 ## Acceptance Criteria
 
-This task is complete when the old vectorization path has been replaced and the new v008 tests verify the point-graph behavior described in `spec_v008_mask_to_vector.md`.
+This task is complete when the old vectorization path has been replaced and the new v008 tests verify the point-graph behavior described in `spec_v008_phase3_mask_to_vector.md`.
 

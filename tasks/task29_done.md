@@ -1,4 +1,4 @@
-# Task 29 - Raster-to-Graph Fast Three-Sample Runtime-Limited Test
+﻿# Task 29 - Raster-to-Graph Fast Three-Sample Runtime-Limited Test
 
 ## Objective
 
@@ -152,7 +152,7 @@ whether max_new_starts=2 is enough for these samples
 Update:
 
 ```txt
-specs/spec_v010_raster2graph_modifications.md
+specs/spec_v010_phase4_raster2graph_modifications.md
 ```
 
 Add that Task 29 is a runtime-limited smoke test:
@@ -174,6 +174,6 @@ three docs samples only
 7. Task 27/28 hard filters and soft scoring remain active.
 8. No junction support score is added.
 9. `summary.md` reports sample IDs and runtime.
-10. `spec_v010_raster2graph_modifications.md` is updated.
+10. `spec_v010_phase4_raster2graph_modifications.md` is updated.
 11. No training, fine-tuning, or checkpoint modification happens.
 

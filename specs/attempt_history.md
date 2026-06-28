@@ -547,8 +547,119 @@ The current vectorization direction is therefore:
 model_clean.png
 -> pretrained Raster-to-Graph inference
 -> orthogonal wall graph
--> later attach door/window evidence
+-> attach door/window evidence from the 7-class segmentation output
 -> clean CAD-like SVG / JSON
 ```
 
 This is the current settled direction. The earlier semantic and point-graph attempts remain important history because they explain why the project moved toward graph prediction.
+
+### Latest Phase 4 Graph-To-Vector Update
+
+The next implementation target is documented in:
+
+```txt
+specs/spec_v008_phase4_vectorization.md
+```
+
+The updated Phase 4 vectorization process uses both outputs:
+
+```txt
+Raster-to-Graph output -> clean wall centerline topology
+7-class segmentation   -> scale, doors, windows, and debug evidence
+```
+
+Important decisions:
+
+- door/window endpoints are inferred by proximity to the aligned R2G graph, not by black wall pixels alone
+- the two endpoints of one door/window must host on the same wall edge or same wall chain interval
+- openings are inserted and trimmed in centerline graph space before wall polygons are generated
+- remaining wall centerlines are connected into graph chains before buffering, so corners and junctions render cleanly
+- final wall thickness is 200mm when scale is resolved, implemented as 100mm buffering on each side of the centerline
+
+This update keeps the successful R2G wall topology work while reusing the 7-class segmentation model only where it is strongest: semantic opening evidence and scale inference.
+
+### Task32 Door Primitive Regression
+
+The first Phase 4 graph-to-vector attempt produced useful wall/window output, but revealed a door primitive regression in:
+
+```txt
+outputs/vectorization/phase4_vectorization/1316/final_vector.svg
+```
+
+The failure is not door detection itself. The hosted door origin edge exists, but Phase 4 exports it with the wrong primitive semantics:
+
+```txt
+current wrong behavior:
+  hosted door origin edge is drawn as the red door leaf
+  door origin is reduced to a purple circle
+  door arc starts at the hinge point
+
+required behavior:
+  door_origin = purple line along the hosted wall gap
+  door_leaf   = orange perpendicular line from hinge
+  door_arc    = red 90-degree arc centered on hinge,
+                from origin far point to leaf endpoint
+```
+
+This is a regression because Phase 3 already had the correct primitive contract in:
+
+```txt
+src/vectorization/primitives/door.py
+```
+
+Task32 instructs Claude to reuse or exactly match the existing `DoorOriginPrimitive`, `DoorLeafPrimitive`, and `DoorArcPrimitive` behavior instead of keeping Phase 4's simplified local door drawing.
+
+### Task33 Opening Interval De-Overlap Rule
+
+The next Phase 4 refinement concerns overlapping trim intervals when valid doors and windows sit very close on the same wall segment.
+
+The first idea of preserving the higher-confidence opening and rejecting the lower-confidence one was rejected because the 7-class raster usually detects both openings correctly. Slight overlap is usually a vector-placement problem, not evidence that one opening is invalid.
+
+Updated rule:
+
+```txt
+door vs window:
+  keep the door fixed
+  move or shrink the window away from the door
+
+door vs door:
+  keep the higher-confidence door fixed
+  move or shrink the lower-confidence door
+
+window vs window:
+  keep the higher-confidence window fixed
+  move or shrink the lower-confidence window
+```
+
+Openings should be rejected only when no feasible non-overlapping interval exists on the host wall chain. Final wall trimming must use the adjusted non-overlapping intervals, and `final_vector.json` should record original and adjusted interval positions for debugging.
+
+### Task34 Pipeline Contract Enforcement
+
+After Task33, the vector output barely changed in the problem areas because the implementation only partially followed the intended process.
+
+Observed issues:
+
+```txt
+1. wall trimming used adjusted opening intervals,
+   but final window/door primitives still used the original hosted snapped_points
+
+2. door primitive shape contract was fixed,
+   but hinge and swing direction still used fallback values:
+     hinge_source = fallback_pt0
+     swing_source = fallback
+     swing_side = fallback_left
+
+3. some buffered wall corners stayed disconnected,
+   indicating the pre-buffer wall graph still contains endpoints that are visually close
+   but not topologically snapped into shared nodes
+```
+
+Task34 therefore requires the adjusted opening geometry to become the single source of truth for wall trim, SVG, JSON, debug overlay, and notebook output. It also requires evidence-driven door direction from the 7-class raster:
+
+```txt
+red door_arc pixels    -> primary swing-side / arc quadrant evidence
+orange door_leaf pixels -> secondary hinge/leaf support
+purple door_origin pixels -> origin edge validation
+```
+
+The Phase 4 notebook is now treated as part of the required deliverable for every future vectorization behavior change, because it is the manual sample-testing surface.

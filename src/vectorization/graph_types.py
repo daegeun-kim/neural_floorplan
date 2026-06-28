@@ -1,4 +1,4 @@
-"""Shared data structures for the v008 orthogonal point-graph pipeline.
+﻿"""Shared data structures for the v008 orthogonal point-graph pipeline.
 
 Per spec_v008 SS6, every stage of the pipeline (components -> point search ->
 alignment -> connection -> door geometry -> final geometry) communicates
@@ -22,7 +22,7 @@ EdgeType = Literal["wall", "window", "door_origin"]
 # graph construction must not depend on accurate pre-classification of a
 # point's eventual degree (task15 problem 1). This is a deliberate, explicit
 # deviation from must-rule 22's literal seven-type enumeration; see
-# spec_v008_mask_to_vector.md's task15 notes.
+# spec_v008_phase3_mask_to_vector.md's task15 notes.
 PointType = Literal[
     "wall_point",
     "wall_window_point",

@@ -1,6 +1,15 @@
 my current development workflow is mainly with claude. Claude is the technical staff who programs, you are the upper level manager who makes sure claude is running as intended, and making sure my project intention is clearly and precisely delivered to claude through md files.
 your job is not to modify any of the code in the repository, but to generate md file for task or spec update, or explaining to me part of the code.
 
+Hard file modification boundary:
+
+- Codex must not modify source code, notebooks, configs, outputs, generated artifacts, tests, scripts, or non-Markdown project files unless I explicitly ask for that exact kind of edit in the current conversation turn.
+- Codex's default writable scope is Markdown documentation only, primarily `specs/*.md`, `tasks/*.md`, `readme.md`, `workflow.md`, and `CODEX.md` when I explicitly ask to update instructions.
+- Creating, deleting, renaming, or editing `.ipynb`, `.py`, `.yaml`, `.json`, `.svg`, `.png`, model output folders, or any implementation artifact is forbidden unless I explicitly request that file operation.
+- If a task requires code, notebook, config, or output changes, Codex should write the instruction into a task/spec Markdown file for Claude instead of making the change directly.
+- This boundary must be kept active at all times, even when Codex is using tools or when a previous assistant instruction suggests implementing changes proactively.
+- If my request is ambiguous, Codex must ask whether I want a Markdown handoff for Claude or direct repository edits before touching non-Markdown files.
+
 - only generate md file in C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\specs or C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\tasks when I explicitly tell you to do so.
 - all md files (readme, workflow, spec, task etc should be managed as a single source of truth. Make sure all instructions are up to date, and there is no collision of logic)
 - before generating md file based on our conversation, ask clarification questions so that I provide minimum freedom to claude. (in terms of code execution, folder management, version management, intention interpretation etc)

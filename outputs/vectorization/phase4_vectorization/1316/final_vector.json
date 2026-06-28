@@ -1,0 +1,1410 @@
+{
+  "coordinate_space": "preprocessed_512",
+  "preprocessing": {
+    "source_image": "C:\\Users\\kdgki\\Desktop\\MSCDP\\Projects\\neural_floorplan\\outputs\\vectorization\\phase4_vectorization\\1316\\image.png",
+    "source_width": 0,
+    "source_height": 0,
+    "content_bbox_original": [
+      148,
+      73,
+      362,
+      439
+    ],
+    "padding_fraction": 0.2,
+    "padded_width": 0,
+    "padded_height": 0,
+    "scale_to_512": 1.0,
+    "canvas_offset_x": 0,
+    "canvas_offset_y": 0,
+    "coordinate_space": "preprocessed_512",
+    "source_variant": "crop512_margin20_truepad",
+    "content_touches_edge": false,
+    "final_canvas_margins_px": {
+      "left": 149,
+      "top": 73,
+      "right": 149,
+      "bottom": 73
+    },
+    "content_bbox_after_preprocess": [
+      149,
+      73,
+      363,
+      439
+    ]
+  },
+  "scale": {
+    "status": "estimated",
+    "px_to_mm": 21.21212121212121,
+    "source": "door_arc_bbox_long_edge_clustering",
+    "confidence": 0.75,
+    "evidence": {
+      "red_arc_bbox_long_edges_px": [
+        33.0,
+        30.0,
+        35.0,
+        5.0
+      ],
+      "red_arc_px_to_mm_candidates": [
+        20.0,
+        21.21212121212121,
+        23.333333333333332,
+        25.714285714285715,
+        27.272727272727273,
+        30.0,
+        140.0,
+        180.0
+      ],
+      "red_arc_selected_modules_mm": [
+        700.0
+      ],
+      "selected_px_to_mm": 21.21212121212121,
+      "scale_rejected_outliers": [
+        5.0
+      ],
+      "door_origin_check_px_to_mm": 24.137931034482758,
+      "wall_thickness_check_px_to_mm": 2.2433945857258646,
+      "scale_source": "door_arc_bbox_long_edge_clustering"
+    }
+  },
+  "wall_graph": {
+    "raw": {
+      "nodes": [
+        [
+          316,
+          180
+        ],
+        [
+          316,
+          77
+        ],
+        [
+          152,
+          180
+        ],
+        [
+          226,
+          332
+        ],
+        [
+          316,
+          330
+        ],
+        [
+          152,
+          75
+        ],
+        [
+          316,
+          402
+        ],
+        [
+          152,
+          402
+        ],
+        [
+          226,
+          402
+        ]
+      ],
+      "edges": [
+        [
+          316,
+          180,
+          152,
+          180
+        ],
+        [
+          316,
+          77,
+          152,
+          75
+        ],
+        [
+          316,
+          77,
+          316,
+          402
+        ],
+        [
+          226,
+          332,
+          316,
+          330
+        ],
+        [
+          226,
+          332,
+          226,
+          402
+        ],
+        [
+          152,
+          75,
+          152,
+          402
+        ],
+        [
+          316,
+          402,
+          152,
+          402
+        ]
+      ]
+    },
+    "aligned": {
+      "nodes": [
+        [
+          152.0,
+          180.0
+        ],
+        [
+          316.0,
+          180.0
+        ],
+        [
+          152.0,
+          76.0
+        ],
+        [
+          316.0,
+          76.0
+        ],
+        [
+          226.0,
+          331.0
+        ],
+        [
+          316.0,
+          331.0
+        ],
+        [
+          152.0,
+          402.0
+        ],
+        [
+          226.0,
+          402.0
+        ],
+        [
+          316.0,
+          402.0
+        ]
+      ],
+      "edges": [
+        [
+          152.0,
+          180.0,
+          316.0,
+          180.0
+        ],
+        [
+          152.0,
+          76.0,
+          316.0,
+          76.0
+        ],
+        [
+          226.0,
+          331.0,
+          316.0,
+          331.0
+        ],
+        [
+          152.0,
+          402.0,
+          226.0,
+          402.0
+        ],
+        [
+          226.0,
+          402.0,
+          316.0,
+          402.0
+        ],
+        [
+          316.0,
+          77.0,
+          316.0,
+          180.0
+        ],
+        [
+          316.0,
+          180.0,
+          316.0,
+          331.0
+        ],
+        [
+          316.0,
+          331.0,
+          316.0,
+          402.0
+        ],
+        [
+          226.0,
+          332.0,
+          226.0,
+          402.0
+        ],
+        [
+          152.0,
+          75.0,
+          152.0,
+          180.0
+        ],
+        [
+          152.0,
+          180.0,
+          152.0,
+          402.0
+        ]
+      ]
+    },
+    "trimmed": {
+      "edges": [
+        [
+          152.0,
+          180.0,
+          195.0,
+          180.0
+        ],
+        [
+          228.0,
+          180.0,
+          230.35714285714286,
+          180.0
+        ],
+        [
+          299.3571428571429,
+          180.0,
+          316.0,
+          180.0
+        ],
+        [
+          152.0,
+          76.0,
+          171.7682262528763,
+          76.0
+        ],
+        [
+          295.7682109940872,
+          76.0,
+          316.0,
+          76.0
+        ],
+        [
+          226.0,
+          331.0,
+          316.0,
+          331.0
+        ],
+        [
+          152.0,
+          402.0,
+          188.0,
+          402.0
+        ],
+        [
+          221.0,
+          402.0,
+          226.0,
+          402.0
+        ],
+        [
+          226.0,
+          402.0,
+          316.0,
+          402.0
+        ],
+        [
+          316.0,
+          77.0,
+          316.0,
+          180.0
+        ],
+        [
+          316.0,
+          180.0,
+          316.0,
+          331.0
+        ],
+        [
+          316.0,
+          331.0,
+          316.0,
+          402.0
+        ],
+        [
+          226.0,
+          332.0,
+          226.0,
+          348.0
+        ],
+        [
+          226.0,
+          381.0,
+          226.0,
+          402.0
+        ],
+        [
+          152.0,
+          75.0,
+          152.0,
+          180.0
+        ],
+        [
+          152.0,
+          180.0,
+          152.0,
+          402.0
+        ]
+      ],
+      "opening_gaps": [
+        {
+          "opening_type": "door",
+          "source_component_id": 1,
+          "host_edge_idx": 0,
+          "host_edge_raw": [
+            152.0,
+            180.0,
+            316.0,
+            180.0
+          ],
+          "snapped_points": [
+            [
+              195.0,
+              180.0
+            ],
+            [
+              228.0,
+              180.0
+            ]
+          ],
+          "original_interval": [
+            0.2621951219512195,
+            0.4634146341463415
+          ],
+          "adjusted_interval": [
+            0.2621951219512195,
+            0.4634146341463415
+          ],
+          "t_start": 0.2621951219512195,
+          "t_end": 0.4634146341463415,
+          "width_px": 33.0,
+          "width_mm": 700.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "window",
+          "source_component_id": 3,
+          "host_edge_idx": 0,
+          "host_edge_raw": [
+            152.0,
+            180.0,
+            316.0,
+            180.0
+          ],
+          "snapped_points": [
+            [
+              230.35714285714286,
+              180.0
+            ],
+            [
+              299.3571428571429,
+              180.0
+            ]
+          ],
+          "original_interval": [
+            0.43343836961859566,
+            0.8541700769356688
+          ],
+          "adjusted_interval": [
+            0.4777874564459931,
+            0.8985191637630663
+          ],
+          "t_start": 0.4777874564459931,
+          "t_end": 0.8985191637630663,
+          "width_px": 69.0,
+          "width_mm": 1463.6363636363635,
+          "confidence": 1.0,
+          "was_adjusted": true,
+          "adjustment_reason": "window interval moved right of door (lower priority)",
+          "adjustment_px": 7.27,
+          "adjustment_mm": 0.34,
+          "overlap_resolution_priority": "door_fixed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "window",
+          "source_component_id": 1,
+          "host_edge_idx": 1,
+          "host_edge_raw": [
+            152.0,
+            76.0,
+            316.0,
+            76.0
+          ],
+          "snapped_points": [
+            [
+              171.7682262528763,
+              76.0
+            ],
+            [
+              295.7682109940872,
+              76.0
+            ]
+          ],
+          "original_interval": [
+            0.12053796495656283,
+            0.8766354328907756
+          ],
+          "adjusted_interval": [
+            0.12053796495656283,
+            0.8766354328907756
+          ],
+          "t_start": 0.12053796495656283,
+          "t_end": 0.8766354328907756,
+          "width_px": 123.99998474121091,
+          "width_mm": 2630.3027066317463,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 3,
+          "host_edge_idx": 3,
+          "host_edge_raw": [
+            152.0,
+            402.0,
+            226.0,
+            402.0
+          ],
+          "snapped_points": [
+            [
+              188.0,
+              402.0
+            ],
+            [
+              221.0,
+              402.0
+            ]
+          ],
+          "original_interval": [
+            0.4864864864864865,
+            0.9324324324324325
+          ],
+          "adjusted_interval": [
+            0.4864864864864865,
+            0.9324324324324325
+          ],
+          "t_start": 0.4864864864864865,
+          "t_end": 0.9324324324324325,
+          "width_px": 33.0,
+          "width_mm": 700.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        },
+        {
+          "opening_type": "door",
+          "source_component_id": 2,
+          "host_edge_idx": 8,
+          "host_edge_raw": [
+            226.0,
+            332.0,
+            226.0,
+            402.0
+          ],
+          "snapped_points": [
+            [
+              226.0,
+              348.0
+            ],
+            [
+              226.0,
+              381.0
+            ]
+          ],
+          "original_interval": [
+            0.22857142857142856,
+            0.7
+          ],
+          "adjusted_interval": [
+            0.22857142857142856,
+            0.7
+          ],
+          "t_start": 0.22857142857142856,
+          "t_end": 0.7,
+          "width_px": 33.0,
+          "width_mm": 700.0,
+          "confidence": 1.0,
+          "was_adjusted": false,
+          "adjustment_reason": "",
+          "adjustment_px": 0.0,
+          "adjustment_mm": 0.0,
+          "overlap_resolution_priority": "not_needed",
+          "large_adjustment_flagged": false
+        }
+      ]
+    }
+  },
+  "openings": {
+    "doors": [
+      {
+        "source_component_id": 1,
+        "opening_type": "door",
+        "host_edge_idx": 0,
+        "host_edge_raw": [
+          152.0,
+          180.0,
+          316.0,
+          180.0
+        ],
+        "raw_points": [
+          [
+            195.0,
+            177.0
+          ],
+          [
+            225.0,
+            177.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            195.0,
+            180.0
+          ],
+          [
+            228.0,
+            180.0
+          ]
+        ],
+        "final_points": [
+          [
+            195.0,
+            180.0
+          ],
+          [
+            228.0,
+            180.0
+          ]
+        ],
+        "width_px": 33.0,
+        "width_mm": 700.0,
+        "snapped_module_mm": 700.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.2621951219512195,
+          0.4634146341463415
+        ],
+        "adjusted_interval": [
+          0.2621951219512195,
+          0.4634146341463415
+        ],
+        "snapped_points_adjusted": [
+          [
+            195.0,
+            180.0
+          ],
+          [
+            228.0,
+            180.0
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            195.0,
+            180.0
+          ],
+          [
+            228.0,
+            180.0
+          ]
+        ]
+      },
+      {
+        "source_component_id": 2,
+        "opening_type": "door",
+        "host_edge_idx": 8,
+        "host_edge_raw": [
+          226.0,
+          332.0,
+          226.0,
+          402.0
+        ],
+        "raw_points": [
+          [
+            226.0,
+            348.0
+          ],
+          [
+            226.0,
+            377.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            226.0,
+            348.0
+          ],
+          [
+            226.0,
+            381.0
+          ]
+        ],
+        "final_points": [
+          [
+            226.0,
+            348.0
+          ],
+          [
+            226.0,
+            381.0
+          ]
+        ],
+        "width_px": 33.0,
+        "width_mm": 700.0,
+        "snapped_module_mm": 700.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.22857142857142856,
+          0.7
+        ],
+        "adjusted_interval": [
+          0.22857142857142856,
+          0.7
+        ],
+        "snapped_points_adjusted": [
+          [
+            226.0,
+            348.0
+          ],
+          [
+            226.0,
+            381.0
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            226.0,
+            348.0
+          ],
+          [
+            226.0,
+            381.0
+          ]
+        ]
+      },
+      {
+        "source_component_id": 3,
+        "opening_type": "door",
+        "host_edge_idx": 3,
+        "host_edge_raw": [
+          152.0,
+          402.0,
+          226.0,
+          402.0
+        ],
+        "raw_points": [
+          [
+            188.0,
+            405.0
+          ],
+          [
+            221.0,
+            405.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            188.0,
+            402.0
+          ],
+          [
+            221.0,
+            402.0
+          ]
+        ],
+        "final_points": [
+          [
+            188.0,
+            402.0
+          ],
+          [
+            221.0,
+            402.0
+          ]
+        ],
+        "width_px": 33.0,
+        "width_mm": 700.0,
+        "snapped_module_mm": 700.0,
+        "confidence": 1.0,
+        "original_interval": [
+          0.4864864864864865,
+          0.9324324324324325
+        ],
+        "adjusted_interval": [
+          0.4864864864864865,
+          0.9324324324324325
+        ],
+        "snapped_points_adjusted": [
+          [
+            188.0,
+            402.0
+          ],
+          [
+            221.0,
+            402.0
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            188.0,
+            402.0
+          ],
+          [
+            221.0,
+            402.0
+          ]
+        ]
+      }
+    ],
+    "windows": [
+      {
+        "source_component_id": 1,
+        "opening_type": "window",
+        "host_edge_idx": 1,
+        "host_edge_raw": [
+          152.0,
+          76.0,
+          316.0,
+          76.0
+        ],
+        "raw_points": [
+          [
+            171.77,
+            76.42
+          ],
+          [
+            295.77,
+            76.42
+          ]
+        ],
+        "snapped_points": [
+          [
+            171.77,
+            76.0
+          ],
+          [
+            295.77,
+            76.0
+          ]
+        ],
+        "final_points": [
+          [
+            171.77,
+            76.0
+          ],
+          [
+            295.77,
+            76.0
+          ]
+        ],
+        "width_px": 124.0,
+        "width_mm": 2630.3,
+        "snapped_module_mm": null,
+        "confidence": 1.0,
+        "original_interval": [
+          0.12053796495656283,
+          0.8766354328907756
+        ],
+        "adjusted_interval": [
+          0.12053796495656283,
+          0.8766354328907756
+        ],
+        "snapped_points_adjusted": [
+          [
+            171.77,
+            76.0
+          ],
+          [
+            295.77,
+            76.0
+          ]
+        ],
+        "was_adjusted": false,
+        "adjustment_reason": "",
+        "adjustment_px": 0.0,
+        "adjustment_mm": 0.0,
+        "overlap_resolution_priority": "not_needed",
+        "snapped_points_original": [
+          [
+            171.77,
+            76.0
+          ],
+          [
+            295.77,
+            76.0
+          ]
+        ]
+      },
+      {
+        "source_component_id": 3,
+        "opening_type": "window",
+        "host_edge_idx": 0,
+        "host_edge_raw": [
+          152.0,
+          180.0,
+          316.0,
+          180.0
+        ],
+        "raw_points": [
+          [
+            223.08,
+            179.2
+          ],
+          [
+            292.08,
+            179.2
+          ]
+        ],
+        "snapped_points": [
+          [
+            230.36,
+            180.0
+          ],
+          [
+            299.36,
+            180.0
+          ]
+        ],
+        "final_points": [
+          [
+            230.36,
+            180.0
+          ],
+          [
+            299.36,
+            180.0
+          ]
+        ],
+        "width_px": 69.0,
+        "width_mm": 1463.6,
+        "snapped_module_mm": null,
+        "confidence": 1.0,
+        "original_interval": [
+          0.43343836961859566,
+          0.8541700769356688
+        ],
+        "adjusted_interval": [
+          0.4777874564459931,
+          0.8985191637630663
+        ],
+        "snapped_points_adjusted": [
+          [
+            230.36,
+            180.0
+          ],
+          [
+            299.36,
+            180.0
+          ]
+        ],
+        "was_adjusted": true,
+        "adjustment_reason": "window interval moved right of door (lower priority)",
+        "adjustment_px": 7.27,
+        "adjustment_mm": 0.34,
+        "overlap_resolution_priority": "door_fixed",
+        "snapped_points_original": [
+          [
+            223.08,
+            180.0
+          ],
+          [
+            292.08,
+            180.0
+          ]
+        ]
+      }
+    ],
+    "rejected": [
+      {
+        "opening_type": "door",
+        "source_component_id": 4,
+        "raw_points": [
+          [
+            245.0,
+            481.0
+          ],
+          [
+            248.0,
+            481.0
+          ]
+        ],
+        "rejection_reason": "no single wall edge could host both endpoints within 20px",
+        "debug_confidence": 1.0
+      },
+      {
+        "opening_type": "window",
+        "source_component_id": 2,
+        "raw_points": [
+          [
+            319.59,
+            79.66
+          ],
+          [
+            329.59,
+            79.66
+          ]
+        ],
+        "rejection_reason": "no single wall edge could host both endpoints within 20px",
+        "debug_confidence": 1.0
+      }
+    ]
+  },
+  "geometry": {
+    "walls": [
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            147.29,
+            70.66
+          ],
+          [
+            147.29,
+            180.0
+          ],
+          [
+            147.29,
+            406.71
+          ],
+          [
+            188.0,
+            406.71
+          ],
+          [
+            188.0,
+            397.29
+          ],
+          [
+            156.71,
+            397.29
+          ],
+          [
+            156.71,
+            184.71
+          ],
+          [
+            195.0,
+            184.71
+          ],
+          [
+            195.0,
+            175.29
+          ],
+          [
+            156.71,
+            175.29
+          ],
+          [
+            156.71,
+            80.34
+          ],
+          [
+            171.65,
+            80.71
+          ],
+          [
+            171.89,
+            71.29
+          ],
+          [
+            147.29,
+            70.66
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            228.0,
+            184.71
+          ],
+          [
+            230.36,
+            184.71
+          ],
+          [
+            230.36,
+            175.29
+          ],
+          [
+            228.0,
+            175.29
+          ],
+          [
+            228.0,
+            184.71
+          ]
+        ],
+        "interiors": []
+      },
+      {
+        "type": "Polygon",
+        "exterior": [
+          [
+            221.29,
+            397.29
+          ],
+          [
+            221.0,
+            397.29
+          ],
+          [
+            221.0,
+            406.71
+          ],
+          [
+            226.0,
+            406.71
+          ],
+          [
+            320.71,
+            406.71
+          ],
+          [
+            320.71,
+            331.0
+          ],
+          [
+            320.71,
+            180.0
+          ],
+          [
+            320.71,
+            71.9
+          ],
+          [
+            295.88,
+            71.29
+          ],
+          [
+            295.65,
+            80.71
+          ],
+          [
+            311.29,
+            81.1
+          ],
+          [
+            311.29,
+            175.29
+          ],
+          [
+            299.36,
+            175.29
+          ],
+          [
+            299.36,
+            184.71
+          ],
+          [
+            311.29,
+            184.71
+          ],
+          [
+            311.29,
+            326.31
+          ],
+          [
+            221.29,
+            326.81
+          ],
+          [
+            221.29,
+            348.0
+          ],
+          [
+            230.71,
+            348.0
+          ],
+          [
+            230.71,
+            336.19
+          ],
+          [
+            311.29,
+            335.74
+          ],
+          [
+            311.29,
+            397.29
+          ],
+          [
+            230.71,
+            397.29
+          ],
+          [
+            230.71,
+            381.0
+          ],
+          [
+            221.29,
+            381.0
+          ],
+          [
+            221.29,
+            397.29
+          ]
+        ],
+        "interiors": []
+      }
+    ],
+    "doors": [
+      {
+        "source_component_id": 1,
+        "final_points": [
+          [
+            195.0,
+            180.0
+          ],
+          [
+            228.0,
+            180.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            195.0,
+            180.0
+          ],
+          [
+            228.0,
+            180.0
+          ]
+        ],
+        "width_px": 33.0,
+        "width_mm": 700.0,
+        "door_geometry": {
+          "hinge_point": [
+            195.0,
+            180.0
+          ],
+          "origin_far_point": [
+            228.0,
+            180.0
+          ],
+          "leaf_end": [
+            195.0,
+            147.0
+          ],
+          "swing_side": "right",
+          "width_px": 33.0,
+          "width_mm": 700.0,
+          "orientation_angle_deg": 0.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 2,
+        "final_points": [
+          [
+            226.0,
+            348.0
+          ],
+          [
+            226.0,
+            381.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            226.0,
+            348.0
+          ],
+          [
+            226.0,
+            381.0
+          ]
+        ],
+        "width_px": 33.0,
+        "width_mm": 700.0,
+        "door_geometry": {
+          "hinge_point": [
+            226.0,
+            381.0
+          ],
+          "origin_far_point": [
+            226.0,
+            348.0
+          ],
+          "leaf_end": [
+            193.0,
+            381.0
+          ],
+          "swing_side": "right",
+          "width_px": 33.0,
+          "width_mm": 700.0,
+          "orientation_angle_deg": -90.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      },
+      {
+        "source_component_id": 3,
+        "final_points": [
+          [
+            188.0,
+            402.0
+          ],
+          [
+            221.0,
+            402.0
+          ]
+        ],
+        "snapped_points": [
+          [
+            188.0,
+            402.0
+          ],
+          [
+            221.0,
+            402.0
+          ]
+        ],
+        "width_px": 33.0,
+        "width_mm": 700.0,
+        "door_geometry": {
+          "hinge_point": [
+            221.0,
+            402.0
+          ],
+          "origin_far_point": [
+            188.0,
+            402.0
+          ],
+          "leaf_end": [
+            221.0,
+            435.0
+          ],
+          "swing_side": "right",
+          "width_px": 33.0,
+          "width_mm": 700.0,
+          "orientation_angle_deg": 180.0,
+          "hinge_source": "red_orange_purple_evidence",
+          "swing_source": "red_door_arc_side",
+          "primitive_contract": "door_origin_leaf_arc"
+        }
+      }
+    ],
+    "windows": [
+      {
+        "source_component_id": 1,
+        "final_points": [
+          [
+            171.77,
+            76.0
+          ],
+          [
+            295.77,
+            76.0
+          ]
+        ],
+        "points": [
+          [
+            171.77,
+            76.0
+          ],
+          [
+            295.77,
+            76.0
+          ]
+        ],
+        "width_px": 124.0,
+        "width_mm": 2630.3
+      },
+      {
+        "source_component_id": 3,
+        "final_points": [
+          [
+            230.36,
+            180.0
+          ],
+          [
+            299.36,
+            180.0
+          ]
+        ],
+        "points": [
+          [
+            230.36,
+            180.0
+          ],
+          [
+            299.36,
+            180.0
+          ]
+        ],
+        "width_px": 69.0,
+        "width_mm": 1463.6
+      }
+    ]
+  },
+  "metrics": {
+    "elapsed_s": 0.11,
+    "r2g_nodes": 9,
+    "r2g_edges": 7,
+    "aligned_edges": 11,
+    "trimmed_wall_edges": 16,
+    "opening_gaps": 5,
+    "hosted_doors": 3,
+    "hosted_windows": 2,
+    "rejected_total": 2,
+    "wall_chains": 11,
+    "scale_status": "estimated",
+    "px_to_mm": 21.21212121212121,
+    "wall_thickness_mm": 200.0,
+    "scale_blocked": false,
+    "pre_buffer_node_count": 22,
+    "post_snap_node_count": 19,
+    "pre_buffer_edge_count": 16,
+    "wall_chain_count": 11,
+    "disconnected_endpoint_count": 10
+  }
+}

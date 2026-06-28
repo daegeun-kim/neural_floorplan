@@ -1,4 +1,4 @@
-# Spec v008: Strict 7-Class Mask-to-Vector Reconstruction
+﻿# Spec v008: Strict 7-Class Mask-to-Vector Reconstruction
 
 ## 0. Purpose
 
@@ -18,7 +18,7 @@ Pipeline:
 -> SVG output
 ```
 
-Component definitions are in `spec_v007_component_primitives.md`.
+Component definitions are in `spec_v007_phase3_component_primitives.md`.
 
 JSON output is intentionally out of scope for v008 and belongs to v009 after vectorization is reliable.
 

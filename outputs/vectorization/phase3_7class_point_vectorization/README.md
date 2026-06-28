@@ -1,6 +1,6 @@
-# Phase 3 - Seven-Class Segmentation To Point-Based Vectorization
+﻿# Phase 3 - Seven-Class Segmentation To Point-Based Vectorization
 
-See `specs/vectorization_phase_history.md` and `specs/spec_v008_mask_to_vector.md` for the full writeup. Summary:
+See `specs/vectorization_phase_history.md` and `specs/spec_v008_phase3_mask_to_vector.md` for the full writeup. Summary:
 
 - **Phase goal**: shift from line recognition to architectural point recognition + graph construction.
 - **Input segmentation type**: 7-class (same as phase 2 - the change is in vectorization, not the segmentation target).
@@ -9,4 +9,4 @@ See `specs/vectorization_phase_history.md` and `specs/spec_v008_mask_to_vector.m
 
 ## Iteration folders here
 
-- `iteration5_run3/` - current/active output, no `failed` suffix. This is the required test case for `specs/vectorization_must_rules.md` validation (see `spec_v008_mask_to_vector.md`'s Task14-19 Debugging Notes).
+- `iteration5_run3/` - current/active output, no `failed` suffix. This is the required test case for `specs/vectorization_must_rules.md` validation (see `spec_v008_phase3_mask_to_vector.md`'s Task14-19 Debugging Notes).

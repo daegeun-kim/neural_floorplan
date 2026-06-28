@@ -1,4 +1,4 @@
-# Task 13 - Make Red Door-Arc Clusters Guaranteed Door Objects
+﻿# Task 13 - Make Red Door-Arc Clusters Guaranteed Door Objects
 
 ## Objective
 
@@ -19,7 +19,7 @@ After a red cluster creates a door object, the vectorizer must infer the door's 
 Use:
 
 ```txt
-specs/spec_v008_mask_to_vector.md
+specs/spec_v008_phase3_mask_to_vector.md
 tasks/task12.md
 ```
 

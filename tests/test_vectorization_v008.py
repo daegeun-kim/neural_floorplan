@@ -1,7 +1,7 @@
-"""Tests for the v008 orthogonal point-graph mask-to-vector pipeline (run3).
+﻿"""Tests for the v008 orthogonal point-graph mask-to-vector pipeline (run3).
 
 Organized by module, following the reconstruction order in
-spec_v008_mask_to_vector.md SS7, and covering the validation requirements in
+spec_v008_phase3_mask_to_vector.md SS7, and covering the validation requirements in
 SS17.
 """
 
@@ -353,7 +353,7 @@ class TestWallSkeletonGraph:
         # collapsed 1/2/3/4_wall_point into one generic "wall_point" - this
         # is a deliberate, explicit deviation from must-rule 22's literal
         # seven-type enumeration (now four types), documented in
-        # spec_v008_mask_to_vector.md's task15 notes.
+        # spec_v008_phase3_mask_to_vector.md's task15 notes.
         mask = _cross_mask()
         components, _ = extract_components(mask, "wall", min_area_px=4)
         points, _rejected, _edges = detect_points({"wall": components}, {}, UNKNOWN_SCALE)

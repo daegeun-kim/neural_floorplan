@@ -1,4 +1,4 @@
-# Task 12 - Fix Door-Based Scale and Point Recognition
+﻿# Task 12 - Fix Door-Based Scale and Point Recognition
 
 ## Objective
 
@@ -14,7 +14,7 @@ The current output recognizes too many `1_wall_point` endpoints and treats red d
 Use the active spec as context:
 
 ```txt
-specs/spec_v008_mask_to_vector.md
+specs/spec_v008_phase3_mask_to_vector.md
 ```
 
 ## 1. Scale Rule Update
