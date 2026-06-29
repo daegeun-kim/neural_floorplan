@@ -379,7 +379,9 @@ predicted graph nodes
   -> graph_pred.json
   -> graph_pred.svg
   -> graph_overlay.png
-  -> future final_vector.svg / final_vector.json
+  -> door/window hosting from 7-class segmentation
+  -> wall trimming and buffering
+  -> final_vector.svg / final_vector.json
 ```
 
 Why clean input:
@@ -435,7 +437,7 @@ main failure: hand-written point detection too brittle
 Phase 4
 model_clean.png
 pretrained Raster-to-Graph inference
-current: predict topology directly with preprocessing, scoring, multistart, and merge cleanup
+current: predict topology directly, attach openings from 7-class segmentation, and export CAD-like SVG/JSON
 ```
 
 Suggested final caption:
@@ -460,7 +462,7 @@ CubiCasa SVG / raster data
        failed: keypoint detection brittle
   -> Phase 4: Raster-to-Graph inference
        current: infer wall graph directly with pretrained R2G
-  -> future CAD-like SVG / JSON
+  -> CAD-like SVG / JSON
 ```
 
 ## Suggested Visual Hierarchy

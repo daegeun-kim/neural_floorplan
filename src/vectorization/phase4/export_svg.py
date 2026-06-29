@@ -57,7 +57,7 @@ def _window_to_svg(win: HostedOpening) -> str:
         f'<line x1="{x1:.2f}" y1="{y1:.2f}" '
         f'x2="{x2:.2f}" y2="{y2:.2f}" '
         f'stroke="{WINDOW_STROKE}" stroke-width="4" '
-        f'stroke-linecap="square" />'
+        f'stroke-linecap="butt" />'
     )
 
 
@@ -112,12 +112,34 @@ def _door_to_svg(door: HostedOpening, idx: int, geom: Optional[DoorGeometry] = N
         swing_direction=swing_base,
     )
 
+    parts = [origin_prim.to_svg(), leaf_prim.to_svg(), arc_prim.to_svg()]
+
+    # Double-swing: render a second leaf + arc on the opposite side
+    if geom.door_type == "double_swing_shared_origin" and geom.secondary_leaf_end is not None:
+        sec_base = geom.secondary_swing_side.replace("fallback_", "") or (
+            "right" if swing_base == "left" else "left"
+        )
+        sec_leaf = DoorLeafPrimitive(
+            primitive_id=f"door_{idx}_leaf_b",
+            hinge_point=geom.hinge_point,
+            width=geom.width_px,
+            orientation_angle=geom.orientation_angle_deg,
+            swing_direction=sec_base,
+        )
+        sec_arc = DoorArcPrimitive(
+            primitive_id=f"door_{idx}_arc_b",
+            hinge_point=geom.hinge_point,
+            origin_far_point=geom.origin_far_point,
+            width=geom.width_px,
+            orientation_angle=geom.orientation_angle_deg,
+            swing_direction=sec_base,
+        )
+        parts += [sec_leaf.to_svg(), sec_arc.to_svg()]
+
     return (
-        f'<g id="door_{idx}" data-type="door">'
-        f'{origin_prim.to_svg()}'
-        f'{leaf_prim.to_svg()}'
-        f'{arc_prim.to_svg()}'
-        f'</g>'
+        f'<g id="door_{idx}" data-type="door" data-door-type="{geom.door_type}">'
+        + "".join(parts)
+        + "</g>"
     )
 
 

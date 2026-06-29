@@ -86,7 +86,7 @@ class DoorOriginPrimitive(BasePrimitive):
         return (
             f'<line id="{self.primitive_id}" data-type="door_origin" '
             f'x1="{s[0]:.2f}" y1="{s[1]:.2f}" x2="{e[0]:.2f}" y2="{e[1]:.2f}" '
-            f'stroke="{self.COLOR}" stroke-width="2" stroke-linecap="square" />'
+            f'stroke="{self.COLOR}" stroke-width="2" stroke-linecap="butt" />'
         )
 
     def bounds(self) -> tuple[float, float, float, float]:

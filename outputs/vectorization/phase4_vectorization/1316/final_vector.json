@@ -1237,7 +1237,20 @@
           "orientation_angle_deg": 0.0,
           "hinge_source": "red_orange_purple_evidence",
           "swing_source": "red_door_arc_side",
-          "primitive_contract": "door_origin_leaf_arc"
+          "primitive_contract": "door_origin_leaf_arc",
+          "red_side_positive_count": 0,
+          "red_side_negative_count": 743,
+          "red_side_selected": "negative",
+          "orange_hinge_p0_score": 119.0,
+          "orange_hinge_p1_score": 0.0,
+          "hinge_selected": "p0",
+          "fallback_used": false,
+          "door_type": "single_swing",
+          "classification_reason": "one_sided_red_evidence",
+          "double_swing_ratio": null,
+          "source_door_component_ids": [
+            1
+          ]
         }
       },
       {
@@ -1267,23 +1280,36 @@
         "door_geometry": {
           "hinge_point": [
             226.0,
-            381.0
+            348.0
           ],
           "origin_far_point": [
             226.0,
-            348.0
+            381.0
           ],
           "leaf_end": [
             193.0,
-            381.0
+            348.0
           ],
-          "swing_side": "right",
+          "swing_side": "left",
           "width_px": 33.0,
           "width_mm": 700.0,
-          "orientation_angle_deg": -90.0,
+          "orientation_angle_deg": 90.0,
           "hinge_source": "red_orange_purple_evidence",
           "swing_source": "red_door_arc_side",
-          "primitive_contract": "door_origin_leaf_arc"
+          "primitive_contract": "door_origin_leaf_arc",
+          "red_side_positive_count": 642,
+          "red_side_negative_count": 0,
+          "red_side_selected": "positive",
+          "orange_hinge_p0_score": 150.0,
+          "orange_hinge_p1_score": 4.0,
+          "hinge_selected": "p0",
+          "fallback_used": false,
+          "door_type": "single_swing",
+          "classification_reason": "one_sided_red_evidence",
+          "double_swing_ratio": null,
+          "source_door_component_ids": [
+            2
+          ]
         }
       },
       {
@@ -1329,7 +1355,20 @@
           "orientation_angle_deg": 180.0,
           "hinge_source": "red_orange_purple_evidence",
           "swing_source": "red_door_arc_side",
-          "primitive_contract": "door_origin_leaf_arc"
+          "primitive_contract": "door_origin_leaf_arc",
+          "red_side_positive_count": 931,
+          "red_side_negative_count": 0,
+          "red_side_selected": "positive",
+          "orange_hinge_p0_score": 2.0,
+          "orange_hinge_p1_score": 153.0,
+          "hinge_selected": "p1",
+          "fallback_used": false,
+          "door_type": "single_swing",
+          "classification_reason": "one_sided_red_evidence",
+          "double_swing_ratio": null,
+          "source_door_component_ids": [
+            3
+          ]
         }
       }
     ],
@@ -1387,7 +1426,7 @@
     ]
   },
   "metrics": {
-    "elapsed_s": 0.11,
+    "elapsed_s": 0.09,
     "r2g_nodes": 9,
     "r2g_edges": 7,
     "aligned_edges": 11,

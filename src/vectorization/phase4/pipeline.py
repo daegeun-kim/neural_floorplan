@@ -31,7 +31,8 @@ import numpy as np
 from PIL import Image
 
 from .debug_overlay import build_debug_overlay, write_debug_overlay
-from .door_geometry import DoorGeometry, compute_door_geometry
+from .door_classification import ClassificationResult, classify_door_openings
+from .door_geometry import DoorGeometry, compute_door_geometry, compute_door_geometry_double_swing
 from .export_json import build_final_vector_json, write_final_vector_json
 from .export_svg import build_final_svg, write_final_svg
 from .graph_alignment import normalize_graph
@@ -87,6 +88,11 @@ class Phase4Result:
     trimmed_graph: Optional[TrimmedGraph] = None
     # Final geometry
     wall_geometry: Optional[WallGeometry] = None
+    door_geometries: list = field(default_factory=list)
+    # task36 classification
+    door_classification_result: Optional[Any] = None  # ClassificationResult
+    double_swing_count: int = 0
+    ignored_duplicate_count: int = 0
     # Outputs
     final_vector_json: dict = field(default_factory=dict)
     final_vector_svg: str = ""
@@ -349,11 +355,37 @@ def run_phase4_pipeline(
     print(f"  hosted: {len(hosted_doors)} doors, {len(hosted_windows)} windows")
     print(f"  rejected total: {len(all_rejected)}")
 
+    # --- 8b. Door classification (single/double-swing, paired detection) ---
+    door_arc_comps_dict = {c.component_id: c for c in components.get("door_arc", [])}
+    classification_result = classify_door_openings(
+        hosted_doors=hosted_doors,
+        door_arc_mask=seg_masks.get("door_arc"),
+        door_arc_comps=door_arc_comps_dict,
+    )
+    classified_doors = classification_result.final_doors
+    door_classifications = classification_result.classifications
+    all_rejected += [
+        RejectedOpening(
+            opening_type="door",
+            source_component_id=d.source_component_id,
+            raw_points=d.raw_points,
+            rejection_reason="ignored_duplicate_same_origin",
+            debug_confidence=d.confidence,
+        )
+        for d in classification_result.ignored_doors
+    ]
+    result.door_classification_result = classification_result
+    result.double_swing_count = classification_result.double_swing_count
+    result.ignored_duplicate_count = classification_result.ignored_duplicate_count
+    if classification_result.double_swing_count or classification_result.ignored_duplicate_count:
+        print(f"  door classification: {classification_result.double_swing_count} double-swing, "
+              f"{classification_result.ignored_duplicate_count} ignored duplicates")
+
     # --- 9-10. Wall interval trimming ---
     print("[phase4] 9/13 wall interval trimming...")
     trimmed = trim_wall_intervals(
         aligned_edges,
-        hosted_doors + hosted_windows,
+        classified_doors + hosted_windows,  # classified_doors replaces hosted_doors (merged pairs)
         px_to_mm=scale_info.px_to_mm,
     )
     result.trimmed_graph = trimmed
@@ -362,9 +394,7 @@ def run_phase4_pipeline(
     print(f"  wall edges after trimming: {len(trimmed.wall_edges)}")
 
     # --- Part A: propagate adjusted intervals to final opening objects ---
-    # After conflict resolution, opening gaps carry the adjusted endpoints.
-    # Rebuild hosted_doors/windows so their snapped_points == trim endpoints.
-    final_doors   = apply_adjusted_intervals_to_hosted_openings(trimmed, hosted_doors)
+    final_doors   = apply_adjusted_intervals_to_hosted_openings(trimmed, classified_doors)
     final_windows = apply_adjusted_intervals_to_hosted_openings(trimmed, hosted_windows)
 
     # --- 11. Wall chain buffering (Part C: topology-snap pre-processing) ---
@@ -381,10 +411,10 @@ def run_phase4_pipeline(
     # --- Part B: evidence-based door geometry ---
     door_arc_mask = seg_masks.get("door_arc")
     door_leaf_mask = seg_masks.get("door_leaf")
-    door_arc_comps = {c.component_id: c for c in components.get("door_arc", [])}
+    door_arc_comps = door_arc_comps_dict  # already computed at classification step
 
     door_geometries: list[DoorGeometry] = []
-    for door in final_doors:
+    for door_idx, door in enumerate(final_doors):
         # Use the component-local mask when available (restrict to component bbox)
         comp = door_arc_comps.get(door.source_component_id)
         local_arc_mask = None
@@ -404,11 +434,26 @@ def run_phase4_pipeline(
             door_arc_mask=local_arc_mask,
             door_leaf_mask=door_leaf_mask,
         )
+        # Attach classification metadata
+        cls = door_classifications[door_idx] if door_idx < len(door_classifications) else None
+        if cls is not None:
+            from dataclasses import replace as _dc_replace
+            geom = _dc_replace(
+                geom,
+                classification_reason=cls.decision_reason,
+                double_swing_ratio=cls.double_swing_ratio,
+                source_door_component_ids=list(cls.source_component_ids),
+            )
+            # Apply double-swing secondary geometry
+            if cls.door_type == "double_swing_shared_origin":
+                geom = compute_door_geometry_double_swing(geom)
         door_geometries.append(geom)
 
     evidence_count = sum(1 for g in door_geometries if "evidence" in g.hinge_source)
+    fallback_count = len(door_geometries) - evidence_count
     print(f"  door direction: {evidence_count}/{len(door_geometries)} from evidence, "
-          f"{len(door_geometries) - evidence_count} fallback")
+          f"{fallback_count} fallback")
+    result.door_geometries = door_geometries
 
     # --- 12. Export final SVG ---
     print("[phase4] 11/13 exporting final SVG...")

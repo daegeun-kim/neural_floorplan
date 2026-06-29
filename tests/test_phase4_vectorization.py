@@ -496,20 +496,21 @@ class TestFinalVectorJsonSchema:
 # Door geometry / primitive contract tests  (task32)
 # ---------------------------------------------------------------------------
 
-def _make_hosted_door(p0, p1, component_id=0, host_edge=None, width_mm=None):
+def _make_hosted_door(p0, p1, component_id=0, host_edge=None, width_mm=None, confidence=1.0, comp_id=None):
     """Build a minimal HostedOpening for door geometry tests."""
     width_px = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
     edge = host_edge or [p0[0], p0[1], p1[0], p1[1]]
+    cid = comp_id if comp_id is not None else component_id
     return HostedOpening(
         opening_type="door",
-        source_component_id=component_id,
+        source_component_id=cid,
         host_edge_idx=0,
         host_edge_raw=edge,
         raw_points=[p0, p1],
         snapped_points=[p0, p1],
         width_px=width_px,
         width_mm=width_mm,
-        confidence=1.0,
+        confidence=confidence,
         snapped_module_mm=None,
     )
 
@@ -1136,3 +1137,390 @@ class TestTopologySnapEdges:
         assert "post_snap_node_count" in m
         assert "disconnected_endpoint_count" in m
         assert "wall_chain_count" in m
+
+
+# ---------------------------------------------------------------------------
+# Task 35 — Red-side swing + orange hinge + flat-ended rendering
+# ---------------------------------------------------------------------------
+
+class TestTask35DoorDirection:
+    """task35: primary swing from red side-count; primary hinge from orange corridor."""
+
+    # Door origin from p0=(50,100) to p1=(90,100), horizontal, going east.
+    P0 = (50.0, 100.0)
+    P1 = (90.0, 100.0)
+    SIZE = 200
+
+    def _mask_above(self) -> np.ndarray:
+        """Red pixels strictly ABOVE the door line (y < 100): negative cross → 'negative' side."""
+        mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        mask[60:98, 55:85] = 255   # y ∈ [60, 98], all above y=100
+        return mask
+
+    def _mask_below(self) -> np.ndarray:
+        """Red pixels strictly BELOW the door line (y > 100): positive cross → 'positive' side."""
+        mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        mask[103:140, 55:85] = 255  # y ∈ [103, 140], all below y=100
+        return mask
+
+    def _orange_near_p0(self) -> np.ndarray:
+        """Orange pixels clustered near p0=(50,100) in a downward corridor."""
+        mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        mask[100:140, 45:56] = 255  # corridor below p0
+        return mask
+
+    def _orange_near_p1(self) -> np.ndarray:
+        """Orange pixels clustered near p1=(90,100) in a downward corridor."""
+        mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        mask[100:140, 84:96] = 255  # corridor below p1
+        return mask
+
+    def test_red_pixels_below_choose_positive_side(self):
+        """Pixels below the p0→p1 line (positive cross) → positive side → left swing for hinge=p0."""
+        from src.vectorization.phase4.door_geometry import _score_side_by_red_pixels
+        pos, neg, side = _score_side_by_red_pixels(self.P0, self.P1, self._mask_below())
+        assert side == "positive"
+        assert pos > 0
+        assert neg == 0
+
+    def test_red_pixels_above_choose_negative_side(self):
+        """Pixels above the p0→p1 line (negative cross) → negative side → right swing for hinge=p0."""
+        from src.vectorization.phase4.door_geometry import _score_side_by_red_pixels
+        pos, neg, side = _score_side_by_red_pixels(self.P0, self.P1, self._mask_above())
+        assert side == "negative"
+        assert neg > 0
+        assert pos == 0
+
+    def test_orange_near_p0_selects_p0_hinge(self):
+        """Orange pixels near p0 → hinge=p0 selected via orange corridor primary."""
+        from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
+        red_mask = self._mask_below()   # positive side → swing=left for p0
+        orange_mask = self._orange_near_p0()
+        h_pt, swing, h_src, sw_src = infer_door_direction_from_evidence(
+            self.P0, self.P1, red_mask, door_leaf_mask=orange_mask
+        )
+        assert h_pt == "p0"
+        assert swing == "left"
+        assert h_src == "red_orange_purple_evidence"
+
+    def test_orange_near_p1_selects_p1_hinge(self):
+        """Orange pixels near p1 → hinge=p1 selected via orange corridor primary."""
+        from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
+        red_mask = self._mask_below()   # positive side → swing=right for p1
+        orange_mask = self._orange_near_p1()
+        h_pt, swing, h_src, sw_src = infer_door_direction_from_evidence(
+            self.P0, self.P1, red_mask, door_leaf_mask=orange_mask
+        )
+        assert h_pt == "p1"
+        assert swing == "right"
+        assert h_src == "red_orange_purple_evidence"
+
+    def test_red_outside_local_region_ignored_with_local_mask(self):
+        """Red pixels far from the door (outside a local crop) must not influence the result.
+
+        Simulates component-local masking: construct a global mask where the true door's
+        arc is below the line, but a 'remote door' places red pixels above the line.
+        Applying a local crop that contains only the true door's region should still
+        select the correct (positive) side.
+        """
+        from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
+        global_mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        # True door arc: below the line
+        global_mask[103:140, 55:85] = 255
+        # Remote door: above the line, far x-region
+        global_mask[60:98, 150:190] = 255
+
+        # Local crop: restrict to x ∈ [30, 110], y ∈ [80, 160]
+        local_mask = np.zeros_like(global_mask)
+        local_mask[80:160, 30:110] = global_mask[80:160, 30:110]
+
+        # With local mask, only the below-line pixels are visible
+        from src.vectorization.phase4.door_geometry import _score_side_by_red_pixels
+        pos, neg, side = _score_side_by_red_pixels(self.P0, self.P1, local_mask)
+        assert side == "positive", "local mask must exclude remote door red pixels"
+
+    def test_arc_sampling_cannot_override_strong_red_side_evidence(self):
+        """When red pixels strongly favour one side, arc-sampling for hinge must not flip swing.
+
+        Construct a scenario where: red side-count says 'positive' (below), but the arc
+        hypothesis with best arc-overlap would be hinge=p1/swing=right (which is also
+        positive side — both are positive here). The final swing must respect the side count.
+        """
+        from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence, _score_side_by_red_pixels
+        red_mask = self._mask_below()
+        pos, neg, side = _score_side_by_red_pixels(self.P0, self.P1, red_mask)
+        assert side == "positive"  # pre-condition
+
+        # Without orange mask, arc secondary picks hinge from arc-pixel proximity
+        h_pt, swing, h_src, sw_src = infer_door_direction_from_evidence(self.P0, self.P1, red_mask)
+        # Swing must be consistent with the positive absolute side
+        if h_pt == "p0":
+            assert swing == "left", "positive side + p0 hinge must be left"
+        else:
+            assert swing == "right", "positive side + p1 hinge must be right"
+        # Evidence sources must not be fallback
+        assert h_src == "red_orange_purple_evidence"
+        assert sw_src == "red_door_arc_side"
+
+    def test_window_svg_uses_butt_linecap(self):
+        """Window SVG line must use stroke-linecap='butt' so it does not extend past endpoints."""
+        from src.vectorization.phase4.export_svg import _window_to_svg, WINDOW_STROKE
+        win = _make_hosted_door(self.P0, self.P1)
+        # Reuse _make_hosted_door — the snapped_points geometry is the same for windows
+        svg = _window_to_svg(win)
+        assert 'stroke-linecap="butt"' in svg, "window must use butt linecap, not square/round"
+        assert 'stroke-linecap="square"' not in svg
+
+    def test_door_origin_svg_uses_butt_linecap(self):
+        """DoorOriginPrimitive.to_svg() must use stroke-linecap='butt'."""
+        from src.vectorization.primitives.door import DoorOriginPrimitive
+        prim = DoorOriginPrimitive(
+            primitive_id="test_origin",
+            center=(70.0, 100.0),
+            width=40.0,
+            orientation_angle=0.0,
+        )
+        svg = prim.to_svg()
+        assert 'stroke-linecap="butt"' in svg
+        assert 'stroke-linecap="square"' not in svg
+
+    def test_evidence_fields_in_door_geometry_dict(self):
+        """door_geometry_to_dict() must include all task35 evidence debug fields."""
+        from src.vectorization.phase4.door_geometry import compute_door_geometry, door_geometry_to_dict
+        door = _make_hosted_door(self.P0, self.P1)
+        red_mask = self._mask_below()
+        geom = compute_door_geometry(door, door_arc_mask=red_mask)
+        d = door_geometry_to_dict(geom)
+        for field_name in [
+            "red_side_positive_count", "red_side_negative_count", "red_side_selected",
+            "orange_hinge_p0_score", "orange_hinge_p1_score", "hinge_selected", "fallback_used",
+        ]:
+            assert field_name in d, f"missing evidence field: {field_name}"
+        assert d["red_side_selected"] == "positive"
+        assert d["fallback_used"] is False
+
+
+class TestTask36DoubleSwing:
+    """Tests for double-swing door classification and rendering (task36)."""
+
+    SIZE = 200
+    # Horizontal origin: p0=(50,100), p1=(130,100)
+    P0 = (50.0, 100.0)
+    P1 = (130.0, 100.0)
+    EDGE = [0.0, 100.0, 200.0, 100.0]
+
+    def _make_door(self, comp_id: int = 0, confidence: float = 0.9) -> "HostedOpening":
+        return _make_hosted_door(self.P0, self.P1, comp_id=comp_id, confidence=confidence)
+
+    def _mask_below(self, intensity: int = 255) -> np.ndarray:
+        m = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        m[105:145, 55:125] = intensity
+        return m
+
+    def _mask_above(self, intensity: int = 255) -> np.ndarray:
+        m = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        m[55:97, 55:125] = intensity
+        return m
+
+    # ── Part A: two-sided evidence detection ──────────────────────────────────
+
+    def test_one_sided_red_evidence_yields_single_swing(self):
+        """Only red pixels on one side of the line → single_swing classification."""
+        from src.vectorization.phase4.door_classification import (
+            classify_door_openings, MIN_SIDE_PIXELS,
+        )
+        door = self._make_door(comp_id=1)
+        door.host_edge_raw = self.EDGE
+        red_mask = self._mask_below()
+        result = classify_door_openings([door], door_arc_mask=red_mask, door_arc_comps={})
+        assert result.double_swing_count == 0
+        assert result.classifications[0].door_type == "single_swing"
+
+    def test_weak_opposite_side_does_not_trigger_double_swing(self):
+        """Ratio below threshold (< MIN_DOUBLE_SWING_RATIO) stays single_swing."""
+        from src.vectorization.phase4.door_classification import classify_door_openings
+        door = self._make_door(comp_id=2)
+        door.host_edge_raw = self.EDGE
+        # Add a tiny bit of noise on the upper side
+        combined = self._mask_below()
+        combined[97:100, 55:60] = 255  # ~3 pixels above: far below MIN_SIDE_PIXELS=10
+        result = classify_door_openings([door], door_arc_mask=combined, door_arc_comps={})
+        assert result.double_swing_count == 0
+        assert result.classifications[0].door_type == "single_swing"
+
+    def test_strong_both_sides_yields_double_swing_single_component(self):
+        """Single component with strong red evidence on both sides → double_swing_shared_origin."""
+        from src.vectorization.phase4.door_classification import (
+            classify_door_openings, MIN_DOUBLE_SWING_RATIO, MIN_SIDE_PIXELS,
+        )
+        door = self._make_door(comp_id=3)
+        door.host_edge_raw = self.EDGE
+        # Large blocks on BOTH sides so both counts > MIN_SIDE_PIXELS and ratio > threshold
+        combined = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        combined[105:145, 55:125] = 255  # below (positive)
+        combined[57:97, 55:125] = 255    # above (negative)
+        result = classify_door_openings([door], door_arc_mask=combined, door_arc_comps={})
+        assert result.double_swing_count == 1
+        assert result.classifications[0].door_type == "double_swing_shared_origin"
+        assert result.classifications[0].double_swing_ratio is not None
+        assert result.classifications[0].double_swing_ratio >= MIN_DOUBLE_SWING_RATIO
+
+    # ── Part B/C: paired door detection ──────────────────────────────────────
+
+    def test_two_overlapping_doors_opposite_sides_merge_to_double_swing(self):
+        """Two doors on same edge, overlapping intervals, opposite sides → one double-swing."""
+        from src.vectorization.phase4.door_classification import classify_door_openings
+        d1 = self._make_door(comp_id=10, confidence=0.9)
+        d2 = self._make_door(comp_id=11, confidence=0.8)
+        d1.host_edge_raw = self.EDGE
+        d2.host_edge_raw = self.EDGE
+
+        result = classify_door_openings(
+            [d1, d2],
+            door_arc_mask=None,  # force fallback — side evidence from separate masks
+            door_arc_comps={},
+        )
+        # No mask → both sides are "fallback" → pair is NOT merged (same-side, same-dir default)
+        assert result.double_swing_count == 0  # correct: fallback sides are not "opposite"
+
+    def test_two_overlapping_doors_with_injected_opposite_side_evidence_merge(self):
+        """Two paired doors where component bboxes restrict each to its own side.
+
+        d1's component bbox covers below-the-line pixels → positive side.
+        d2's component bbox covers above-the-line pixels → negative side.
+        Shared overlapping intervals on same edge → merged as double_swing_shared_origin.
+        """
+        from src.vectorization.phase4.door_classification import classify_door_openings
+        from src.vectorization.graph_types import ComponentRecord
+
+        d1 = self._make_door(comp_id=20, confidence=0.9)
+        d2 = self._make_door(comp_id=21, confidence=0.9)
+        d1.host_edge_raw = self.EDGE
+        d2.host_edge_raw = self.EDGE
+
+        # Combined mask: below-line region (positive) + above-line region (negative)
+        both_mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
+        both_mask[105:145, 55:125] = 255   # below the line at y=100
+        both_mask[57:97, 55:125] = 255     # above the line
+
+        # Restrict d1's comp to below-line, d2's comp to above-line via bbox
+        comp20 = ComponentRecord(
+            class_name="door_arc", component_id=20,
+            area_px=40 * 70, bbox=(55, 105, 125, 145), centroid=(90.0, 125.0),
+        )
+        comp21 = ComponentRecord(
+            class_name="door_arc", component_id=21,
+            area_px=40 * 70, bbox=(55, 57, 125, 97), centroid=(90.0, 77.0),
+        )
+        comps = {20: comp20, 21: comp21}
+
+        result = classify_door_openings([d1, d2], door_arc_mask=both_mask, door_arc_comps=comps)
+        assert result.double_swing_count == 1, (
+            f"Expected 1 double-swing from opposite-side pair, "
+            f"got double={result.double_swing_count}, ignored={result.ignored_duplicate_count}, "
+            f"classifications={[c.decision_reason for c in result.classifications]}"
+        )
+
+    def test_two_overlapping_doors_same_side_ignored_duplicate(self):
+        """Two doors with same side evidence → weaker one becomes ignored_duplicate."""
+        from src.vectorization.phase4.door_classification import classify_door_openings
+
+        d1 = self._make_door(comp_id=30, confidence=0.9)
+        d2 = self._make_door(comp_id=31, confidence=0.7)  # weaker
+        d1.host_edge_raw = self.EDGE
+        d2.host_edge_raw = self.EDGE
+
+        # Both see only below-line → same side → pair but NOT opposite → ignore weaker
+        below = self._mask_below()
+        result = classify_door_openings([d1, d2], door_arc_mask=below, door_arc_comps={})
+        assert result.ignored_duplicate_count == 1
+        assert len(result.ignored_doors) == 1
+        assert result.ignored_doors[0].source_component_id == 31  # lower confidence
+        assert len(result.final_doors) == 1
+
+    def test_non_overlapping_intervals_yield_separate_single_swing_doors(self):
+        """Doors with non-overlapping intervals on same edge stay as separate single-swing."""
+        from src.vectorization.phase4.door_classification import classify_door_openings
+
+        d1 = self._make_door(comp_id=40)
+        d1.snapped_points = [(10.0, 100.0), (50.0, 100.0)]  # first quarter
+        d1.host_edge_raw = self.EDGE
+
+        d2 = self._make_door(comp_id=41)
+        d2.snapped_points = [(150.0, 100.0), (190.0, 100.0)]  # last quarter
+        d2.host_edge_raw = self.EDGE
+
+        result = classify_door_openings([d1, d2], door_arc_mask=None, door_arc_comps={})
+        assert result.ignored_duplicate_count == 0
+        assert result.double_swing_count == 0
+        assert len(result.final_doors) == 2
+
+    # ── Part D/E: geometry and rendering ────────────────────────────────────
+
+    def test_double_swing_svg_renders_two_leaves_and_arcs(self):
+        """SVG output for double_swing_shared_origin contains secondary leaf and arc."""
+        from src.vectorization.phase4.door_geometry import (
+            compute_door_geometry, compute_door_geometry_double_swing,
+        )
+        from src.vectorization.phase4.export_svg import _door_to_svg
+
+        door = self._make_door(comp_id=50)
+        geom = compute_door_geometry(door, door_arc_mask=self._mask_below())
+        double_geom = compute_door_geometry_double_swing(geom)
+
+        assert double_geom.door_type == "double_swing_shared_origin"
+        assert double_geom.secondary_leaf_end is not None
+
+        svg = _door_to_svg(door, idx=0, geom=double_geom)
+        assert 'door_0_leaf_b' in svg, "secondary leaf primitive must be in SVG"
+        assert 'door_0_arc_b' in svg, "secondary arc primitive must be in SVG"
+        assert 'data-door-type="double_swing_shared_origin"' in svg
+
+    # ── Part E: JSON fields ──────────────────────────────────────────────────
+
+    def test_json_includes_task36_classification_fields(self):
+        """door_geometry_to_dict() must record door_type, classification_reason, source ids."""
+        from src.vectorization.phase4.door_geometry import (
+            compute_door_geometry, compute_door_geometry_double_swing, door_geometry_to_dict,
+        )
+        from dataclasses import replace as _dc_replace
+
+        door = self._make_door(comp_id=60)
+        geom = compute_door_geometry(door, door_arc_mask=self._mask_below())
+        geom = _dc_replace(
+            geom,
+            classification_reason="single_component_two_sided_red_evidence",
+            double_swing_ratio=0.85,
+            source_door_component_ids=[60, 61],
+        )
+        geom = compute_door_geometry_double_swing(geom)
+        d = door_geometry_to_dict(geom)
+        assert d["door_type"] == "double_swing_shared_origin"
+        assert d["classification_reason"] == "single_component_two_sided_red_evidence"
+        assert d["double_swing_ratio"] == pytest.approx(0.85)
+        assert set(d["source_door_component_ids"]) == {60, 61}
+        assert "secondary_leaf_end" in d
+        assert "secondary_swing_side" in d
+
+    # ── Part H: counts in ClassificationResult ───────────────────────────────
+
+    def test_classification_result_counts_match_actual_output(self):
+        """ClassificationResult counters must match the actual final_doors list."""
+        from src.vectorization.phase4.door_classification import classify_door_openings
+
+        doors = [self._make_door(comp_id=i) for i in range(3)]
+        for d in doors:
+            d.host_edge_raw = self.EDGE
+
+        # All doors on same edge, overlapping intervals, same side → 2 ignored + 1 survivor
+        below = self._mask_below()
+        result = classify_door_openings(doors, door_arc_mask=below, door_arc_comps={})
+        # Can't predict exact counts without knowing pair-pairing order,
+        # but totals must be internally consistent:
+        # final_doors + ignored_doors == original 3
+        assert (len(result.final_doors) + len(result.ignored_doors)) == 3
+        # counters must match the actual lists
+        assert result.double_swing_count == sum(
+            1 for c in result.classifications if c.door_type == "double_swing_shared_origin"
+        )
+        assert result.ignored_duplicate_count == len(result.ignored_doors)

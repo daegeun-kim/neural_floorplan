@@ -663,3 +663,43 @@ purple door_origin pixels -> origin edge validation
 ```
 
 The Phase 4 notebook is now treated as part of the required deliverable for every future vectorization behavior change, because it is the manual sample-testing surface.
+
+### Task35 Red-Side Door Direction And Flat-Ended Openings
+
+Task34 still leaves door left/right and hinge reversal errors in some samples.
+The next refinement should trust the 7-class raster more directly:
+
+```txt
+red door_arc pixels     -> primary swing side by signed-side count around origin segment
+orange door_leaf pixels -> primary hinge endpoint by proximity / candidate leaf support
+purple door_origin      -> origin validation and tie-break only
+```
+
+Generated arc or leaf sampling can remain as secondary evidence, but it should
+not override strong local red/orange raster evidence.
+
+Task35 also addresses the equal overlap at both window ends. Hosted opening
+segments must be rendered with flat endpoints and must not be lengthened by
+buffering or SVG stroke caps. Windows and door-origin segments should either use
+`stroke-linecap="butt"` or explicit flat-ended rectangle/polygon geometry whose
+endpoints match the adjusted wall trim nodes exactly.
+
+### Task36 Double-Swing Shared-Origin Doors
+
+Some doors are valid two-sided openings: red door-arc evidence exists on both
+sides of the same door origin, and forcing a single swing side is wrong.
+
+Task36 adds a classification step:
+
+```txt
+single_swing
+double_swing_shared_origin
+separate_single_swing_doors
+ignored_duplicate
+```
+
+When two detections share the same origin edge and have opposite-side red arc
+evidence, they may merge into one double-swing door. The merged primitive should
+draw one shared origin edge and leaves/arcs on both sides, while trimming the
+wall only once. Nearby doors must remain separate unless they share the origin
+edge relationship.

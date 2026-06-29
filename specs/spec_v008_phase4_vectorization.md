@@ -845,3 +845,170 @@ Summary dict now includes `disconnected_endpoints`, `pre_buffer_nodes`,
 - `TestAdjustedIntervalPropagation` (4 tests): Part A
 - `TestDoorEvidenceScoring` (6 tests): Part B
 - `TestTopologySnapEdges` (7 tests): Part C
+
+## 21. Red-Side Door Direction and Flat-Ended Rendering (task35 — 2026-06-28)
+
+### Parts A/B — Updated Evidence Hierarchy
+
+`door_geometry.py` now uses a stronger evidence hierarchy:
+
+**Primary swing — red-pixel cross-product side count** (`_score_side_by_red_pixels`):
+- For each red pixel in the local door_arc mask, compute the signed cross product
+  of `(p0→p1)` × `(p0→pixel)`.
+- Count pixels with positive cross (one absolute side) vs negative cross (other).
+- The majority side selects the absolute swing direction (not relative to hinge).
+- Pixels within `min_line_dist=2px` of the threshold line are excluded (noise).
+
+Absolute side maps to per-hinge swing directions:
+```
+positive side + hinge=p0 → swing="left"    (arc below line when going east)
+positive side + hinge=p1 → swing="right"
+negative side + hinge=p0 → swing="right"
+negative side + hinge=p1 → swing="left"
+```
+
+**Primary hinge — orange leaf corridor** (`_score_hinge_by_orange_pixels`):
+- Score each endpoint by: orange pixels within `near_radius=8px` of the endpoint
+  + orange pixels inside the candidate leaf corridor (extends `door_width_px` in the
+  perpendicular/swing direction, `corridor_half_width=6px` tolerance across the origin axis).
+- The endpoint with the higher score is selected as the hinge.
+- Only applies when `door_leaf_mask` is provided and has positive evidence.
+
+**Secondary hinge — arc-sampling with fixed swing (2 hypotheses)**:
+- When orange evidence is absent/zero, score `(hinge=p0, fixed_swing)` vs
+  `(hinge=p1, opposite_fixed_swing)` using the existing arc-sampling method.
+- This is 2 hypotheses, not 4 (swing is already decided by side count).
+
+**Full 4-hypothesis arc fallback**:
+- Only used when `red_side_selected == "fallback"` (tie or zero red pixels).
+- Arc sampling scores all 4 combinations; result must exceed `min_score_threshold`.
+
+### Part C — Evidence Debug Fields
+
+`DoorGeometry` dataclass gains 7 new optional fields (all default-valued):
+```
+red_side_positive_count   int    pixels on positive cross-product side
+red_side_negative_count   int    pixels on negative cross-product side
+red_side_selected         str    "positive" | "negative" | "fallback"
+orange_hinge_p0_score     float  orange corridor score for p0 as hinge
+orange_hinge_p1_score     float  orange corridor score for p1 as hinge
+hinge_selected            str    "p0" | "p1"
+fallback_used             bool   True when evidence was absent/ambiguous
+```
+
+`door_geometry_to_dict()` now serializes all 7 fields into `final_vector.json`
+under `geometry.doors[].door_geometry`.
+
+`build_debug_overlay()` hinge label updated to `"{swing}|{side_or_fb}"` showing
+both the swing direction and whether fallback was used.
+
+`Phase4Result` gets `door_geometries: list[DoorGeometry]` so the notebook can
+count fallbacks without re-running the pipeline.
+
+### Part D — Flat-Ended Rendering
+
+`stroke-linecap="square"` changed to `"butt"` in two places:
+- `DoorOriginPrimitive.to_svg()` (`src/vectorization/primitives/door.py`)
+- `_window_to_svg()` (`src/vectorization/phase4/export_svg.py`)
+
+`stroke-linecap="square"` extends the stroke by `stroke-width/2` at each end,
+causing window/door-origin segments to overlap the wall polygon at their trim
+endpoints. `butt` terminates exactly at the endpoint coordinates.
+
+### Part E/F — Tests and Notebook
+
+9 new tests in `TestTask35DoorDirection` (total: 84 phase4 tests):
+- Side-count tests for positive and negative absolute sides
+- Orange corridor selects p0 and p1 hinge correctly
+- Local mask isolates evidence from remote doors
+- Arc sampling cannot override strong red-side evidence
+- Window and door-origin SVG use butt linecap
+- Evidence fields appear in `door_geometry_to_dict()` output
+
+Notebook `vectorize_image()` summary now includes `door_evidence_fallbacks` count.
+
+## 21. Red-Side Door Direction And Flat-Ended Openings (task35)
+
+Task35 refines the Task34 door evidence logic. Door swing side should be inferred
+directly from the 7-class segmentation raster, not primarily from generated arc
+samples.
+
+For each adjusted door origin segment `p0 -> p1`, the primary swing-side score is:
+
+```txt
+count red door_arc pixels on signed side A of p0 -> p1
+count red door_arc pixels on signed side B of p0 -> p1
+select the side with stronger local red support
+```
+
+The red pixels must come from the associated local door component or a tightly
+expanded component bbox so adjacent doors do not affect the decision. Generated
+arc sampling may remain only as a tie-breaker or debug metric.
+
+The hinge endpoint should be inferred from orange `door_leaf` pixels:
+
+```txt
+compare orange support for p0-as-hinge vs p1-as-hinge
+use proximity to endpoint and/or candidate leaf corridor support
+select the endpoint with stronger orange evidence
+```
+
+Purple `door_origin` pixels validate the origin segment and may help tie-break,
+but they should not override strong red/orange evidence.
+
+`final_vector.json` should record door evidence metrics including red side counts,
+orange hinge scores, selected hinge, selected swing side, evidence source, and
+fallback status. The debug overlay should show which side and hinge were selected.
+
+Task35 also fixes hosted opening rendering. Window segments and door-origin
+segments must be thickened only perpendicular to their segment direction. They
+must not extend beyond their adjusted trim endpoints. If SVG lines are used,
+hosted opening segments must use `stroke-linecap="butt"` rather than square or
+round caps. Explicit rectangle/polygon primitives are also acceptable if their
+centerline endpoints exactly equal the adjusted opening endpoints.
+
+As with all future Phase 4 vectorization changes, `notebooks/phase4_vectorization.ipynb`
+must be updated together with `src/` so manual sample testing uses the same
+pipeline behavior.
+
+## 22. Double-Swing Shared-Origin Doors (task36)
+
+The door model must support valid doors that open to both sides of the same
+origin edge. Task35 chooses a single side from red-pixel evidence, but some
+doors have real red arc evidence on both sides.
+
+Door classification should include:
+
+```txt
+single_swing
+double_swing_shared_origin
+separate_single_swing_doors
+ignored_duplicate
+```
+
+A door is a two-sided candidate when red `door_arc` pixels have meaningful
+support on both signed sides of the adjusted origin segment:
+
+```txt
+positive_supported = red_side_positive_count >= min_side_pixels
+negative_supported = red_side_negative_count >= min_side_pixels
+ratio_ok = min(positive, negative) / max(positive, negative) >= min_double_swing_ratio
+```
+
+Two detected door components may merge into one double-swing door only when
+their origin segments are collinear, strongly overlapping or nearly identical,
+their hinge/origin evidence points to the same physical origin relationship,
+and their red evidence selects opposite sides of the same origin line.
+
+The merged output should trim the wall once and render:
+
+```txt
+one shared door origin edge
+one leaf + arc on the positive side
+one leaf + arc on the negative side
+```
+
+The JSON/debug output must record the classification, source door ids, red side
+counts, double-swing ratio, merge/ignore decision, and reason. The notebook must
+report counts for single-swing, double-swing, ignored duplicate, and fallback
+door decisions.

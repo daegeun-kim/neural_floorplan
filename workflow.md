@@ -41,7 +41,7 @@ model:
 output:
   graph_pred.json / graph_pred.svg / graph overlays / metrics
 
-next output:
+vector output:
   final_vector.svg / final_vector.json from the R2G wall graph plus 7-class
   segmentation evidence for doors, windows, and scale
 ```
@@ -335,20 +335,19 @@ stage-count metrics
 
 ---
 
-## 8. Future CAD Output
+## 8. Phase 4 CAD-Like Output
 
-After the wall graph is reliable, later stages can attach:
+After the wall graph is generated, the Phase 4 vectorization stage attaches:
 
 ```txt
 windows
 doors
 wall thickness
-rooms
 classified JSON
 final SVG
 ```
 
-Doors/windows should use the existing semantic evidence:
+Doors/windows use the existing semantic evidence:
 
 ```txt
 window mask
@@ -357,7 +356,10 @@ door_leaf mask
 door_origin mask
 ```
 
-The wall graph stage does not need to solve all of those in the first version.
+The wall graph stage does not solve those semantic components directly. It
+provides wall topology; the graph-to-vector stage hosts openings on that graph,
+trims wall intervals, buffers connected wall chains, and exports
+`final_vector.svg` / `final_vector.json`.
 
 ---
 
@@ -387,10 +389,10 @@ The current priority is:
 
 ```txt
 1. Treat Phase 4 pretrained Raster-to-Graph inference as the current wall graph method.
-2. Keep Phase 4 outputs under outputs/vectorization/phase4_raster2graph_generous_inference/<sample>/.
+2. Keep current Phase 4 vectorization outputs under outputs/vectorization/phase4_vectorization/<sample>/.
 3. Keep preprocessing standardized as crop512_margin20_truepad.
-4. Preserve graph_pred.json, graph_pred.svg, overlays, metrics, and component diagnostics per sample.
-5. Use the 7-class semantic model later for door/window attachment and classified CAD output.
+4. Preserve input.png, image_segmentation.png, graph_pred.json, graph_pred.svg, graph overlays, image_debug_overlay.png, final_vector.svg, and final_vector.json per sample.
+5. Use the 7-class semantic model for door/window attachment, scale evidence, and classified vector output.
 6. Keep fine-tuning only as a future fallback if the settled inference method stops being sufficient.
 ```
 

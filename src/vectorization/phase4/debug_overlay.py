@@ -237,13 +237,17 @@ def build_debug_overlay(
         for pt in hosted.snapped_points:
             _draw_point(img, pt, _FINAL_PT_COLOR, r=4)
             _draw_point(img, pt, _SNAP_PT_COLOR, r=6)  # cyan ring
-        # Evidence-based hinge point (yellow) and swing label
+        # Evidence-based hinge point (yellow) + swing / side / fallback / type label
         if door_geometries and i < len(door_geometries):
             dg = door_geometries[i]
             _draw_point(img, dg.hinge_point, _HINGE_COLOR, r=5)
             lx, ly = int(dg.hinge_point[0]) + 6, int(dg.hinge_point[1]) - 6
             swing_str = dg.swing_side.replace("fallback_", "fb_")
-            cv2.putText(img, swing_str, (lx, ly),
+            side_str = dg.red_side_selected[:3] if dg.red_side_selected else "?"
+            fb_str = "fb" if dg.fallback_used else side_str
+            type_tag = "DS" if dg.door_type == "double_swing_shared_origin" else ""
+            label = f"{type_tag}{swing_str}|{fb_str}" if type_tag else f"{swing_str}|{fb_str}"
+            cv2.putText(img, label, (lx, ly),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.28, _HINGE_COLOR, 1, cv2.LINE_AA)
 
     # Hosted windows: final snapped points + host edge
