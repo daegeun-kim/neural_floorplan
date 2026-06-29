@@ -1,498 +1,399 @@
-# Neural Floorplan → Classified CAD Workflow
+﻿# Neural Floorplan Workflow
 
-## 0. Purpose of This Document
+## 0. Purpose
 
-This document explains the overall goal and project workflow for Neural Floorplan.
+This document explains how the project stages connect.
 
-It is not a detailed implementation specification. Detailed training rules, model configuration, checkpointing, loss functions, and metric formulas belong in the relevant spec files.
-
-The purpose of this file is to explain:
-
-```text
-what the project is trying to achieve
-why each stage exists
-how each stage connects to the next one
-what is currently in scope
-what is intentionally left for later
-```
+Detailed implementation rules belong in specs under `specs/`. This file is the top-level workflow map.
 
 ---
 
 ## 1. Project Goal
 
-The project goal is to convert a raster floorplan into a clean, classified, CAD-like representation.
+The long-term goal is:
 
-The intended long-term pipeline is:
-
-```text
-raster floorplan image
-→ semantic understanding
-→ classified masks
-→ vector geometry
-→ clean CAD-like JSON / SVG
-→ later Grasshopper or downstream spatial analysis
+```txt
+raster floorplan
+-> semantic understanding
+-> vector wall graph
+-> doors/windows attached to graph
+-> clean CAD-like SVG / JSON
 ```
 
-The current active development stage is the CNN segmentation stage:
-
-```text
-raster floorplan image
-→ 7-class semantic segmentation map
-```
-
-The active model is `segformer_b0_run3` (see `spec_v005_segformer_train.md`). Earlier `run1`/`run2` checkpoints used a 5-class scheme and are kept only for historical comparison.
-
-The vectorization stage comes later, after the CNN output is visually and numerically reliable.
+The project has learned that semantic segmentation alone is not enough. The difficult part is spatial reconstruction: wall graph accuracy, orthogonal alignment, junctions, and opening placement.
 
 ---
 
-## 2. Core Design Principle
+## 2. Current Active Direction
 
-The project should not simply maximize pixel-perfect segmentation.
+The current active direction is **Phase 4 pretrained Raster-to-Graph inference plus graph-to-vector reconstruction**.
 
-A good result should satisfy both:
+Instead of continuing to add more OpenCV/rule-based vectorization logic, Phase 4 now uses the official Raster-to-Graph checkpoint with local preprocessing, generous inference thresholds, multistart recovery, and graph validity filtering.
 
-```text
-1. The predicted pixels are accurate enough to support vectorization.
-2. The predicted masks preserve the architectural intention of the plan.
+```txt
+input:
+  model_clean.png, cropped to content, padded with true 20% white margin,
+  scaled to 512 px, and normalized with the original R2G mean/std
+
+model:
+  external/raster_to_graph/ checkpoint0299.pth
+
+output:
+  graph_pred.json / graph_pred.svg / graph overlays / metrics
+
+vector output:
+  final_vector.svg / final_vector.json from the R2G wall graph plus 7-class
+  segmentation evidence for doors, windows, and scale
 ```
 
-This means pixel accuracy still matters, especially for clean or well-drawn plans. A clean input should produce a clean, reliable mask because later CAD conversion depends on it.
+The graph target remains intentionally minimal:
 
-At the same time, mean IoU alone is not enough. A model can have lower mIoU on messy raster inputs while still producing a more useful architectural interpretation. Openings are especially important because they control circulation and room connectivity.
+```txt
+nodes = wall endpoints / wall junctions
+edges = orthogonal wall segments
+```
 
-The model should therefore be evaluated as a segmentation model and as a future vectorization input.
+Doors, windows, and wall thickness are not predicted by Raster-to-Graph itself. They are attached in the Phase 4 graph-to-vector stage using the 7-class segmentation output on the same preprocessed image.
 
 ---
 
-## 3. Current Scope
+## 3. Main Data Flow
 
-The current project scope is:
+Current intended data flow:
 
-```text
-CubiCasa5K raster / SVG data
-→ prepared semantic masks
-→ SegFormer-based 7-class CNN segmentation (segformer_b0_run3)
-→ visual and metric-based evaluation
+```txt
+CubiCasa model.svg
+-> model_clean.png
+-> 7-class semantic masks
+-> optional wall_graph.json for QA/reference
+-> Phase 4 Raster-to-Graph inference from model_clean.png
+-> predicted wall graph JSON/SVG
+-> attach doors/windows from semantic masks on the same preprocessed canvas
+-> trim wall intervals at openings
+-> buffer connected wall chains into 200mm wall polygons
+-> CAD-like SVG / JSON
 ```
 
-The current CNN model predicts these seven classes:
-
-| Class ID | Class Name |
-|---:|---|
-| 0 | background |
-| 1 | floor |
-| 2 | wall |
-| 3 | window |
-| 4 | door_arc |
-| 5 | door_leaf |
-| 6 | door_origin |
-
-No additional semantic labels should be introduced at this stage.
-
-Do not add:
-
-```text
-hinge labels
-corner labels
-wall centerline labels
-room instance labels
-new semantic classes
-new external datasets
-```
-
-The project size should stay fixed until the current 7-class model is satisfactory.
+The semantic segmentation model remains useful for later door/window attachment and CAD classification, but the Raster-to-Graph input is `model_clean.png`, not the seven-class debug overlay.
 
 ---
 
-## 4. Dataset Strategy
+## 4. Four Vectorization Phases
 
-### 4.1 Primary Dataset
+### Phase 1 - 5-Class Segmentation To Line Segments
 
-CubiCasa5K is the active dataset.
+Pipeline:
 
-It is used because it provides both raster floorplan images and SVG-based semantic information. The SVG data allows the project to generate semantic masks that become the training target.
-
-The active data sources are:
-
-```text
-F1_scaled.png        original CubiCasa raster image
-model_clean.png      SVG-rendered clean raster image
-masks/semantic_class_map.png
+```txt
+5-class segmented raster
+-> pixel/line extraction
+-> vector output
 ```
 
-Both `F1_scaled.png` and `model_clean.png` can be used as separate input samples while sharing the same target mask.
+Problem:
 
-This lets the model learn from both:
-
-```text
-clean SVG-rendered floorplans
-original real raster floorplans
+```txt
+doors and windows were not separated
+opening evidence was ambiguous
+vector accuracy was extremely low
 ```
 
-The clean image helps the model learn precise semantic structure. The original raster helps the model generalize to messier real inputs.
+Outputs:
 
----
-
-### 4.2 Inactive / Future Datasets
-
-Other datasets such as HouseGAN++, RPLAN, or FloorPlanCAD may be useful later for topology, layout distribution, or CAD-level details.
-
-They are not active in the current workflow.
-
-The current priority is to make the CubiCasa5K-based 7-class CNN pipeline reliable before expanding the dataset scope.
-
----
-
-## 5. Data Preparation Intent
-
-The purpose of data preparation is to create reliable image-mask pairs.
-
-Each sample should have:
-
-```text
-input image:
-    F1_scaled.png or model_clean.png
-
-target:
-    masks/semantic_class_map.png
+```txt
+outputs/vectorization/v008/iteration1_run1_failed
+outputs/vectorization/v008/iteration2_run1_failed
+outputs/vectorization/v008/iteration2_run2_failed
 ```
 
-The target mask is a single class-ID image where each pixel belongs to one of the seven classes.
+### Phase 2 - 7-Class Segmentation With Stronger Door/Window Hints
 
-The separate binary masks are useful for inspection and debugging:
+Pipeline:
 
-```text
-floor_mask.png
-wall_mask.png
-window_mask.png
-door_arc_mask.png
-door_leaf_mask.png
-door_origin_mask.png
+```txt
+7-class segmented raster
+-> richer semantic pixel evidence
+-> rule/CV vectorization
 ```
 
-The combined training target is:
+Improvement:
 
-```text
-semantic_class_map.png
-```
-
-Background does not need a separate mask file. Background is simply every pixel that is not assigned to floor, wall, window, or one of the door classes.
-
----
-
-## 6. CNN Segmentation Stage
-
-The CNN stage is responsible for perception.
-
-Its job is to answer:
-
-```text
-what semantic class does each pixel belong to?
-```
-
-It should learn to recognize:
-
-```text
-floor
-walls
-windows
+```txt
+window
 door_arc
 door_leaf
 door_origin
+```
+
+were separated to expose circulation and opening intent.
+
+Problem:
+
+```txt
+direct pixel/line conversion still could not reliably recover clean wall topology
+```
+
+Outputs:
+
+```txt
+outputs/vectorization/v008/iteration3_run2_failed
+outputs/vectorization/v008/iteration4_run3_failed
+```
+
+### Phase 3 - 7-Class Segmentation To Point-Based Vectorization
+
+Pipeline:
+
+```txt
+7-class segmented raster
+-> component cleanup
+-> point recognition
+-> axis alignment
+-> graph construction
+-> SVG/debug/metrics
+```
+
+Improvement:
+
+```txt
+explicit points
+door bboxes
+debug metrics
+orthogonal graph attempts
+```
+
+Problem:
+
+```txt
+point recognition and spatial logic are too brittle for a simple CV/rule system
+```
+
+Output:
+
+```txt
+outputs/vectorization/v008/iteration5_run3
+```
+
+### Phase 4 - Pretrained Raster-To-Graph Wall Extraction And Vector Output
+
+Pipeline:
+
+```txt
+model_clean.png
+-> content bbox crop
+-> true 20% white padding
+-> 512 px Raster-to-Graph input
+-> pretrained Raster-to-Graph checkpoint
+-> generous autoregressive graph generation
+-> validity scoring and hard filters
+-> mask-and-rerun multistart recovery
+-> merge-on-intersection
+-> predicted orthogonal wall graph
+-> 7-class segmentation on the same preprocessed image
+-> scale inference from red door_arc components
+-> door/window graph hosting
+-> opening interval trimming
+-> connected wall-chain buffering
+-> final_vector.svg / final_vector.json
+```
+
+Goal:
+
+```txt
+replace rule-only wall graph extraction with an adapted pretrained graph predictor
+```
+
+Main specs:
+
+```txt
+specs/spec_v003-1_phase4_graph_generation.md
+specs/spec_v005_phase4_raster2graph.md
+specs/spec_v008_phase4_vectorization.md
+specs/spec_v010_phase4_raster2graph_modifications.md
+```
+
+---
+
+## 5. Segmentation Stage
+
+The active segmentation model is:
+
+```txt
+segformer_b0_run3
+```
+
+Classes:
+
+```txt
 background
+floor
+wall
+window
+door_arc
+door_leaf
+door_origin
 ```
 
-from both clean and original raster floorplans.
+Segmentation responsibility:
 
-The CNN should not directly produce CAD geometry, room graphs, or final SVG output.
-
-The current model direction is:
-
-```text
-SegFormer-B0 pretrained backbone
-+ custom trainable segmentation head
-+ 7-class semantic output
+```txt
+raster image -> useful semantic evidence
 ```
 
-The model output is:
-
-```text
-[B, 7, H, W]
-```
-
-After prediction, the model produces a hard semantic class map for inspection and later use.
+It should not directly output CAD geometry.
 
 ---
 
-## 7. Training Intention
+## 6. Graph Generation Stage
 
-The training goal is not only to reduce loss. The model should produce masks that are visually clean, class-consistent, and useful for later vectorization.
+Optional Phase 4 graph reference labels can be generated from original SVGs:
 
-The model should perform well on:
-
-```text
-clean SVG-rendered floorplans
-original CubiCasa raster floorplans
-lightly augmented floorplans
+```txt
+docs/high_quality_architectural/<sample>/model.svg
 ```
 
-Clean input accuracy remains important. If a user provides a clear, well-drawn plan, the model should not over-generalize or distort it.
+Sample artifacts:
 
-Messy input generalization is also important. If the input is noisy or less clean, the model should still recover the main spatial structure.
+```txt
+masks/wall_graph.json
+masks/wall_graph_debug.svg
+masks/wall_graph_debug.png
+```
+
+The source SVGs may contain complex layered wall drawings. Therefore graph generation should not assume SVG wall geometry is already clean CAD.
+
+Preferred graph-label process:
+
+```txt
+model.svg
+-> isolate/render wall evidence
+-> wall mask
+-> centerline/skeleton
+-> orthogonal simplification
+-> simple graph
+-> debug visualization
+```
+
+Bad or uncertain graph labels should be flagged instead of silently used for QA, evaluation, or any future training fallback.
 
 ---
 
-## 8. Evaluation Intention
+## 7. Raster-To-Graph Inference Stage
 
-The project should keep standard segmentation metrics, but they should not be the only way to judge the model.
+The raster-to-graph stage currently predicts only:
 
-Useful metrics include:
-
-```text
-train_loss
-val_loss
-pixel_accuracy
-foreground_mIoU
-per-class IoU
-wall_IoU
-window_IoU
-door_arc_IoU
-door_leaf_IoU
-door_origin_IoU
-floor_IoU
-wall_boundary_F1
-door_boundary_F1
+```txt
+wall graph nodes
+wall graph edges
 ```
 
-Pixel accuracy matters because a well-drawn plan should produce a precise mask.
+Current implementation:
 
-Door and window quality matters because openings affect circulation. A small wall dimension shift may be acceptable, but a misplaced or miscounted door/window can change the architectural interpretation.
-
-For this reason, the best model should be selected with a vector-readiness score that gives more weight to windows and door subclasses than walls (see `spec_v005_segformer_train.md` §16).
-
-The evaluation should also separate results by input type when possible:
-
-```text
-clean SVG-rendered input
-original raster input
-overall validation set
+```txt
+external/raster_to_graph/run_inference_generous_phase4.py
+checkpoint: checkpoints_Raster2Graph/checkpoint0299.pth
+output: outputs/vectorization/phase4_raster2graph_generous_inference/<sample>/
 ```
 
-This helps answer two different questions:
+Current preprocessing:
 
-```text
-Can the model accurately segment clean plans?
-Can the model generalize to original raster plans?
+```txt
+model_clean.png
+-> detect dark content bbox
+-> crop exactly to content
+-> add true 20% white padding
+-> scale long edge to 512 px
+-> center on white 512x512 canvas
+-> normalize with original R2G mean/std
 ```
 
-If separating metrics by input type becomes computationally expensive, it can be skipped temporarily, but it should remain part of the intended evaluation design.
+Current inference logic:
+
+```txt
+first_step_threshold = 0.02
+later_step_threshold = 0.02
+first_step_force_best = true
+edge_search_threshold = 50 px
+monte_times = 4
+max_candidates_per_step = 40
+max_new_starts = 2
+angle hard filter = keep edges within +/-10 degrees of horizontal/vertical
+soft reranking = wall evidence, rectangle cycles, dangling penalty, unsupported-edge penalty
+```
+
+Evaluation should include:
+
+```txt
+node accuracy
+edge accuracy
+structure accuracy
+orthogonality
+visual graph overlays
+component overlays
+stage-count metrics
+```
 
 ---
 
-## 9. Visual Inspection
+## 8. Phase 4 CAD-Like Output
 
-Metrics alone are not enough.
+After the wall graph is generated, the Phase 4 vectorization stage attaches:
 
-The training workflow should save a small number of preview samples so the result can be inspected directly.
-
-The preview should show:
-
-```text
-input image
-ground-truth target
-model prediction
-overlay or comparison image
-```
-
-Only a few samples are needed, usually 3–4 per preview cycle.
-
-The purpose is to check whether the model is learning the actual floorplan structure, not just improving a number.
-
----
-
-## 10. Checkpointing and Model Safety
-
-The model should be saved safely, but not waste disk space by saving every epoch archive.
-
-The expected saved models are:
-
-```text
-latest.pt
-best.pt
-```
-
-`latest.pt` is used to resume interrupted training.
-
-`best.pt` is used for evaluation and future inference.
-
-Historical epoch archives should not be saved by default unless explicitly enabled.
-
-Model and checkpoint names should include a clear version name, such as:
-
-```text
-segformer_b0_v005
-```
-
-This prevents overwriting older trained models when the spec or training intention changes.
-
----
-
-## 11. Hardware Assumption
-
-The active development machine has an NVIDIA RTX 5080 Laptop GPU.
-
-Training should use CUDA/GPU rather than CPU.
-
-CPU training is not the intended workflow. If CUDA is unavailable, the script should warn clearly instead of silently continuing as if the environment is correct.
-
----
-
-## 12. Boundary Between CNN and Vectorization
-
-The CNN stage and the vectorization stage have different responsibilities.
-
-The CNN stage should produce good semantic evidence:
-
-```text
-raster image
-→ 7-class semantic mask
-```
-
-The vectorization stage, which comes later, will convert masks into geometry:
-
-```text
-semantic mask
-→ wall lines
-→ floor polygon
-→ windows
-→ doors (from door_arc/door_leaf/door_origin evidence)
-→ classified JSON / SVG
-```
-
-Architectural logic such as straightening walls, snapping corners, attaching openings to walls, and checking room adjacency belongs mainly to the vectorization stage.
-
-However, the CNN output must still be clean enough for that later process to work. That is why pixel accuracy, door/window quality, and boundary quality are important during CNN evaluation.
-
-**Implementation status note (task07):** the implemented vectorization code (`spec_v007_component_primitives.md`, `spec_v008_mask_to_vector.md`) still targets the retired 5-class scheme and has not yet been updated to consume run3's 7-class output directly — see the "Known Mismatch / Technical Debt" notes in those specs. This file describes the intended long-term boundary, not the current implementation state.
-
----
-
-## 13. Future Raster-to-Vector Stage
-
-This stage is not active yet, but it remains the long-term target of the project.
-
-The future vectorization stage should take the predicted semantic masks and produce classified geometry.
-
-Expected objects include:
-
-```text
-walls
+```txt
 windows
-doors (reconstructed from door_arc/door_leaf/door_origin evidence)
-rooms
-adjacency relationships
+doors
+wall thickness
+classified JSON
+final SVG
 ```
 
-The future vector process may include:
+Doors/windows use the existing semantic evidence:
 
-```text
-mask cleanup
-contour extraction
-wall centerline extraction
-line simplification
-orthogonal snapping
-room polygon reconstruction
-opening-to-wall assignment
-classified JSON / SVG export
+```txt
+window mask
+door_arc mask
+door_leaf mask
+door_origin mask
 ```
 
-This should not be mixed into the current CNN training spec.
+The wall graph stage does not solve those semantic components directly. It
+provides wall topology; the graph-to-vector stage hosts openings on that graph,
+trims wall intervals, buffers connected wall chains, and exports
+`final_vector.svg` / `final_vector.json`.
 
 ---
 
-## 14. Final Output Intention
+## 9. Documentation Rules
 
-The final output should be a structured CAD-like representation.
+When major project direction changes happen:
 
-A future JSON output may look like:
-
-```json
-{
-  "walls": [
-    {
-      "centerline": [[x1, y1], [x2, y2]],
-      "thickness": 150
-    }
-  ],
-  "windows": [
-    {
-      "line": [[x1, y1], [x2, y2]],
-      "host_wall_id": 3
-    }
-  ],
-  "doors": [
-    {
-      "origin": [[x1, y1], [x2, y2]],
-      "opening": [[x1, y1], [x2, y2]],
-      "arc_radius": 90,
-      "host_wall_id": 5
-    }
-  ],
-  "rooms": [
-    {
-      "polygon": [[...]],
-      "class": "room",
-      "area": 12.5
-    }
-  ],
-  "adjacency": [
-    ["room_1", "room_2"]
-  ]
-}
+```txt
+update readme.md
+update workflow.md
+update relevant specs/tasks
+update specs/attempt_history.md for vectorization attempts
 ```
 
-This sketch reflects the 7-class CNN evidence (`windows` and `doors` as separate classes, doors reconstructed from `door_arc`/`door_leaf`/`door_origin`). It does not represent a finished schema — the exact JSON schema should be defined later, after the vectorization stage is updated to consume run3 output (see the "Known Mismatch / Technical Debt" notes in `spec_v007_component_primitives.md` and `spec_v008_mask_to_vector.md`). The current implemented `outputs/vectorization/v008` pipeline does not produce this schema; it still emits the older `floor/wall/opening/icon` SVG groups.
+When a new spec or task is requested:
+
+```txt
+ask clarification questions first if requirements are ambiguous
+then generate the md file only after the ambiguity is resolved
+```
 
 ---
 
-## 15. Current Project Priority
+## 10. Current Priority
 
 The current priority is:
 
-```text
-make the 7-class CNN segmentation model (segformer_b0_run3) reliable
+```txt
+1. Treat Phase 4 pretrained Raster-to-Graph inference as the current wall graph method.
+2. Keep current Phase 4 vectorization outputs under outputs/vectorization/phase4_vectorization/<sample>/.
+3. Keep preprocessing standardized as crop512_margin20_truepad.
+4. Preserve input.png, image_segmentation.png, graph_pred.json, graph_pred.svg, graph overlays, image_debug_overlay.png, final_vector.svg, and final_vector.json per sample.
+5. Use the 7-class semantic model for door/window attachment, scale evidence, and classified vector output.
+6. Keep fine-tuning only as a future fallback if the settled inference method stops being sufficient.
 ```
 
-A successful current-stage result means:
-
-```text
-1. Clean plans produce accurate masks.
-2. Original raster plans produce plausible masks.
-3. Windows and door subclasses are recognized reliably.
-4. Floor regions remain spatially coherent.
-5. Predictions look suitable for later vectorization.
-6. Model checkpoints are versioned and safe.
-7. Training uses GPU and does not silently fall back to CPU.
-```
-
-Only after this stage is satisfactory should the project move into raster-to-vector conversion and topology correction.
-
----
-
-## 16. Summary
-
-Neural Floorplan is currently a semantic segmentation project with a CAD-generation goal.
-
-The immediate objective is not to produce final CAD geometry. The immediate objective is to train a reliable 7-class floorplan segmentation model (`segformer_b0_run3`) that preserves both pixel-level accuracy and architectural intention.
-
-The long-term objective is:
-
-```text
-raster floorplan
-→ semantic segmentation
-→ clean vector geometry
-→ classified CAD-like output
-```
-
-The current milestone is complete when the CNN output is accurate, visually plausible, and ready to become the input for a future raster-to-vector pipeline.
+The project should avoid expanding semantic classes or restarting Raster-to-Graph training while the current Phase 4 inference method is producing satisfactory graphs.

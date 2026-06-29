@@ -1,0 +1,56 @@
+{
+  "sample_id": "13736",
+  "components_before_merge": [
+    {
+      "component_id": 0,
+      "source": "initial",
+      "num_points": 22,
+      "num_edges": 28,
+      "stop_code": 2,
+      "candidate_score": 1.8412,
+      "selected_attempt": 0,
+      "filter_stats": {
+        "edges_removed_angle_filter": 3,
+        "components_removed_tiny": 0,
+        "points_removed_tiny_components": 0,
+        "edges_removed_tiny_components": 0,
+        "one_edge_components_removed": 0,
+        "one_edge_components_kept_by_evidence": 0,
+        "dangling_edges_removed": 0
+      },
+      "scores": {
+        "wall_evidence_alignment_score": 0.309,
+        "unsupported_edge_ratio": 0.6429,
+        "rectangle_cycle_count": 8,
+        "rectangle_cycle_score": 1.0,
+        "dangling_node_count": 3,
+        "dangling_node_ratio": 0.1364,
+        "dangling_penalty": 0.0,
+        "small_component_count": 1,
+        "small_component_penalty": 0.0
+      },
+      "accepted": true
+    }
+  ],
+  "discarded_components": [
+    {
+      "component_id": 1,
+      "source": "mask_rerun",
+      "num_points": 0,
+      "num_edges": 0,
+      "stop_code": 2,
+      "accepted": false
+    }
+  ],
+  "merged_graph": {
+    "num_nodes_after_merge": 19,
+    "num_edges_after_merge": 11,
+    "num_nodes_after_light_filter": 15,
+    "num_edges_after_light_filter": 11,
+    "light_post_merge_filter_stats": {
+      "edges_removed_angle_filter": 0,
+      "duplicate_edges_removed": 0,
+      "self_loop_edges_removed": 0
+    }
+  }
+}

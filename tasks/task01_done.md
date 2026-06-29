@@ -4,7 +4,7 @@
 
 This project trains a neural floorplan segmentation model using raster images exported from CubiCasa5K-style SVG floorplan files. Some SVG files contain valid floorplan geometry that is not visible in browser-based SVG rendering or direct SVG-to-raster conversion because parts of the SVG are marked with `display: none` or equivalent hidden styling.
 
-original data sources are located at "C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\original_vector\cubicasa5k\cubicasa5k\high_quality_architectural"
+original data sources are located at "C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\high_quality_architectural"
 
 
 A sample SVG shows that some complete floor groups can be hidden, for example:

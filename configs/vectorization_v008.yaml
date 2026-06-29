@@ -1,20 +1,14 @@
+﻿# Config for the v008 orthogonal point-graph mask-to-vector pipeline.
+# Shape follows spec_v008_phase3_mask_to_vector.md SS16; batch-mode fields
+# (preview_dir/filename_contains/output_dir) are additive, needed because
+# run_mask_to_vector.py processes a directory of prediction images, not one.
+
 input:
   preview_dir: "runs/segformer_b0_run3/previews/epoch_030"
   filename_contains: "prediction"
-
-output:
-  output_dir: "outputs/vectorization/v008"
-  export_svg: true
-  export_json: false
-
-classes:
-  background: 0
-  floor: 1
-  wall: 2
-  window: 3
-  door_arc: 4
-  door_leaf: 5
-  door_origin: 6
+  prediction_path: null
+  palette: run3
+  rgb_tolerance: 20
 
 scale:
   allow_estimated_scale: true
@@ -23,54 +17,67 @@ scale:
   wall_thickness_modules_mm: [100, 200]
   min_scale_confidence_for_metric: 0.70
 
-snapping:
-  allowed_angles_deg: [0, 45, 90, 135, 180, 225, 270, 315]
-  max_angle_snap_error_deg: 12
+geometry:
+  allowed_angles_deg: [0, 90, 180, 270]
+  allow_diagonal_walls: false
+  cardinal_tolerance_deg: 25.0
+  point_merge_tolerance_mm: 500
+  # task17: returned to 500mm from task16's 1000mm - door-derived axes are
+  # now the trusted anchors, so the goal is no longer to over-merge distant
+  # geometry by distance alone.
+  axis_alignment_tolerance_mm: 500
+  px_fallback_tolerance_px: 6.0
+  corridor_slack_px: 20.0
+  free_end_merge_tolerance_px: 8.0
+  free_end_opening_proximity_px: 20.0
+  node_match_tolerance_px: 12.0
   min_segment_length_mm: 100
+  # task15 problem 4: door recognition must not be gated by point-search
+  # precision (must-rule 51 only allows rejecting for min-area or zero
+  # plausible geometry) - max_host_wall_dist_px is searched effectively
+  # unbounded so "no host wall" only fires when none exists anywhere.
+  min_hosted_width_px: 3.0
+  max_host_wall_dist_px: 100000.0
+  corner_ambiguity_px: 25.0
+  min_remainder_px: 3.0
 
-walls:
-  build_order: ["outer", "inner"]
-  bridge_opening_gaps: true
-  ortho_snap_degrees: 20
-  diagonal_snap_degrees: 10
-  merge_distance_px: 6
-  min_wall_length_px: 10
-  connect_gap_px: 20
-  inner_attach_outer_threshold_mm: 500
-
-openings:
-  require_host_wall: true
-  replace_wall_segment: true
-  max_host_wall_dist_px: 40
-  min_hosted_width_px: 10
-  corner_ambiguity_px: 25
-  min_remainder_px: 3
+components:
+  min_wall_area_px: 4
+  min_window_area_px: 4
+  min_door_arc_area_px: 4
+  min_door_leaf_area_px: 2
+  min_door_origin_area_px: 2
 
 windows:
   min_width_mm: 300
+  require_two_wall_window_points: true
+  replace_wall_segment: true
 
 doors:
   require_arc_group: true
-  min_door_arc_component_area: 4
-  hinge_intersection_tolerance_px: 6
-  hinge_snap_to_wall_max_dist_px: 40
-  hinge_arc_inference_enabled: true
+  reject_without_red_arc: true
+  # task16: hinge/end are 2 of the door_arc bbox's 4 vertices, picked by
+  # purple (door_origin) + black (wall) evidence along each bbox edge, with
+  # orange (door_leaf) evidence distinguishing the hinge from the end. This
+  # is the probe band (px) around each edge/corner used to score that
+  # evidence - no longer a mask-intersection search radius.
+  bbox_corner_probe_px: 14.0
+  # task18: reject a red door_arc bbox whose long/short side ratio exceeds
+  # this (e.g. a 1:3 sliver) - only bboxes from square (1:1) up to 2:1 are
+  # accepted as plausible doors.
+  max_bbox_aspect_ratio: 2.0
+  # See geometry.max_host_wall_dist_px note above - same task15 problem 4 reasoning.
+  hinge_snap_to_wall_max_dist_px: 100000.0
   door_width_modules_mm: [700, 900]
+  # Must-rule 17: fixed at 200mm, not a tunable search radius - unchanged.
+  max_hinge_end_distance_from_arc_mm: 200.0
+  replace_wall_segment: true
 
-floor:
-  prefer_outer_wall_when_ambiguous: true
-
-cleanup:
-  min_wall_component_area: 20
-  min_floor_component_area: 100
-  min_window_component_area: 8
-  min_door_arc_component_area: 4
-  min_door_leaf_component_area: 4
-  min_door_origin_component_area: 4
-  close_wall_gap_px: 3
-
-svg:
-  draw_floor: true
-  draw_wall: true
-  draw_window: true
-  draw_door: true
+output:
+  # task20: outputs/vectorization/v008/<name> was reorganized into phase
+  # folders (outputs/vectorization/README.md has the old-to-new mapping);
+  # this pipeline's output is phase3 (point-based vectorization).
+  output_dir: "outputs/vectorization/phase3_7class_point_vectorization"
+  include_floor: false
+  write_debug_overlay: true
+  write_metrics: true

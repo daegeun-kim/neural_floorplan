@@ -1,7 +1,7 @@
 Goal:
 Convert CubiCasa SVG annotations into raster masks.
 
-Vector data: Located in "C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\original_vector\cubicasa5k\cubicasa5k\high_quality_architectural" as svg format.
+Vector data: Located in "C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\high_quality_architectural" as svg format.
 Job:
 - for all svg files in the folder, convert to a png file with white background
 - name of the converted png files are model_clean.png

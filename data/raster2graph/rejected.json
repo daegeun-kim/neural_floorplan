@@ -1,0 +1,729 @@
+[
+  {
+    "sample_id": "10321",
+    "input": "10321\\masks\\debug_overlay.png",
+    "graph": "10321\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "10349",
+    "input": "10349\\masks\\debug_overlay.png",
+    "graph": "10349\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "10514",
+    "input": "10514\\masks\\debug_overlay.png",
+    "graph": "10514\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "10571",
+    "input": "10571\\masks\\debug_overlay.png",
+    "graph": "10571\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "10580",
+    "input": "10580\\masks\\debug_overlay.png",
+    "graph": "10580\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "10584",
+    "input": "10584\\masks\\debug_overlay.png",
+    "graph": "10584\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "10643",
+    "input": "10643\\masks\\debug_overlay.png",
+    "graph": "10643\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "11154",
+    "input": "11154\\masks\\debug_overlay.png",
+    "graph": "11154\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "11287",
+    "input": "11287\\masks\\debug_overlay.png",
+    "graph": "11287\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "11297",
+    "input": "11297\\masks\\debug_overlay.png",
+    "graph": "11297\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "11382",
+    "input": "11382\\masks\\debug_overlay.png",
+    "graph": "11382\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "11390",
+    "input": "11390\\masks\\debug_overlay.png",
+    "graph": "11390\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "11580",
+    "input": "11580\\masks\\debug_overlay.png",
+    "graph": "11580\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "11926",
+    "input": "11926\\masks\\debug_overlay.png",
+    "graph": "11926\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "12085",
+    "input": "12085\\masks\\debug_overlay.png",
+    "graph": "12085\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "12242",
+    "input": "12242\\masks\\debug_overlay.png",
+    "graph": "12242\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "12262",
+    "input": "12262\\masks\\debug_overlay.png",
+    "graph": "12262\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "12413",
+    "input": "12413\\masks\\debug_overlay.png",
+    "graph": "12413\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "12480",
+    "input": "12480\\masks\\debug_overlay.png",
+    "graph": "12480\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "12672",
+    "input": "12672\\masks\\debug_overlay.png",
+    "graph": "12672\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "12799",
+    "input": "12799\\masks\\debug_overlay.png",
+    "graph": "12799\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "12834",
+    "input": "12834\\masks\\debug_overlay.png",
+    "graph": "12834\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "12868",
+    "input": "12868\\masks\\debug_overlay.png",
+    "graph": "12868\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "13007",
+    "input": "13007\\masks\\debug_overlay.png",
+    "graph": "13007\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "13133",
+    "input": "13133\\masks\\debug_overlay.png",
+    "graph": "13133\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "13169",
+    "input": "13169\\masks\\debug_overlay.png",
+    "graph": "13169\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "13361",
+    "input": "13361\\masks\\debug_overlay.png",
+    "graph": "13361\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "13398",
+    "input": "13398\\masks\\debug_overlay.png",
+    "graph": "13398\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "13764",
+    "input": "13764\\masks\\debug_overlay.png",
+    "graph": "13764\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "13787",
+    "input": "13787\\masks\\debug_overlay.png",
+    "graph": "13787\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "14095",
+    "input": "14095\\masks\\debug_overlay.png",
+    "graph": "14095\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "14484",
+    "input": "14484\\masks\\debug_overlay.png",
+    "graph": "14484\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "1941",
+    "input": "1941\\masks\\debug_overlay.png",
+    "graph": "1941\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "1988",
+    "input": "1988\\masks\\debug_overlay.png",
+    "graph": "1988\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "2032",
+    "input": "2032\\masks\\debug_overlay.png",
+    "graph": "2032\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "2036",
+    "input": "2036\\masks\\debug_overlay.png",
+    "graph": "2036\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "2037",
+    "input": "2037\\masks\\debug_overlay.png",
+    "graph": "2037\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "2079",
+    "input": "2079\\masks\\debug_overlay.png",
+    "graph": "2079\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "2558",
+    "input": "2558\\masks\\debug_overlay.png",
+    "graph": "2558\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "3035",
+    "input": "3035\\masks\\debug_overlay.png",
+    "graph": "3035\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "3222",
+    "input": "3222\\masks\\debug_overlay.png",
+    "graph": "3222\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "4520",
+    "input": "4520\\masks\\debug_overlay.png",
+    "graph": "4520\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "4553",
+    "input": "4553\\masks\\debug_overlay.png",
+    "graph": "4553\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "4897",
+    "input": "4897\\masks\\debug_overlay.png",
+    "graph": "4897\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "5064",
+    "input": "5064\\masks\\debug_overlay.png",
+    "graph": "5064\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "5135",
+    "input": "5135\\masks\\debug_overlay.png",
+    "graph": "5135\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "5572",
+    "input": "5572\\masks\\debug_overlay.png",
+    "graph": "5572\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "5599",
+    "input": "5599\\masks\\debug_overlay.png",
+    "graph": "5599\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "5741",
+    "input": "5741\\masks\\debug_overlay.png",
+    "graph": "5741\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "5859",
+    "input": "5859\\masks\\debug_overlay.png",
+    "graph": "5859\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "5901",
+    "input": "5901\\masks\\debug_overlay.png",
+    "graph": "5901\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "6017",
+    "input": "6017\\masks\\debug_overlay.png",
+    "graph": "6017\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "6122",
+    "input": "6122\\masks\\debug_overlay.png",
+    "graph": "6122\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components",
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "6142",
+    "input": "6142\\masks\\debug_overlay.png",
+    "graph": "6142\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains",
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "6303",
+    "input": "6303\\masks\\debug_overlay.png",
+    "graph": "6303\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "6352",
+    "input": "6352\\masks\\debug_overlay.png",
+    "graph": "6352\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "6445",
+    "input": "6445\\masks\\debug_overlay.png",
+    "graph": "6445\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "6515",
+    "input": "6515\\masks\\debug_overlay.png",
+    "graph": "6515\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "6718",
+    "input": "6718\\masks\\debug_overlay.png",
+    "graph": "6718\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "7029",
+    "input": "7029\\masks\\debug_overlay.png",
+    "graph": "7029\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "7098",
+    "input": "7098\\masks\\debug_overlay.png",
+    "graph": "7098\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "7529",
+    "input": "7529\\masks\\debug_overlay.png",
+    "graph": "7529\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "7607",
+    "input": "7607\\masks\\debug_overlay.png",
+    "graph": "7607\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "797",
+    "input": "797\\masks\\debug_overlay.png",
+    "graph": "797\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "8073",
+    "input": "8073\\masks\\debug_overlay.png",
+    "graph": "8073\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "8159",
+    "input": "8159\\masks\\debug_overlay.png",
+    "graph": "8159\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "8216",
+    "input": "8216\\masks\\debug_overlay.png",
+    "graph": "8216\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "8425",
+    "input": "8425\\masks\\debug_overlay.png",
+    "graph": "8425\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "8541",
+    "input": "8541\\masks\\debug_overlay.png",
+    "graph": "8541\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "8544",
+    "input": "8544\\masks\\debug_overlay.png",
+    "graph": "8544\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "8819",
+    "input": "8819\\masks\\debug_overlay.png",
+    "graph": "8819\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "882",
+    "input": "882\\masks\\debug_overlay.png",
+    "graph": "882\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "913",
+    "input": "913\\masks\\debug_overlay.png",
+    "graph": "913\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "9169",
+    "input": "9169\\masks\\debug_overlay.png",
+    "graph": "9169\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "9185",
+    "input": "9185\\masks\\debug_overlay.png",
+    "graph": "9185\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "graph_far_from_wall_mask"
+    ]
+  },
+  {
+    "sample_id": "9405",
+    "input": "9405\\masks\\debug_overlay.png",
+    "graph": "9405\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  },
+  {
+    "sample_id": "9504",
+    "input": "9504\\masks\\debug_overlay.png",
+    "graph": "9504\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_tiny_components"
+    ]
+  },
+  {
+    "sample_id": "9758",
+    "input": "9758\\masks\\debug_overlay.png",
+    "graph": "9758\\masks\\wall_graph_debug.svg",
+    "quality": "rejected",
+    "reasons": [
+      "too_many_diagonal_chains"
+    ]
+  }
+]

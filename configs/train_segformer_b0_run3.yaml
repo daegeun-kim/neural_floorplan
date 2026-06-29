@@ -3,7 +3,7 @@ run:
   run_name: "segformer_b0_run3"
 
 paths:
-  dataset_root: "docs/original_vector/cubicasa5k/cubicasa5k/high_quality_architectural"
+  dataset_root: "docs/high_quality_architectural"
   train_index: "splits/train.json"
   val_index: "splits/val.json"
   debug_train_index: "splits/debug_train.json"

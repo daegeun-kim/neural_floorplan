@@ -1,0 +1,1 @@
+1 component. Components: 32pts/38edges → Merged: 30pts/17edges → Final: 27pts/17edges. wall_ev=0.27.

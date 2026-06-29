@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="white"/>
+<line x1="371" y1="325" x2="372" y2="238" stroke="blue" stroke-width="2"/>
+<line x1="436" y1="221" x2="354" y2="222" stroke="blue" stroke-width="2"/>
+<line x1="436" y1="221" x2="436" y2="296" stroke="blue" stroke-width="2"/>
+<line x1="399" y1="150" x2="78" y2="148" stroke="blue" stroke-width="2"/>
+<line x1="399" y1="150" x2="399" y2="221" stroke="blue" stroke-width="2"/>
+<line x1="77" y1="356" x2="437" y2="356" stroke="blue" stroke-width="2"/>
+<line x1="77" y1="356" x2="78" y2="148" stroke="blue" stroke-width="2"/>
+<line x1="78" y1="236" x2="144" y2="236" stroke="blue" stroke-width="2"/>
+<line x1="230" y1="272" x2="230" y2="226" stroke="blue" stroke-width="2"/>
+<line x1="443" y1="297" x2="373" y2="296" stroke="blue" stroke-width="2"/>
+<line x1="79" y1="294" x2="143" y2="294" stroke="blue" stroke-width="2"/>
+<line x1="269" y1="355" x2="268" y2="149" stroke="blue" stroke-width="2"/>
+<line x1="142" y1="356" x2="142" y2="150" stroke="blue" stroke-width="2"/>
+<line x1="438" y1="331" x2="363" y2="336" stroke="blue" stroke-width="2"/>
+<line x1="399" y1="338" x2="400" y2="296" stroke="blue" stroke-width="2"/>
+<line x1="399" y1="338" x2="289" y2="355" stroke="blue" stroke-width="2"/>
+<line x1="143" y1="225" x2="268" y2="224" stroke="blue" stroke-width="2"/>
+<line x1="289" y1="355" x2="290" y2="148" stroke="blue" stroke-width="2"/>
+<circle cx="371" cy="325" r="4" fill="red"/>
+<circle cx="436" cy="221" r="4" fill="red"/>
+<circle cx="399" cy="150" r="4" fill="red"/>
+<circle cx="77" cy="356" r="4" fill="red"/>
+<circle cx="78" cy="236" r="4" fill="red"/>
+<circle cx="144" cy="236" r="4" fill="red"/>
+<circle cx="230" cy="272" r="4" fill="red"/>
+<circle cx="443" cy="297" r="4" fill="red"/>
+<circle cx="230" cy="226" r="4" fill="red"/>
+<circle cx="79" cy="294" r="4" fill="red"/>
+<circle cx="269" cy="355" r="4" fill="red"/>
+<circle cx="373" cy="296" r="4" fill="red"/>
+<circle cx="142" cy="356" r="4" fill="red"/>
+<circle cx="438" cy="331" r="4" fill="red"/>
+<circle cx="399" cy="338" r="4" fill="red"/>
+<circle cx="363" cy="336" r="4" fill="red"/>
+<circle cx="400" cy="296" r="4" fill="red"/>
+<circle cx="268" cy="149" r="4" fill="red"/>
+<circle cx="143" cy="225" r="4" fill="red"/>
+<circle cx="143" cy="294" r="4" fill="red"/>
+<circle cx="289" cy="355" r="4" fill="red"/>
+<circle cx="354" cy="222" r="4" fill="red"/>
+<circle cx="437" cy="356" r="4" fill="red"/>
+<circle cx="268" cy="224" r="4" fill="red"/>
+<circle cx="142" cy="150" r="4" fill="red"/>
+<circle cx="372" cy="238" r="4" fill="red"/>
+<circle cx="78" cy="148" r="4" fill="red"/>
+<circle cx="290" cy="148" r="4" fill="red"/>
+<circle cx="436" cy="296" r="4" fill="red"/>
+<circle cx="399" cy="221" r="4" fill="red"/>
+</svg>

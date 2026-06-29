@@ -1,4 +1,4 @@
-# Task 08 - Rebuild Vectorization Output as Strict Architectural Polygons
+﻿# Task 08 - Rebuild Vectorization Output as Strict Architectural Polygons
 
 ## Context
 
@@ -367,4 +367,4 @@ This task is complete when:
 7. Door arc hinge/center is the intersection of door origin and opened leaf.
 8. No line-stroke thickness is used as the final representation for walls, windows, door origin, or door leaf.
 9. No extra visible components appear in the final SVG.
-10. The implementation still follows the previous valid rules from `spec_v007_component_primitives.md` and `spec_v008_mask_to_vector.md` unless this task explicitly supersedes them.
+10. The implementation still follows the previous valid rules from `spec_v007_phase3_component_primitives.md` and `spec_v008_phase3_mask_to_vector.md` unless this task explicitly supersedes them.

@@ -1,4 +1,4 @@
-# Task 07 - Repository Cleanup and Spec Refresh
+﻿# Task 07 - Repository Cleanup and Spec Refresh
 
 ## Context
 
@@ -113,8 +113,8 @@ At minimum, review and update:
 ```txt
 specs/spec_v003_semantic_mask_generation.md
 specs/spec_v005_segformer_train.md
-specs/spec_v007_component_primitives.md
-specs/spec_v008_mask_to_vector.md
+specs/spec_v007_phase3_component_primitives.md
+specs/spec_v008_phase3_mask_to_vector.md
 workflow.md
 readme.md
 ```

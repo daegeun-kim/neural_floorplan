@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" data-unit="mm" data-scale-status="estimated" data-px-to-mm="10.9375" data-scale-source="door_arc_bbox_long_edge_clustering">
+  <g id="wall">
+    <path d="M 85.59,200.00 85.59,46.00 70.41,46.00 85.59,200.00 Z M 310.00,452.59 477.59,452.59 477.59,192.41 420.00,192.41 420.00,207.59 462.41,207.59 462.41,437.41 317.59,437.41 317.59,410.00 302.41,410.00 302.41,437.41 227.59,437.41 227.59,53.59 302.41,53.59 302.41,200.00 302.41,346.00 317.59,346.00 317.59,200.00 317.59,38.41 212.41,38.41 212.41,452.59 310.00,452.59 Z M 78.00,445.00 78.00,452.59 156.00,452.59 156.00,437.41 85.59,437.41 85.59,200.00 70.41,200.00 70.41,445.00 78.00,445.00 Z" fill="#000000" fill-rule="evenodd" stroke="none" id="wall_polygon" />
+  </g>
+  <g id="window">
+    <path d="M 78.00,41.19 78.00,50.33 220.00,50.33 220.00,41.19 78.00,41.19 Z" fill="#3c78dc" fill-rule="evenodd" stroke="none" id="windowedge_1" data-type="window" />
+    <path d="M 310.00,195.43 310.00,204.57 419.72,204.57 419.72,195.43 310.00,195.43 Z" fill="#3c78dc" fill-rule="evenodd" stroke="none" id="windowedge_2" data-type="window" />
+  </g>
+  <g id="door">
+    <g id="door_0001" data-type="door"><line id="door_origin_0001" data-type="door_origin" x1="78.00" y1="200.00" x2="78.00" y2="136.00" stroke="#a046b4" stroke-width="2" stroke-linecap="square" /><line id="door_leaf_0001" data-type="door_leaf" x1="78.00" y1="200.00" x2="142.00" y2="200.00" stroke="#eb8c50" stroke-width="1.5" /><path id="door_arc_0001" data-type="door_arc" d="M 78.00 136.00 A 64.00 64.00 0 0 1 142.00 200.00" fill="none" stroke="#dc5a5a" stroke-width="1.5" /></g>
+    <g id="door_0002" data-type="door"><line id="door_origin_0002" data-type="door_origin" x1="310.00" y1="346.00" x2="310.00" y2="410.00" stroke="#a046b4" stroke-width="2" stroke-linecap="square" /><line id="door_leaf_0002" data-type="door_leaf" x1="310.00" y1="346.00" x2="374.00" y2="346.00" stroke="#eb8c50" stroke-width="1.5" /><path id="door_arc_0002" data-type="door_arc" d="M 310.00 410.00 A 64.00 64.00 0 0 0 374.00 346.00" fill="none" stroke="#dc5a5a" stroke-width="1.5" /></g>
+    <g id="door_0003" data-type="door"><line id="door_origin_0003" data-type="door_origin" x1="156.00" y1="444.75" x2="220.00" y2="444.75" stroke="#a046b4" stroke-width="2" stroke-linecap="square" /><line id="door_leaf_0003" data-type="door_leaf" x1="156.00" y1="444.75" x2="156.00" y2="508.75" stroke="#eb8c50" stroke-width="1.5" /><path id="door_arc_0003" data-type="door_arc" d="M 220.00 444.75 A 64.00 64.00 0 0 1 156.00 508.75" fill="none" stroke="#dc5a5a" stroke-width="1.5" /></g>
+  </g>
+</svg>

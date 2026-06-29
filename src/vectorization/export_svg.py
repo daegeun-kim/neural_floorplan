@@ -1,16 +1,9 @@
-"""Generate SVG output from vectorized primitives (active 7-class run3 scheme).
+"""Generate the final SVG from vectorized primitives (spec_v008 SS14).
 
-Final SVG group order (back to front): floor -> wall -> window -> door. Per
-task08, the final SVG contains only these four component types - no debug
-group, no unresolved/unidentified markers. `wall` is rendered as one (or a
-few, if genuinely disconnected) black filled polygon built by buffering and
-unioning every outer+inner wall centerline (wall_geometry.segments_to_polygon)
-rather than per-segment stroked lines. `door` holds one `<g>` per door
-containing its origin/leaf/arc primitives.
-
-Debug-only visualization of unresolved/unhosted evidence lives exclusively in
-run_mask_to_vector's debug_overlay.png raster and metrics.json - never in
-this SVG.
+Final visible groups, back to front: ``wall``, ``window``, ``door``. No
+``floor`` group exists for this restart, and no debug/unresolved/retired
+group may appear here - that evidence lives exclusively in
+debug_overlay.png and metrics.json (spec_v008 SS15).
 """
 
 from __future__ import annotations
@@ -18,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .primitives import FloorPrimitive, ScaleInfo, WallPrimitive, WindowPrimitive
+from .primitives import ScaleInfo, WallPrimitive, WindowPrimitive
 from .primitives.door import DoorArcPrimitive, DoorLeafPrimitive, DoorOriginPrimitive
 from .wall_geometry import polygon_to_svg_path, segments_to_polygon
 
@@ -52,7 +45,6 @@ def build_svg(
     door_origins: list[DoorOriginPrimitive],
     door_leaves: list[DoorLeafPrimitive],
     door_arcs: list[DoorArcPrimitive],
-    floor: FloorPrimitive | None = None,
     scale_info: ScaleInfo | None = None,
     svg_config: dict[str, Any] | None = None,
 ) -> str:
@@ -60,8 +52,6 @@ def build_svg(
     cfg = svg_config or {}
 
     header = _svg_header(image_width, image_height, scale_info)
-
-    floor_svg = floor.to_svg() if floor is not None and cfg.get("draw_floor", True) else ""
 
     wall_svg = ""
     if cfg.get("draw_wall", True) and walls:
@@ -73,7 +63,7 @@ def build_svg(
 
     door_svg = ""
     if cfg.get("draw_door", True):
-        doors_by_id = {}
+        doors_by_id: dict[str, dict[str, Any]] = {}
         for origin in door_origins:
             idx = origin.primitive_id.rsplit("_", 1)[-1]
             doors_by_id.setdefault(idx, {})["origin"] = origin
@@ -86,18 +76,11 @@ def build_svg(
 
         door_groups = []
         for idx, parts in sorted(doors_by_id.items()):
-            inner = "".join(
-                parts[key].to_svg() for key in ("origin", "leaf", "arc") if key in parts
-            )
+            inner = "".join(parts[key].to_svg() for key in ("origin", "leaf", "arc") if key in parts)
             door_groups.append(f'<g id="door_{idx}" data-type="door">{inner}</g>')
         door_svg = "\n    ".join(door_groups)
 
-    body = (
-        _group("floor", floor_svg)
-        + _group("wall", wall_svg)
-        + _group("window", window_svg)
-        + _group("door", door_svg)
-    )
+    body = _group("wall", wall_svg) + _group("window", window_svg) + _group("door", door_svg)
 
     return header + body + "</svg>\n"
 

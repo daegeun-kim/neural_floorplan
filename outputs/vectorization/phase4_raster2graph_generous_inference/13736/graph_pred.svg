@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="white"/>
+<line x1="346" y1="358" x2="346" y2="266" stroke="blue" stroke-width="2"/>
+<line x1="346" y1="358" x2="428" y2="358" stroke="blue" stroke-width="2"/>
+<line x1="308" y1="336" x2="81" y2="337" stroke="blue" stroke-width="2"/>
+<line x1="82" y1="210" x2="190" y2="210" stroke="blue" stroke-width="2"/>
+<line x1="268" y1="266" x2="268" y2="336" stroke="blue" stroke-width="2"/>
+<line x1="189" y1="129" x2="190" y2="266" stroke="blue" stroke-width="2"/>
+<line x1="430" y1="122" x2="79" y2="126" stroke="blue" stroke-width="2"/>
+<line x1="430" y1="122" x2="428" y2="358" stroke="blue" stroke-width="2"/>
+<line x1="190" y1="266" x2="346" y2="266" stroke="blue" stroke-width="2"/>
+<line x1="212" y1="266" x2="212" y2="336" stroke="blue" stroke-width="2"/>
+<line x1="81" y1="337" x2="79" y2="126" stroke="blue" stroke-width="2"/>
+<circle cx="346" cy="358" r="4" fill="red"/>
+<circle cx="308" cy="336" r="4" fill="red"/>
+<circle cx="82" cy="210" r="4" fill="red"/>
+<circle cx="268" cy="266" r="4" fill="red"/>
+<circle cx="268" cy="336" r="4" fill="red"/>
+<circle cx="189" cy="129" r="4" fill="red"/>
+<circle cx="430" cy="122" r="4" fill="red"/>
+<circle cx="190" cy="210" r="4" fill="red"/>
+<circle cx="190" cy="266" r="4" fill="red"/>
+<circle cx="212" cy="266" r="4" fill="red"/>
+<circle cx="81" cy="337" r="4" fill="red"/>
+<circle cx="79" cy="126" r="4" fill="red"/>
+<circle cx="346" cy="266" r="4" fill="red"/>
+<circle cx="212" cy="336" r="4" fill="red"/>
+<circle cx="428" cy="358" r="4" fill="red"/>
+</svg>

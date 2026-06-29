@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" data-unit="mm" data-scale-status="estimated" data-px-to-mm="21.21212121212121">
+
+  <g id="walls">
+    <path d="M 147.29,70.66 L 147.29,180.00 L 147.29,406.71 L 188.00,406.71 L 188.00,397.29 L 156.71,397.29 L 156.71,184.71 L 195.00,184.71 L 195.00,175.29 L 156.71,175.29 L 156.71,80.34 L 171.65,80.71 L 171.89,71.29 L 147.29,70.66 Z" fill="#1a1a1a" stroke="none" fill-rule="evenodd" />    <path d="M 228.00,184.71 L 230.36,184.71 L 230.36,175.29 L 228.00,175.29 L 228.00,184.71 Z" fill="#1a1a1a" stroke="none" fill-rule="evenodd" />    <path d="M 221.29,397.29 L 221.00,397.29 L 221.00,406.71 L 226.00,406.71 L 320.71,406.71 L 320.71,331.00 L 320.71,180.00 L 320.71,71.90 L 295.88,71.29 L 295.65,80.71 L 311.29,81.10 L 311.29,175.29 L 299.36,175.29 L 299.36,184.71 L 311.29,184.71 L 311.29,326.31 L 221.29,326.81 L 221.29,348.00 L 230.71,348.00 L 230.71,336.19 L 311.29,335.74 L 311.29,397.29 L 230.71,397.29 L 230.71,381.00 L 221.29,381.00 L 221.29,397.29 Z" fill="#1a1a1a" stroke="none" fill-rule="evenodd" />
+  </g>
+
+  <g id="windows">
+    <line x1="171.77" y1="76.00" x2="295.77" y2="76.00" stroke="#3a78dc" stroke-width="4" stroke-linecap="butt" />    <line x1="230.36" y1="180.00" x2="299.36" y2="180.00" stroke="#3a78dc" stroke-width="4" stroke-linecap="butt" />
+  </g>
+
+  <g id="doors">
+    <g id="door_0" data-type="door" data-door-type="single_swing"><line id="door_0_origin" data-type="door_origin" x1="195.00" y1="180.00" x2="228.00" y2="180.00" stroke="#a046b4" stroke-width="2" stroke-linecap="butt" /><line id="door_0_leaf" data-type="door_leaf" x1="195.00" y1="180.00" x2="195.00" y2="147.00" stroke="#eb8c50" stroke-width="1.5" /><path id="door_0_arc" data-type="door_arc" d="M 228.00 180.00 A 33.00 33.00 0 0 0 195.00 147.00" fill="none" stroke="#dc5a5a" stroke-width="1.5" /></g>    <g id="door_1" data-type="door" data-door-type="single_swing"><line id="door_1_origin" data-type="door_origin" x1="226.00" y1="348.00" x2="226.00" y2="381.00" stroke="#a046b4" stroke-width="2" stroke-linecap="butt" /><line id="door_1_leaf" data-type="door_leaf" x1="226.00" y1="348.00" x2="193.00" y2="348.00" stroke="#eb8c50" stroke-width="1.5" /><path id="door_1_arc" data-type="door_arc" d="M 226.00 381.00 A 33.00 33.00 0 0 1 193.00 348.00" fill="none" stroke="#dc5a5a" stroke-width="1.5" /></g>    <g id="door_2" data-type="door" data-door-type="single_swing"><line id="door_2_origin" data-type="door_origin" x1="221.00" y1="402.00" x2="188.00" y2="402.00" stroke="#a046b4" stroke-width="2" stroke-linecap="butt" /><line id="door_2_leaf" data-type="door_leaf" x1="221.00" y1="402.00" x2="221.00" y2="435.00" stroke="#eb8c50" stroke-width="1.5" /><path id="door_2_arc" data-type="door_arc" d="M 188.00 402.00 A 33.00 33.00 0 0 0 221.00 435.00" fill="none" stroke="#dc5a5a" stroke-width="1.5" /></g>
+  </g>
+
+</svg>
