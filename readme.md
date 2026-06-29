@@ -12,7 +12,7 @@ The current work has two major tracks:
    semantic mask or SVG-derived raster -> wall graph / CAD-like geometry
 ```
 
-The segmentation track is working reasonably well. The vectorization track has now settled on a pretrained Raster-to-Graph inference pipeline for Phase 4 wall graph extraction, followed by a graph-to-vector stage that attaches doors/windows from the 7-class segmentation output.
+The segmentation track is complete for the current version with the `segformer_b0_run3` 7-class model. The vectorization track has settled on a pretrained Raster-to-Graph inference pipeline for Phase 4 wall graph extraction, followed by an implemented graph-to-vector stage that attaches doors/windows from the 7-class segmentation output.
 
 ---
 
@@ -49,19 +49,19 @@ specs/vectorization_phase_history.md
 
 ## Pipeline
 
-| Stage | Description | Status |
-|---:|---|---|
-| 1 | Dataset loading: CubiCasa5K `high_quality_architectural` subset | done |
-| 2 | SVG/raster preprocessing: render CubiCasa SVG annotations to aligned rasters | done |
-| 3 | Semantic mask generation: 7-class masks for background/floor/wall/window/door components | done |
-| 4 | Sketch-style augmentation | done |
-| 5 | SegFormer-B0 segmentation training, active run `segformer_b0_run3` | done |
-| 6 | Segmentation evaluation and preview generation | done |
-| 7 | Component/vector primitive experiments | historical / superseded |
-| 8 | Mask-to-vector experiments | phase history, still useful for lessons learned |
-| 9 | SVG-derived wall graph label generation (`masks/wall_graph.json`) for QA/reference | available / optional |
-| 10 | Pretrained Raster-to-Graph inference from preprocessed `model_clean.png` | current / settled |
-| 11 | Phase 4 graph-to-vector export from R2G wall graph + 7-class openings | current spec / implementation target |
+| Name | Description |
+|---|---|
+| Dataset loading | CubiCasa5K `high_quality_architectural` subset |
+| SVG/raster preprocessing | Render CubiCasa SVG annotations to aligned rasters |
+| Semantic mask generation | 7-class masks for background/floor/wall/window/door components |
+| Sketch-style augmentation | Augmented training inputs for segmentation robustness |
+| SegFormer-B0 segmentation training | Active completed run: `segformer_b0_run3` |
+| Segmentation evaluation | Preview generation and qualitative/metric checks |
+| Component/vector primitive experiments | Historical / superseded primitive experiments |
+| Mask-to-vector experiments | Phase history, still useful for lessons learned |
+| SVG-derived wall graph labels | Optional QA/reference labels in `masks/wall_graph.json` |
+| Pretrained Raster-to-Graph inference | Current settled wall graph extraction from preprocessed `model_clean.png` |
+| Phase 4 graph-to-vector export | Implemented current working output from R2G wall graph + 7-class openings |
 
 ---
 
@@ -157,7 +157,7 @@ outputs/vectorization/v008/iteration5_run3
 -> final_vector.svg / final_vector.json
 ```
 
-This is the current settled direction. Instead of training a new model, the project uses the official Raster-to-Graph checkpoint and adapts preprocessing, thresholds, candidate scoring, recovery, and graph cleanup around this project's `model_clean.png` inputs.
+This is the current implemented direction. Instead of training a new wall graph model, the project uses the official Raster-to-Graph checkpoint and adapts preprocessing, thresholds, candidate scoring, recovery, and graph cleanup around this project's `model_clean.png` inputs. The graph-to-vector stage then uses the 7-class segmentation output to host openings, trim wall intervals, buffer connected wall chains, and export final CAD-like SVG/JSON artifacts.
 
 Output graph:
 
@@ -166,7 +166,7 @@ nodes = wall endpoints / wall junctions
 edges = orthogonal wall segments
 ```
 
-Phase 4 wall graph inference is settled. The next active implementation target is graph-to-vector reconstruction: attach doors/windows using the existing 7-class semantic evidence, trim the hosted wall intervals, and buffer the remaining connected wall graph into final CAD-like geometry.
+Phase 4 wall graph inference and graph-to-vector reconstruction are implemented for the current working prototype. The output is not yet perfect on every sample, especially for complex plans with difficult wall topology or ambiguous openings, but the current pipeline now produces final vector artifacts rather than stopping at graph prediction.
 
 ---
 
@@ -223,13 +223,13 @@ optional masks/wall_graph_debug.svg
 optional masks/wall_graph_debug.png
 ```
 
-Phase 4 model outputs should be stored under:
+Current Phase 4 vectorization outputs are stored under:
 
 ```txt
-outputs/vectorization/phase4_raster2graph_generous_inference/<sample>/
+outputs/vectorization/phase4_vectorization/<sample>/
 ```
 
-Each sample folder keeps its input PNG, graph JSON/SVG, overlays, metrics, and component diagnostics together. The old `outputs/raster2graph/` folder was testing-only and is retired.
+Each sample folder keeps its preprocessed input PNG, segmentation image, graph JSON/SVG, graph overlays, debug overlay, final vector SVG/JSON, metrics, and component diagnostics together. The old `outputs/raster2graph/` folder was testing-only and is retired.
 
 ---
 

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="white"/>
+<line x1="160" y1="229" x2="102" y2="229" stroke="blue" stroke-width="2"/>
+<line x1="102" y1="288" x2="160" y2="288" stroke="blue" stroke-width="2"/>
+<line x1="228" y1="332" x2="342" y2="332" stroke="blue" stroke-width="2"/>
+<line x1="228" y1="210" x2="228" y2="371" stroke="blue" stroke-width="2"/>
+<line x1="324" y1="352" x2="278" y2="352" stroke="blue" stroke-width="2"/>
+<line x1="228" y1="371" x2="324" y2="372" stroke="blue" stroke-width="2"/>
+<line x1="437" y1="371" x2="436" y2="151" stroke="blue" stroke-width="2"/>
+<line x1="437" y1="371" x2="346" y2="371" stroke="blue" stroke-width="2"/>
+<line x1="278" y1="332" x2="278" y2="372" stroke="blue" stroke-width="2"/>
+<line x1="435" y1="273" x2="343" y2="273" stroke="blue" stroke-width="2"/>
+<line x1="436" y1="151" x2="102" y2="150" stroke="blue" stroke-width="2"/>
+<line x1="324" y1="332" x2="324" y2="372" stroke="blue" stroke-width="2"/>
+<line x1="102" y1="372" x2="212" y2="372" stroke="blue" stroke-width="2"/>
+<line x1="102" y1="372" x2="102" y2="150" stroke="blue" stroke-width="2"/>
+<line x1="346" y1="371" x2="344" y2="151" stroke="blue" stroke-width="2"/>
+<line x1="115" y1="328" x2="165" y2="328" stroke="blue" stroke-width="2"/>
+<line x1="160" y1="150" x2="162" y2="372" stroke="blue" stroke-width="2"/>
+<circle cx="160" cy="229" r="4" fill="red"/>
+<circle cx="102" cy="288" r="4" fill="red"/>
+<circle cx="228" cy="332" r="4" fill="red"/>
+<circle cx="102" cy="229" r="4" fill="red"/>
+<circle cx="228" cy="210" r="4" fill="red"/>
+<circle cx="324" cy="352" r="4" fill="red"/>
+<circle cx="228" cy="371" r="4" fill="red"/>
+<circle cx="437" cy="371" r="4" fill="red"/>
+<circle cx="278" cy="332" r="4" fill="red"/>
+<circle cx="342" cy="332" r="4" fill="red"/>
+<circle cx="435" cy="273" r="4" fill="red"/>
+<circle cx="436" cy="151" r="4" fill="red"/>
+<circle cx="160" cy="288" r="4" fill="red"/>
+<circle cx="324" cy="332" r="4" fill="red"/>
+<circle cx="102" cy="372" r="4" fill="red"/>
+<circle cx="346" cy="371" r="4" fill="red"/>
+<circle cx="115" cy="328" r="4" fill="red"/>
+<circle cx="212" cy="372" r="4" fill="red"/>
+<circle cx="102" cy="150" r="4" fill="red"/>
+<circle cx="344" cy="151" r="4" fill="red"/>
+<circle cx="160" cy="150" r="4" fill="red"/>
+<circle cx="162" cy="372" r="4" fill="red"/>
+<circle cx="343" cy="273" r="4" fill="red"/>
+<circle cx="324" cy="372" r="4" fill="red"/>
+<circle cx="278" cy="372" r="4" fill="red"/>
+<circle cx="165" cy="328" r="4" fill="red"/>
+<circle cx="278" cy="352" r="4" fill="red"/>
+</svg>
