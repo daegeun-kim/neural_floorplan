@@ -46,6 +46,7 @@ def _svg_arc_center(
 # WallPrimitive
 # ---------------------------------------------------------------------------
 
+
 class TestWallPrimitive:
     def test_svg_contains_line_tag(self):
         wall = WallPrimitive("w1", start=(0.0, 0.0), end=(100.0, 0.0), thickness=8.0)
@@ -104,7 +105,10 @@ class TestWallPrimitive:
 
     def test_shared_base_fields(self):
         wall = WallPrimitive(
-            "w1", start=(0.0, 0.0), end=(10.0, 0.0), source_class_ids=[2],
+            "w1",
+            start=(0.0, 0.0),
+            end=(10.0, 0.0),
+            source_class_ids=[2],
         )
         assert wall.kind == "WallPrimitive"
         assert wall.source_class_ids == [2]
@@ -113,6 +117,7 @@ class TestWallPrimitive:
 # ---------------------------------------------------------------------------
 # OuterWallLoopPrimitive
 # ---------------------------------------------------------------------------
+
 
 class TestOuterWallLoopPrimitive:
     def test_is_closed_for_a_rectangle(self):
@@ -126,9 +131,7 @@ class TestOuterWallLoopPrimitive:
         assert not loop.is_closed()
 
     def test_is_not_closed_for_degenerate_line(self):
-        loop = OuterWallLoopPrimitive(
-            "loop1", centerline=[(0.0, 0.0), (50.0, 0.0), (100.0, 0.0)]
-        )
+        loop = OuterWallLoopPrimitive("loop1", centerline=[(0.0, 0.0), (50.0, 0.0), (100.0, 0.0)])
         assert not loop.is_closed()
 
     def test_to_svg_is_a_polygon_with_no_fill(self):
@@ -150,6 +153,7 @@ class TestOuterWallLoopPrimitive:
 # ---------------------------------------------------------------------------
 # OpeningPrimitive (debug-only marker)
 # ---------------------------------------------------------------------------
+
 
 class TestOpeningPrimitive:
     def test_svg_contains_line_tag(self):
@@ -184,6 +188,7 @@ class TestOpeningPrimitive:
 # DoorOriginPrimitive / DoorLeafPrimitive / DoorArcPrimitive
 # ---------------------------------------------------------------------------
 
+
 class TestDoorOriginPrimitive:
     def test_svg_is_a_purple_thin_line(self):
         # task09 supersedes task08's polygon decision for door origin: it
@@ -215,7 +220,11 @@ class TestDoorLeafPrimitive:
 
     def test_leaf_end_horizontal_right_swing(self):
         leaf = DoorLeafPrimitive(
-            "dl1", hinge_point=(0.0, 0.0), width=90.0, orientation_angle=0.0, swing_direction="right"
+            "dl1",
+            hinge_point=(0.0, 0.0),
+            width=90.0,
+            orientation_angle=0.0,
+            swing_direction="right",
         )
         assert leaf.leaf_end == pytest.approx((0.0, -90.0))
 
@@ -270,16 +279,21 @@ class TestDoorArcPrimitive:
         for orientation in (0.0, 30.0, 90.0, 137.0, 200.0):
             for swing in ("left", "right"):
                 arc = DoorArcPrimitive(
-                    "da1", hinge_point=(20.0, 30.0), origin_far_point=(
+                    "da1",
+                    hinge_point=(20.0, 30.0),
+                    origin_far_point=(
                         20.0 + 40.0 * math.cos(math.radians(orientation)),
                         30.0 + 40.0 * math.sin(math.radians(orientation)),
                     ),
-                    width=40.0, orientation_angle=orientation, swing_direction=swing,
+                    width=40.0,
+                    orientation_angle=orientation,
+                    swing_direction=swing,
                 )
                 svg = arc.to_svg()
                 match = re.search(
                     r"M ([\d.\-]+) ([\d.\-]+) A ([\d.\-]+) ([\d.\-]+) 0 0 (\d) "
-                    r"([\d.\-]+) ([\d.\-]+)", svg
+                    r"([\d.\-]+) ([\d.\-]+)",
+                    svg,
                 )
                 assert match is not None
                 ox, oy, rx, ry = (float(match.group(i)) for i in (1, 2, 3, 4))
@@ -293,8 +307,12 @@ class TestDoorArcPrimitive:
 
     def test_arc_spans_90_degrees(self):
         arc = DoorArcPrimitive(
-            "da1", hinge_point=(0.0, 0.0), origin_far_point=(90.0, 0.0), width=90.0,
-            orientation_angle=0.0, swing_direction="left",
+            "da1",
+            hinge_point=(0.0, 0.0),
+            origin_far_point=(90.0, 0.0),
+            width=90.0,
+            orientation_angle=0.0,
+            swing_direction="left",
         )
         hx, hy = arc.hinge_point
         ox, oy = arc.origin_far_point
@@ -318,6 +336,7 @@ class TestDoorArcPrimitive:
 # ---------------------------------------------------------------------------
 # WindowPrimitive
 # ---------------------------------------------------------------------------
+
 
 class TestWindowPrimitive:
     """Window is a blue closed polygon replacing a wall segment (task08)."""
@@ -359,9 +378,12 @@ class TestWindowPrimitive:
 # FloorPrimitive
 # ---------------------------------------------------------------------------
 
+
 class TestFloorPrimitive:
     def test_svg_contains_polygon(self):
-        floor = FloorPrimitive("f1", polygon=[(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)])
+        floor = FloorPrimitive(
+            "f1", polygon=[(0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0)]
+        )
         svg = floor.to_svg()
         assert "<polygon" in svg
         assert 'id="f1"' in svg
@@ -385,6 +407,7 @@ class TestFloorPrimitive:
 # ---------------------------------------------------------------------------
 # ScaleInfo / resolve_scale / snap_to_module_mm
 # ---------------------------------------------------------------------------
+
 
 class TestScaleInfo:
     def test_defaults(self):

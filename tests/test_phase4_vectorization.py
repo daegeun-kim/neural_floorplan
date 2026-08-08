@@ -13,37 +13,36 @@ import math
 import numpy as np
 import pytest
 
+from src.vectorization.graph_types import ComponentRecord
+from src.vectorization.phase4.export_json import build_final_vector_json
 from src.vectorization.phase4.graph_alignment import (
-    normalize_graph,
     _cluster_values,
     _merge_intervals,
+    normalize_graph,
 )
 from src.vectorization.phase4.opening_detection import (
+    DoorCandidate,
+    WindowCandidate,
     detect_door_candidates,
     detect_window_candidates,
 )
 from src.vectorization.phase4.opening_hosting import (
     HostedOpening,
-    RejectedOpening,
-    host_openings,
     _try_host_on_edge,
+    host_openings,
 )
+from src.vectorization.phase4.wall_buffering import WallGeometry, buffer_wall_chains
 from src.vectorization.phase4.wall_interval_editing import (
-    trim_wall_intervals,
+    TrimmedGraph,
     apply_adjusted_intervals_to_hosted_openings,
+    trim_wall_intervals,
 )
-from src.vectorization.phase4.wall_buffering import buffer_wall_chains
-from src.vectorization.phase4.export_json import build_final_vector_json
-from src.vectorization.phase4.opening_detection import DoorCandidate, WindowCandidate
-from src.vectorization.phase4.wall_interval_editing import TrimmedGraph
-from src.vectorization.phase4.wall_buffering import WallGeometry
 from src.vectorization.primitives.scale import ScaleInfo
-from src.vectorization.graph_types import ComponentRecord
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_scale(px_to_mm: float | None = None, status: str = "unknown") -> ScaleInfo:
     return ScaleInfo(
@@ -78,6 +77,7 @@ def _make_component(
 # ---------------------------------------------------------------------------
 # Graph alignment tests
 # ---------------------------------------------------------------------------
+
 
 class TestClusterValues:
     def test_single_value(self):
@@ -120,10 +120,7 @@ class TestNormalizeGraph:
         }
         result = normalize_graph(graph)
         # Only the horizontal edge should survive
-        assert all(
-            math.hypot(e[2] - e[0], e[3] - e[1]) > 0
-            for e in result["edges"]
-        )
+        assert all(math.hypot(e[2] - e[0], e[3] - e[1]) > 0 for e in result["edges"])
 
     def test_horizontal_edge_snapped(self):
         # Edge slightly tilted: should become exactly horizontal
@@ -155,8 +152,8 @@ class TestNormalizeGraph:
         graph = {
             "nodes": [[0, 50], [100, 50], [50, 0], [50, 100]],
             "edges": [
-                [0, 50, 100, 50],    # horizontal
-                [50, 0, 50, 100],    # vertical
+                [0, 50, 100, 50],  # horizontal
+                [50, 0, 50, 100],  # vertical
             ],
         }
         result = normalize_graph(graph)
@@ -195,6 +192,7 @@ class TestNormalizeGraph:
 # ---------------------------------------------------------------------------
 # Opening detection tests
 # ---------------------------------------------------------------------------
+
 
 class TestDetectDoorCandidates:
     def test_basic_door_candidate(self):
@@ -250,6 +248,7 @@ class TestDetectWindowCandidates:
 # Opening hosting tests
 # ---------------------------------------------------------------------------
 
+
 class TestTryHostOnEdge:
     def test_both_points_on_edge(self):
         edge = [0.0, 100.0, 200.0, 100.0]  # horizontal at y=100
@@ -264,14 +263,14 @@ class TestTryHostOnEdge:
     def test_one_point_too_far_rejected(self):
         edge = [0.0, 100.0, 200.0, 100.0]
         pt_a = (40.0, 102.0)
-        pt_b = (140.0, 150.0)   # 50px away from edge
+        pt_b = (140.0, 150.0)  # 50px away from edge
         result = _try_host_on_edge(pt_a, pt_b, edge, max_perp_dist_px=10.0)
         assert result is None
 
     def test_too_narrow_rejected(self):
         edge = [0.0, 100.0, 200.0, 100.0]
         pt_a = (100.0, 100.0)
-        pt_b = (101.0, 100.0)   # 1px wide
+        pt_b = (101.0, 100.0)  # 1px wide
         result = _try_host_on_edge(pt_a, pt_b, edge, max_perp_dist_px=10.0, min_width_px=5.0)
         assert result is None
 
@@ -317,8 +316,8 @@ class TestHostOpenings:
         # Two disconnected edges; door points snap to different edges if allowed
         # -> must be rejected because they can't both land on ONE edge
         edges = [
-            [0.0, 0.0, 100.0, 0.0],   # horizontal at y=0
-            [0.0, 200.0, 100.0, 200.0], # horizontal at y=200
+            [0.0, 0.0, 100.0, 0.0],  # horizontal at y=0
+            [0.0, 200.0, 100.0, 200.0],  # horizontal at y=200
         ]
         scale = _make_scale()
         # One point near edge 0, one near edge 1
@@ -331,6 +330,7 @@ class TestHostOpenings:
 # ---------------------------------------------------------------------------
 # Wall interval trimming tests
 # ---------------------------------------------------------------------------
+
 
 class TestTrimWallIntervals:
     def _make_hosted(
@@ -379,6 +379,7 @@ class TestTrimWallIntervals:
 # Wall buffering tests
 # ---------------------------------------------------------------------------
 
+
 class TestBufferWallChains:
     def test_resolved_scale_gives_correct_thickness(self):
         # 1px = 1mm => half_width = 100px
@@ -406,8 +407,8 @@ class TestBufferWallChains:
         # Two edges forming an L-shape; should produce one merged buffer
         scale = _make_scale(px_to_mm=1.0, status="estimated")
         edges = [
-            [0.0, 0.0, 100.0, 0.0],    # horizontal
-            [100.0, 0.0, 100.0, 100.0], # vertical
+            [0.0, 0.0, 100.0, 0.0],  # horizontal
+            [100.0, 0.0, 100.0, 100.0],  # vertical
         ]
         result = buffer_wall_chains(edges, scale)
         assert result.chain_count >= 1
@@ -420,6 +421,7 @@ class TestBufferWallChains:
 # ---------------------------------------------------------------------------
 # Scale inference integration test
 # ---------------------------------------------------------------------------
+
 
 class TestScaleInferenceFromComponents:
     def test_door_arc_sets_scale(self):
@@ -446,6 +448,7 @@ class TestScaleInferenceFromComponents:
 # ---------------------------------------------------------------------------
 # Final JSON schema test
 # ---------------------------------------------------------------------------
+
 
 class TestFinalVectorJsonSchema:
     def test_schema_shape(self):
@@ -476,8 +479,13 @@ class TestFinalVectorJsonSchema:
         )
         # Check all required top-level keys
         required_keys = {
-            "coordinate_space", "preprocessing", "scale",
-            "wall_graph", "openings", "geometry", "metrics"
+            "coordinate_space",
+            "preprocessing",
+            "scale",
+            "wall_graph",
+            "openings",
+            "geometry",
+            "metrics",
         }
         assert required_keys.issubset(set(data.keys()))
         # Check sub-keys
@@ -496,7 +504,10 @@ class TestFinalVectorJsonSchema:
 # Door geometry / primitive contract tests  (task32)
 # ---------------------------------------------------------------------------
 
-def _make_hosted_door(p0, p1, component_id=0, host_edge=None, width_mm=None, confidence=1.0, comp_id=None):
+
+def _make_hosted_door(
+    p0, p1, component_id=0, host_edge=None, width_mm=None, confidence=1.0, comp_id=None
+):
     """Build a minimal HostedOpening for door geometry tests."""
     width_px = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
     edge = host_edge or [p0[0], p0[1], p1[0], p1[1]]
@@ -520,6 +531,7 @@ class TestDoorGeometry:
 
     def test_origin_edge_is_snapped_points(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         door = _make_hosted_door((195, 180), (228, 180))
         geom = compute_door_geometry(door)
         assert geom.hinge_point == pytest.approx((195, 180), abs=1e-6)
@@ -527,6 +539,7 @@ class TestDoorGeometry:
 
     def test_leaf_is_perpendicular_to_origin(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         # Horizontal origin (0,0) -> (30,0); leaf must be vertical
         door = _make_hosted_door((0.0, 0.0), (30.0, 0.0))
         geom = compute_door_geometry(door)
@@ -541,6 +554,7 @@ class TestDoorGeometry:
 
     def test_leaf_length_equals_door_width(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         door = _make_hosted_door((0.0, 0.0), (33.0, 0.0))
         geom = compute_door_geometry(door)
         leaf_len = math.hypot(
@@ -551,6 +565,7 @@ class TestDoorGeometry:
 
     def test_arc_starts_at_origin_far_point_not_hinge(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         door = _make_hosted_door((195, 180), (228, 180))
         geom = compute_door_geometry(door)
         # Arc starts at origin_far_point (not hinge!)
@@ -560,6 +575,7 @@ class TestDoorGeometry:
 
     def test_arc_center_is_hinge(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         door = _make_hosted_door((10.0, 50.0), (10.0, 90.0))  # vertical origin
         geom = compute_door_geometry(door)
         # Radius from hinge to origin_far_point
@@ -577,6 +593,7 @@ class TestDoorGeometry:
     def test_arc_endpoint_equals_leaf_end(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
         from src.vectorization.primitives.door import DoorArcPrimitive
+
         door = _make_hosted_door((0.0, 0.0), (40.0, 0.0))
         geom = compute_door_geometry(door)
         swing_base = geom.swing_side.replace("fallback_", "")
@@ -592,6 +609,7 @@ class TestDoorGeometry:
 
     def test_arc_sweep_keeps_90_degrees(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         door = _make_hosted_door((0.0, 0.0), (50.0, 0.0))
         geom = compute_door_geometry(door)
         hx, hy = geom.hinge_point
@@ -604,6 +622,7 @@ class TestDoorGeometry:
 
     def test_fallback_hinge_is_recorded(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         door = _make_hosted_door((100.0, 200.0), (150.0, 200.0))
         geom = compute_door_geometry(door)
         assert geom.hinge_source == "fallback_pt0"
@@ -611,6 +630,7 @@ class TestDoorGeometry:
 
     def test_explicit_swing_side_recorded(self):
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         door = _make_hosted_door((0.0, 0.0), (30.0, 0.0))
         geom = compute_door_geometry(door, swing_side="right")
         assert geom.swing_side == "right"
@@ -619,12 +639,17 @@ class TestDoorGeometry:
     def test_json_door_geometry_present(self):
         """geometry.doors in final_vector.json must include door_geometry sub-dict."""
         from src.vectorization.phase4.wall_interval_editing import TrimmedGraph
+
         door = _make_hosted_door((195.0, 180.0), (228.0, 180.0), width_mm=900.0)
         scale = _make_scale(10.0, "estimated")
         trimmed = TrimmedGraph(wall_edges=[], opening_gaps=[], inserted_nodes=[])
         wall_geom = WallGeometry(
-            polygon=None, half_width_px=8.0, wall_thickness_mm=200.0,
-            scale_blocked=False, chain_count=0, edge_count=0,
+            polygon=None,
+            half_width_px=8.0,
+            wall_thickness_mm=200.0,
+            scale_blocked=False,
+            chain_count=0,
+            edge_count=0,
         )
         data = build_final_vector_json(
             preprocessing_manifest={},
@@ -640,8 +665,15 @@ class TestDoorGeometry:
         door_rec = data["geometry"]["doors"][0]
         assert "door_geometry" in door_rec
         dg = door_rec["door_geometry"]
-        required = {"hinge_point", "origin_far_point", "leaf_end", "swing_side",
-                    "width_px", "primitive_contract", "hinge_source"}
+        required = {
+            "hinge_point",
+            "origin_far_point",
+            "leaf_end",
+            "swing_side",
+            "width_px",
+            "primitive_contract",
+            "hinge_source",
+        }
         assert required.issubset(dg.keys())
         assert dg["primitive_contract"] == "door_origin_leaf_arc"
         assert dg["hinge_source"] == "fallback_pt0"
@@ -650,9 +682,11 @@ class TestDoorGeometry:
         """final_vector.svg must have door_origin, door_leaf, door_arc per door."""
         from src.vectorization.phase4.export_svg import build_final_svg
         from src.vectorization.primitives.scale import ScaleInfo
+
         door = _make_hosted_door((195.0, 180.0), (228.0, 180.0))
-        scale = ScaleInfo(unit="px", px_to_mm=None, scale_status="unknown",
-                          scale_source="test", confidence=0.0)
+        scale = ScaleInfo(
+            unit="px", px_to_mm=None, scale_status="unknown", scale_source="test", confidence=0.0
+        )
         svg = build_final_svg(scale, None, [door], [])
         assert 'data-type="door_origin"' in svg
         assert 'data-type="door_leaf"' in svg
@@ -662,9 +696,11 @@ class TestDoorGeometry:
         """final_vector.svg must not contain hinge debug circles."""
         from src.vectorization.phase4.export_svg import build_final_svg
         from src.vectorization.primitives.scale import ScaleInfo
+
         door = _make_hosted_door((100.0, 100.0), (140.0, 100.0))
-        scale = ScaleInfo(unit="px", px_to_mm=None, scale_status="unknown",
-                          scale_source="test", confidence=0.0)
+        scale = ScaleInfo(
+            unit="px", px_to_mm=None, scale_status="unknown", scale_source="test", confidence=0.0
+        )
         svg = build_final_svg(scale, None, [door], [])
         assert "<circle" not in svg, "no debug circles in final SVG"
 
@@ -673,8 +709,16 @@ class TestDoorGeometry:
 # Opening interval de-overlap tests  (task33)
 # ---------------------------------------------------------------------------
 
-def _hosted(opening_type: str, edge_idx: int, edge: list, pt_a, pt_b, confidence: float = 1.0,
-            component_id: int = 0) -> HostedOpening:
+
+def _hosted(
+    opening_type: str,
+    edge_idx: int,
+    edge: list,
+    pt_a,
+    pt_b,
+    confidence: float = 1.0,
+    component_id: int = 0,
+) -> HostedOpening:
     width = math.hypot(pt_b[0] - pt_a[0], pt_b[1] - pt_a[1])
     return HostedOpening(
         opening_type=opening_type,
@@ -704,18 +748,19 @@ class TestOpeningIntervalDeOverlap:
     def test_door_window_overlap_keeps_door_fixed(self):
         # Door at x=50..100, window overlapping at x=80..140
         door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0), confidence=0.9)
-        win  = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0), confidence=0.8)
+        win = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0), confidence=0.8)
         result = self._trim([door, win])
         # Two gaps: door and window must both be present
         assert len(result.opening_gaps) == 2
         # Door gap must not be moved: t_start ≈ 50/300
         door_gap = next(g for g in result.opening_gaps if g["opening_type"] == "door")
-        assert door_gap["original_interval"] == door_gap["adjusted_interval"], \
+        assert door_gap["original_interval"] == door_gap["adjusted_interval"], (
             "door interval must not be moved"
+        )
 
     def test_door_window_overlap_moves_window(self):
         door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0), confidence=0.9)
-        win  = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0), confidence=0.8)
+        win = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0), confidence=0.8)
         result = self._trim([door, win])
         win_gap = next(g for g in result.opening_gaps if g["opening_type"] == "window")
         assert win_gap["was_adjusted"], "window must be adjusted away from door"
@@ -728,7 +773,7 @@ class TestOpeningIntervalDeOverlap:
         # After adjustment, the trimmed wall must not have an opening span that covers
         # both door and window at once (no merged trim)
         door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0), confidence=0.9)
-        win  = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0), confidence=0.8)
+        win = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0), confidence=0.8)
         result = self._trim([door, win])
         assert len(result.opening_gaps) == 2
         # All gaps must be disjoint
@@ -741,23 +786,52 @@ class TestOpeningIntervalDeOverlap:
     # --- door vs door: higher confidence stays fixed ---
 
     def test_door_door_overlap_higher_confidence_fixed(self):
-        door_hi = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0),
-                           confidence=0.9, component_id=1)
-        door_lo = _hosted("door", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0),
-                           confidence=0.5, component_id=2)
+        door_hi = _hosted(
+            "door",
+            self.EI,
+            self.EDGE,
+            (50.0, 100.0),
+            (100.0, 100.0),
+            confidence=0.9,
+            component_id=1,
+        )
+        door_lo = _hosted(
+            "door",
+            self.EI,
+            self.EDGE,
+            (80.0, 100.0),
+            (140.0, 100.0),
+            confidence=0.5,
+            component_id=2,
+        )
         result = self._trim([door_hi, door_lo])
         assert len(result.opening_gaps) == 2
         hi_gap = next(g for g in result.opening_gaps if g["source_component_id"] == 1)
         lo_gap = next(g for g in result.opening_gaps if g["source_component_id"] == 2)
-        assert hi_gap["original_interval"] == hi_gap["adjusted_interval"], \
+        assert hi_gap["original_interval"] == hi_gap["adjusted_interval"], (
             "higher-confidence door must not be moved"
+        )
         assert lo_gap["was_adjusted"], "lower-confidence door must be adjusted"
 
     def test_door_door_overlap_neither_deleted(self):
-        door_hi = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0),
-                           confidence=0.9, component_id=1)
-        door_lo = _hosted("door", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0),
-                           confidence=0.5, component_id=2)
+        door_hi = _hosted(
+            "door",
+            self.EI,
+            self.EDGE,
+            (50.0, 100.0),
+            (100.0, 100.0),
+            confidence=0.9,
+            component_id=1,
+        )
+        door_lo = _hosted(
+            "door",
+            self.EI,
+            self.EDGE,
+            (80.0, 100.0),
+            (140.0, 100.0),
+            confidence=0.5,
+            component_id=2,
+        )
         result = self._trim([door_hi, door_lo])
         types = [g["source_component_id"] for g in result.opening_gaps]
         assert 1 in types and 2 in types, "both doors must be preserved"
@@ -765,23 +839,38 @@ class TestOpeningIntervalDeOverlap:
     # --- window vs window: higher confidence stays fixed ---
 
     def test_window_window_overlap_higher_confidence_fixed(self):
-        win_hi = _hosted("window", self.EI, self.EDGE, (50.0, 100.0), (110.0, 100.0),
-                          confidence=0.9, component_id=1)
-        win_lo = _hosted("window", self.EI, self.EDGE, (90.0, 100.0), (150.0, 100.0),
-                          confidence=0.4, component_id=2)
+        win_hi = _hosted(
+            "window",
+            self.EI,
+            self.EDGE,
+            (50.0, 100.0),
+            (110.0, 100.0),
+            confidence=0.9,
+            component_id=1,
+        )
+        win_lo = _hosted(
+            "window",
+            self.EI,
+            self.EDGE,
+            (90.0, 100.0),
+            (150.0, 100.0),
+            confidence=0.4,
+            component_id=2,
+        )
         result = self._trim([win_hi, win_lo])
         assert len(result.opening_gaps) == 2
         hi_gap = next(g for g in result.opening_gaps if g["source_component_id"] == 1)
         lo_gap = next(g for g in result.opening_gaps if g["source_component_id"] == 2)
-        assert hi_gap["original_interval"] == hi_gap["adjusted_interval"], \
+        assert hi_gap["original_interval"] == hi_gap["adjusted_interval"], (
             "higher-confidence window must not be moved"
+        )
         assert lo_gap["was_adjusted"]
 
     # --- non-overlapping: no adjustment needed ---
 
     def test_no_overlap_no_adjustment(self):
         door = _hosted("door", self.EI, self.EDGE, (10.0, 100.0), (60.0, 100.0), confidence=0.9)
-        win  = _hosted("window", self.EI, self.EDGE, (200.0, 100.0), (260.0, 100.0), confidence=0.8)
+        win = _hosted("window", self.EI, self.EDGE, (200.0, 100.0), (260.0, 100.0), confidence=0.8)
         result = self._trim([door, win])
         for gap in result.opening_gaps:
             assert not gap["was_adjusted"], "non-overlapping intervals must not be adjusted"
@@ -791,7 +880,7 @@ class TestOpeningIntervalDeOverlap:
     def test_slight_overlap_becomes_non_overlap(self):
         # Tiny overlap of 5px between door end (100) and window start (98)
         door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0), confidence=0.9)
-        win  = _hosted("window", self.EI, self.EDGE, (98.0, 100.0), (148.0, 100.0), confidence=0.8)
+        win = _hosted("window", self.EI, self.EDGE, (98.0, 100.0), (148.0, 100.0), confidence=0.8)
         result = self._trim([door, win])
         gaps = sorted(result.opening_gaps, key=lambda g: g["adjusted_interval"][0])
         assert len(gaps) == 2
@@ -803,7 +892,7 @@ class TestOpeningIntervalDeOverlap:
 
     def test_wall_trimming_uses_adjusted_intervals(self):
         door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0), confidence=0.9)
-        win  = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0), confidence=0.8)
+        win = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0), confidence=0.8)
         result = self._trim([door, win])
         win_gap = next(g for g in result.opening_gaps if g["opening_type"] == "window")
         adj_start_px = win_gap["adjusted_interval"][0] * 300.0
@@ -821,14 +910,34 @@ class TestOpeningIntervalDeOverlap:
     # --- JSON records original and adjusted intervals ---
 
     def test_json_records_interval_fields(self):
-        door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0),
-                        confidence=0.9, component_id=1)
-        win  = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0),
-                        confidence=0.8, component_id=2)
+        door = _hosted(
+            "door",
+            self.EI,
+            self.EDGE,
+            (50.0, 100.0),
+            (100.0, 100.0),
+            confidence=0.9,
+            component_id=1,
+        )
+        win = _hosted(
+            "window",
+            self.EI,
+            self.EDGE,
+            (80.0, 100.0),
+            (140.0, 100.0),
+            confidence=0.8,
+            component_id=2,
+        )
         trimmed = self._trim([door, win])
         scale = _make_scale(1.0, "estimated")
-        wall_geom = WallGeometry(polygon=None, half_width_px=8.0, wall_thickness_mm=200.0,
-                                 scale_blocked=False, chain_count=0, edge_count=0)
+        wall_geom = WallGeometry(
+            polygon=None,
+            half_width_px=8.0,
+            wall_thickness_mm=200.0,
+            scale_blocked=False,
+            chain_count=0,
+            edge_count=0,
+        )
         data = build_final_vector_json(
             preprocessing_manifest={},
             scale_info=scale,
@@ -856,9 +965,15 @@ class TestOpeningIntervalDeOverlap:
     def test_last_resort_rejection_when_no_space(self):
         # Edge is very short (20px total), three openings each 15px wide — impossible to fit all three
         short_edge = [0.0, 100.0, 20.0, 100.0]
-        op1 = _hosted("door",   0, short_edge, (0.0, 100.0),  (8.0, 100.0),  confidence=0.9, component_id=1)
-        op2 = _hosted("window", 0, short_edge, (5.0, 100.0),  (15.0, 100.0), confidence=0.6, component_id=2)
-        op3 = _hosted("window", 0, short_edge, (12.0, 100.0), (20.0, 100.0), confidence=0.4, component_id=3)
+        op1 = _hosted(
+            "door", 0, short_edge, (0.0, 100.0), (8.0, 100.0), confidence=0.9, component_id=1
+        )
+        op2 = _hosted(
+            "window", 0, short_edge, (5.0, 100.0), (15.0, 100.0), confidence=0.6, component_id=2
+        )
+        op3 = _hosted(
+            "window", 0, short_edge, (12.0, 100.0), (20.0, 100.0), confidence=0.4, component_id=3
+        )
         result = trim_wall_intervals([short_edge], [op1, op2, op3], px_to_mm=None)
         # At least one should be last-resort rejected (can't all fit)
         total = len(result.opening_gaps) + len(result.last_resort_rejected)
@@ -867,9 +982,15 @@ class TestOpeningIntervalDeOverlap:
 
     def test_last_resort_rejected_has_correct_reason(self):
         short_edge = [0.0, 100.0, 20.0, 100.0]
-        op1 = _hosted("door",   0, short_edge, (0.0, 100.0),  (8.0, 100.0),  confidence=0.9, component_id=1)
-        op2 = _hosted("window", 0, short_edge, (5.0, 100.0),  (15.0, 100.0), confidence=0.6, component_id=2)
-        op3 = _hosted("window", 0, short_edge, (12.0, 100.0), (20.0, 100.0), confidence=0.4, component_id=3)
+        op1 = _hosted(
+            "door", 0, short_edge, (0.0, 100.0), (8.0, 100.0), confidence=0.9, component_id=1
+        )
+        op2 = _hosted(
+            "window", 0, short_edge, (5.0, 100.0), (15.0, 100.0), confidence=0.6, component_id=2
+        )
+        op3 = _hosted(
+            "window", 0, short_edge, (12.0, 100.0), (20.0, 100.0), confidence=0.4, component_id=3
+        )
         result = trim_wall_intervals([short_edge], [op1, op2, op3])
         for rej in result.last_resort_rejected:
             assert rej["rejection_reason"] == "no_feasible_non_overlapping_interval"
@@ -878,6 +999,7 @@ class TestOpeningIntervalDeOverlap:
 # ---------------------------------------------------------------------------
 # Part A — adjusted interval propagation to final primitives (task34)
 # ---------------------------------------------------------------------------
+
 
 class TestAdjustedIntervalPropagation:
     """Verify adjusted snapped_points propagate to SVG/JSON endpoints."""
@@ -890,10 +1012,24 @@ class TestAdjustedIntervalPropagation:
         from src.vectorization.phase4.export_svg import build_final_svg
         from src.vectorization.primitives.scale import ScaleInfo
 
-        door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0),
-                        confidence=0.9, component_id=1)
-        win  = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0),
-                        confidence=0.8, component_id=2)
+        door = _hosted(
+            "door",
+            self.EI,
+            self.EDGE,
+            (50.0, 100.0),
+            (100.0, 100.0),
+            confidence=0.9,
+            component_id=1,
+        )
+        win = _hosted(
+            "window",
+            self.EI,
+            self.EDGE,
+            (80.0, 100.0),
+            (140.0, 100.0),
+            confidence=0.8,
+            component_id=2,
+        )
         trimmed = trim_wall_intervals([self.EDGE], [door, win])
         final_wins = apply_adjusted_intervals_to_hosted_openings(trimmed, [win])
         assert len(final_wins) == 1
@@ -901,24 +1037,45 @@ class TestAdjustedIntervalPropagation:
         # The window was pushed right of the door (which ends at x=100)
         assert adj_x >= 100.0, "adjusted window start must be at/after door end"
         # SVG line uses adjusted coords
-        scale = ScaleInfo(unit="px", px_to_mm=None, scale_status="unknown",
-                          scale_source="test", confidence=0.0)
+        scale = ScaleInfo(
+            unit="px", px_to_mm=None, scale_status="unknown", scale_source="test", confidence=0.0
+        )
         svg = build_final_svg(scale, None, [], final_wins)
         # The adjusted x1 must appear in the SVG (not the original 80.0)
         assert f'x1="{adj_x:.2f}"' in svg
 
     def test_door_json_final_points_match_adjusted_snapped_points(self):
         """geometry.doors[].final_points in JSON must equal adjusted snapped_points."""
-        door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0),
-                        confidence=0.9, component_id=1)
-        win  = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0),
-                        confidence=0.8, component_id=2)
+        door = _hosted(
+            "door",
+            self.EI,
+            self.EDGE,
+            (50.0, 100.0),
+            (100.0, 100.0),
+            confidence=0.9,
+            component_id=1,
+        )
+        win = _hosted(
+            "window",
+            self.EI,
+            self.EDGE,
+            (80.0, 100.0),
+            (140.0, 100.0),
+            confidence=0.8,
+            component_id=2,
+        )
         trimmed = trim_wall_intervals([self.EDGE], [door, win])
         final_doors = apply_adjusted_intervals_to_hosted_openings(trimmed, [door])
-        final_wins  = apply_adjusted_intervals_to_hosted_openings(trimmed, [win])
+        final_wins = apply_adjusted_intervals_to_hosted_openings(trimmed, [win])
         scale = _make_scale(1.0, "estimated")
-        wall_geom = WallGeometry(polygon=None, half_width_px=8.0, wall_thickness_mm=200.0,
-                                 scale_blocked=False, chain_count=0, edge_count=0)
+        wall_geom = WallGeometry(
+            polygon=None,
+            half_width_px=8.0,
+            wall_thickness_mm=200.0,
+            scale_blocked=False,
+            chain_count=0,
+            edge_count=0,
+        )
         data = build_final_vector_json(
             preprocessing_manifest={},
             scale_info=scale,
@@ -940,22 +1097,38 @@ class TestAdjustedIntervalPropagation:
     def test_apply_adjusted_intervals_updates_snapped_points(self):
         """apply_adjusted_intervals_to_hosted_openings must change snapped_points
         when the interval was adjusted."""
-        door = _hosted("door", self.EI, self.EDGE, (50.0, 100.0), (100.0, 100.0),
-                        confidence=0.9, component_id=1)
-        win  = _hosted("window", self.EI, self.EDGE, (80.0, 100.0), (140.0, 100.0),
-                        confidence=0.8, component_id=2)
+        door = _hosted(
+            "door",
+            self.EI,
+            self.EDGE,
+            (50.0, 100.0),
+            (100.0, 100.0),
+            confidence=0.9,
+            component_id=1,
+        )
+        win = _hosted(
+            "window",
+            self.EI,
+            self.EDGE,
+            (80.0, 100.0),
+            (140.0, 100.0),
+            confidence=0.8,
+            component_id=2,
+        )
         trimmed = trim_wall_intervals([self.EDGE], [door, win])
         final_wins = apply_adjusted_intervals_to_hosted_openings(trimmed, [win])
         # The original snapped_points[0] was at x=80; after adjustment it must be > 100
         orig_x = 80.0
         final_x = final_wins[0].snapped_points[0][0]
-        assert abs(final_x - orig_x) > 0.1, \
+        assert abs(final_x - orig_x) > 0.1, (
             "snapped_points must be updated to adjusted interval position"
+        )
 
     def test_non_adjusted_opening_keeps_original_points(self):
         """An opening that did not need adjustment keeps its original snapped_points."""
-        door = _hosted("door", self.EI, self.EDGE, (10.0, 100.0), (60.0, 100.0),
-                        confidence=0.9, component_id=1)
+        door = _hosted(
+            "door", self.EI, self.EDGE, (10.0, 100.0), (60.0, 100.0), confidence=0.9, component_id=1
+        )
         trimmed = trim_wall_intervals([self.EDGE], [door])
         final_doors = apply_adjusted_intervals_to_hosted_openings(trimmed, [door])
         assert len(final_doors) == 1
@@ -967,12 +1140,14 @@ class TestAdjustedIntervalPropagation:
 # Part B — door evidence scoring (task34)
 # ---------------------------------------------------------------------------
 
+
 class TestDoorEvidenceScoring:
     """Door hinge/swing inferred from local red/orange/purple raster evidence."""
 
     def _make_arc_mask(self, hinge, far, swing, size=200, n=24) -> np.ndarray:
         """Create a synthetic binary mask with arc pixels for one hypothesis."""
         import math
+
         mask = np.zeros((size, size), dtype=np.uint8)
         r = math.hypot(far[0] - hinge[0], far[1] - hinge[1])
         start_ang = math.atan2(far[1] - hinge[1], far[0] - hinge[0])
@@ -988,6 +1163,7 @@ class TestDoorEvidenceScoring:
     def test_correct_hinge_and_swing_selected(self):
         """Scoring picks the hypothesis whose arc overlaps the red mask pixels."""
         from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
+
         p0 = (50.0, 100.0)
         p1 = (90.0, 100.0)
         # Ground truth: hinge=p0, swing=left
@@ -1001,6 +1177,7 @@ class TestDoorEvidenceScoring:
     def test_alternative_hinge_selected(self):
         """When arc is on p1 side, hinge=p1 is selected."""
         from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
+
         p0 = (50.0, 100.0)
         p1 = (90.0, 100.0)
         # Ground truth: hinge=p1, swing=right
@@ -1012,6 +1189,7 @@ class TestDoorEvidenceScoring:
     def test_fallback_when_no_evidence(self):
         """When mask is all-zero, fallback hinge/swing are returned."""
         from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
+
         mask = np.zeros((100, 100), dtype=np.uint8)
         h_pt, swing, h_src, sw_src = infer_door_direction_from_evidence(
             (10.0, 50.0), (50.0, 50.0), mask
@@ -1023,6 +1201,7 @@ class TestDoorEvidenceScoring:
     def test_fallback_when_mask_none(self):
         """When door_arc_mask is None, fallback is used."""
         from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
+
         h_pt, swing, h_src, sw_src = infer_door_direction_from_evidence(
             (10.0, 50.0), (50.0, 50.0), None
         )
@@ -1032,6 +1211,7 @@ class TestDoorEvidenceScoring:
     def test_compute_door_geometry_uses_evidence_mask(self):
         """compute_door_geometry with door_arc_mask must set hinge_source from evidence."""
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         p0 = (50.0, 100.0)
         p1 = (90.0, 100.0)
         mask = self._make_arc_mask(p0, p1, "left")
@@ -1043,6 +1223,7 @@ class TestDoorEvidenceScoring:
     def test_compute_door_geometry_fallback_without_mask(self):
         """compute_door_geometry without mask uses fallback_pt0."""
         from src.vectorization.phase4.door_geometry import compute_door_geometry
+
         door = _make_hosted_door((0.0, 0.0), (30.0, 0.0))
         geom = compute_door_geometry(door)
         assert geom.hinge_source == "fallback_pt0"
@@ -1053,11 +1234,13 @@ class TestDoorEvidenceScoring:
 # Part C — topology-safe wall snap before buffering (task34)
 # ---------------------------------------------------------------------------
 
+
 class TestTopologySnapEdges:
     """_topology_snap_edges must connect near-equal endpoints before linemerge."""
 
     def test_near_equal_endpoints_snapped(self):
         from src.vectorization.phase4.wall_buffering import _topology_snap_edges
+
         # Two edges sharing an endpoint at near-equal but not identical coords
         edges = [
             [0.0, 0.0, 100.0, 0.0],
@@ -1071,6 +1254,7 @@ class TestTopologySnapEdges:
 
     def test_metrics_reported(self):
         from src.vectorization.phase4.wall_buffering import _topology_snap_edges
+
         edges = [[0.0, 0.0, 100.0, 0.0], [100.5, 0.0, 200.0, 0.0]]
         _, metrics = _topology_snap_edges(edges, tol=1.5)
         assert "pre_buffer_node_count" in metrics
@@ -1081,12 +1265,14 @@ class TestTopologySnapEdges:
 
     def test_exact_equal_endpoints_unchanged(self):
         from src.vectorization.phase4.wall_buffering import _topology_snap_edges
+
         edges = [[0.0, 0.0, 100.0, 0.0], [100.0, 0.0, 200.0, 0.0]]
         snapped, metrics = _topology_snap_edges(edges, tol=1.5)
         assert len(snapped) == 2  # no zero-length edges created
 
     def test_zero_length_edge_dropped(self):
         from src.vectorization.phase4.wall_buffering import _topology_snap_edges
+
         # An edge whose endpoints snap to the same location
         edges = [[0.0, 0.0, 0.3, 0.0], [0.0, 0.0, 100.0, 0.0]]
         snapped, _ = _topology_snap_edges(edges, tol=1.5)
@@ -1105,9 +1291,11 @@ class TestTopologySnapEdges:
 
     def test_snapped_edges_linemerge_into_one_chain(self):
         """Edges that were near-equal but not exact should merge into one chain after snap."""
-        from shapely.ops import linemerge
         from shapely.geometry import LineString
+        from shapely.ops import linemerge
+
         from src.vectorization.phase4.wall_buffering import _topology_snap_edges
+
         edges = [[0.0, 0.0, 100.0, 0.0], [100.4, 0.0, 200.0, 0.0]]
         snapped, _ = _topology_snap_edges(edges, tol=1.5)
         lines = [LineString([(e[0], e[1]), (e[2], e[3])]) for e in snapped]
@@ -1143,6 +1331,7 @@ class TestTopologySnapEdges:
 # Task 35 — Red-side swing + orange hinge + flat-ended rendering
 # ---------------------------------------------------------------------------
 
+
 class TestTask35DoorDirection:
     """task35: primary swing from red side-count; primary hinge from orange corridor."""
 
@@ -1154,7 +1343,7 @@ class TestTask35DoorDirection:
     def _mask_above(self) -> np.ndarray:
         """Red pixels strictly ABOVE the door line (y < 100): negative cross → 'negative' side."""
         mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
-        mask[60:98, 55:85] = 255   # y ∈ [60, 98], all above y=100
+        mask[60:98, 55:85] = 255  # y ∈ [60, 98], all above y=100
         return mask
 
     def _mask_below(self) -> np.ndarray:
@@ -1178,6 +1367,7 @@ class TestTask35DoorDirection:
     def test_red_pixels_below_choose_positive_side(self):
         """Pixels below the p0→p1 line (positive cross) → positive side → left swing for hinge=p0."""
         from src.vectorization.phase4.door_geometry import _score_side_by_red_pixels
+
         pos, neg, side = _score_side_by_red_pixels(self.P0, self.P1, self._mask_below())
         assert side == "positive"
         assert pos > 0
@@ -1186,6 +1376,7 @@ class TestTask35DoorDirection:
     def test_red_pixels_above_choose_negative_side(self):
         """Pixels above the p0→p1 line (negative cross) → negative side → right swing for hinge=p0."""
         from src.vectorization.phase4.door_geometry import _score_side_by_red_pixels
+
         pos, neg, side = _score_side_by_red_pixels(self.P0, self.P1, self._mask_above())
         assert side == "negative"
         assert neg > 0
@@ -1194,7 +1385,8 @@ class TestTask35DoorDirection:
     def test_orange_near_p0_selects_p0_hinge(self):
         """Orange pixels near p0 → hinge=p0 selected via orange corridor primary."""
         from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
-        red_mask = self._mask_below()   # positive side → swing=left for p0
+
+        red_mask = self._mask_below()  # positive side → swing=left for p0
         orange_mask = self._orange_near_p0()
         h_pt, swing, h_src, sw_src = infer_door_direction_from_evidence(
             self.P0, self.P1, red_mask, door_leaf_mask=orange_mask
@@ -1206,7 +1398,8 @@ class TestTask35DoorDirection:
     def test_orange_near_p1_selects_p1_hinge(self):
         """Orange pixels near p1 → hinge=p1 selected via orange corridor primary."""
         from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
-        red_mask = self._mask_below()   # positive side → swing=right for p1
+
+        red_mask = self._mask_below()  # positive side → swing=right for p1
         orange_mask = self._orange_near_p1()
         h_pt, swing, h_src, sw_src = infer_door_direction_from_evidence(
             self.P0, self.P1, red_mask, door_leaf_mask=orange_mask
@@ -1223,7 +1416,6 @@ class TestTask35DoorDirection:
         Applying a local crop that contains only the true door's region should still
         select the correct (positive) side.
         """
-        from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence
         global_mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
         # True door arc: below the line
         global_mask[103:140, 55:85] = 255
@@ -1236,6 +1428,7 @@ class TestTask35DoorDirection:
 
         # With local mask, only the below-line pixels are visible
         from src.vectorization.phase4.door_geometry import _score_side_by_red_pixels
+
         pos, neg, side = _score_side_by_red_pixels(self.P0, self.P1, local_mask)
         assert side == "positive", "local mask must exclude remote door red pixels"
 
@@ -1246,7 +1439,11 @@ class TestTask35DoorDirection:
         hypothesis with best arc-overlap would be hinge=p1/swing=right (which is also
         positive side — both are positive here). The final swing must respect the side count.
         """
-        from src.vectorization.phase4.door_geometry import infer_door_direction_from_evidence, _score_side_by_red_pixels
+        from src.vectorization.phase4.door_geometry import (
+            _score_side_by_red_pixels,
+            infer_door_direction_from_evidence,
+        )
+
         red_mask = self._mask_below()
         pos, neg, side = _score_side_by_red_pixels(self.P0, self.P1, red_mask)
         assert side == "positive"  # pre-condition
@@ -1264,7 +1461,8 @@ class TestTask35DoorDirection:
 
     def test_window_svg_uses_butt_linecap(self):
         """Window SVG line must use stroke-linecap='butt' so it does not extend past endpoints."""
-        from src.vectorization.phase4.export_svg import _window_to_svg, WINDOW_STROKE
+        from src.vectorization.phase4.export_svg import _window_to_svg
+
         win = _make_hosted_door(self.P0, self.P1)
         # Reuse _make_hosted_door — the snapped_points geometry is the same for windows
         svg = _window_to_svg(win)
@@ -1274,6 +1472,7 @@ class TestTask35DoorDirection:
     def test_door_origin_svg_uses_butt_linecap(self):
         """DoorOriginPrimitive.to_svg() must use stroke-linecap='butt'."""
         from src.vectorization.primitives.door import DoorOriginPrimitive
+
         prim = DoorOriginPrimitive(
             primitive_id="test_origin",
             center=(70.0, 100.0),
@@ -1286,14 +1485,23 @@ class TestTask35DoorDirection:
 
     def test_evidence_fields_in_door_geometry_dict(self):
         """door_geometry_to_dict() must include all task35 evidence debug fields."""
-        from src.vectorization.phase4.door_geometry import compute_door_geometry, door_geometry_to_dict
+        from src.vectorization.phase4.door_geometry import (
+            compute_door_geometry,
+            door_geometry_to_dict,
+        )
+
         door = _make_hosted_door(self.P0, self.P1)
         red_mask = self._mask_below()
         geom = compute_door_geometry(door, door_arc_mask=red_mask)
         d = door_geometry_to_dict(geom)
         for field_name in [
-            "red_side_positive_count", "red_side_negative_count", "red_side_selected",
-            "orange_hinge_p0_score", "orange_hinge_p1_score", "hinge_selected", "fallback_used",
+            "red_side_positive_count",
+            "red_side_negative_count",
+            "red_side_selected",
+            "orange_hinge_p0_score",
+            "orange_hinge_p1_score",
+            "hinge_selected",
+            "fallback_used",
         ]:
             assert field_name in d, f"missing evidence field: {field_name}"
         assert d["red_side_selected"] == "positive"
@@ -1309,7 +1517,7 @@ class TestTask36DoubleSwing:
     P1 = (130.0, 100.0)
     EDGE = [0.0, 100.0, 200.0, 100.0]
 
-    def _make_door(self, comp_id: int = 0, confidence: float = 0.9) -> "HostedOpening":
+    def _make_door(self, comp_id: int = 0, confidence: float = 0.9) -> HostedOpening:
         return _make_hosted_door(self.P0, self.P1, comp_id=comp_id, confidence=confidence)
 
     def _mask_below(self, intensity: int = 255) -> np.ndarray:
@@ -1327,8 +1535,9 @@ class TestTask36DoubleSwing:
     def test_one_sided_red_evidence_yields_single_swing(self):
         """Only red pixels on one side of the line → single_swing classification."""
         from src.vectorization.phase4.door_classification import (
-            classify_door_openings, MIN_SIDE_PIXELS,
+            classify_door_openings,
         )
+
         door = self._make_door(comp_id=1)
         door.host_edge_raw = self.EDGE
         red_mask = self._mask_below()
@@ -1339,6 +1548,7 @@ class TestTask36DoubleSwing:
     def test_weak_opposite_side_does_not_trigger_double_swing(self):
         """Ratio below threshold (< MIN_DOUBLE_SWING_RATIO) stays single_swing."""
         from src.vectorization.phase4.door_classification import classify_door_openings
+
         door = self._make_door(comp_id=2)
         door.host_edge_raw = self.EDGE
         # Add a tiny bit of noise on the upper side
@@ -1351,14 +1561,16 @@ class TestTask36DoubleSwing:
     def test_strong_both_sides_yields_double_swing_single_component(self):
         """Single component with strong red evidence on both sides → double_swing_shared_origin."""
         from src.vectorization.phase4.door_classification import (
-            classify_door_openings, MIN_DOUBLE_SWING_RATIO, MIN_SIDE_PIXELS,
+            MIN_DOUBLE_SWING_RATIO,
+            classify_door_openings,
         )
+
         door = self._make_door(comp_id=3)
         door.host_edge_raw = self.EDGE
         # Large blocks on BOTH sides so both counts > MIN_SIDE_PIXELS and ratio > threshold
         combined = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
         combined[105:145, 55:125] = 255  # below (positive)
-        combined[57:97, 55:125] = 255    # above (negative)
+        combined[57:97, 55:125] = 255  # above (negative)
         result = classify_door_openings([door], door_arc_mask=combined, door_arc_comps={})
         assert result.double_swing_count == 1
         assert result.classifications[0].door_type == "double_swing_shared_origin"
@@ -1370,6 +1582,7 @@ class TestTask36DoubleSwing:
     def test_two_overlapping_doors_opposite_sides_merge_to_double_swing(self):
         """Two doors on same edge, overlapping intervals, opposite sides → one double-swing."""
         from src.vectorization.phase4.door_classification import classify_door_openings
+
         d1 = self._make_door(comp_id=10, confidence=0.9)
         d2 = self._make_door(comp_id=11, confidence=0.8)
         d1.host_edge_raw = self.EDGE
@@ -1390,8 +1603,8 @@ class TestTask36DoubleSwing:
         d2's component bbox covers above-the-line pixels → negative side.
         Shared overlapping intervals on same edge → merged as double_swing_shared_origin.
         """
-        from src.vectorization.phase4.door_classification import classify_door_openings
         from src.vectorization.graph_types import ComponentRecord
+        from src.vectorization.phase4.door_classification import classify_door_openings
 
         d1 = self._make_door(comp_id=20, confidence=0.9)
         d2 = self._make_door(comp_id=21, confidence=0.9)
@@ -1400,17 +1613,23 @@ class TestTask36DoubleSwing:
 
         # Combined mask: below-line region (positive) + above-line region (negative)
         both_mask = np.zeros((self.SIZE, self.SIZE), dtype=np.uint8)
-        both_mask[105:145, 55:125] = 255   # below the line at y=100
-        both_mask[57:97, 55:125] = 255     # above the line
+        both_mask[105:145, 55:125] = 255  # below the line at y=100
+        both_mask[57:97, 55:125] = 255  # above the line
 
         # Restrict d1's comp to below-line, d2's comp to above-line via bbox
         comp20 = ComponentRecord(
-            class_name="door_arc", component_id=20,
-            area_px=40 * 70, bbox=(55, 105, 125, 145), centroid=(90.0, 125.0),
+            class_name="door_arc",
+            component_id=20,
+            area_px=40 * 70,
+            bbox=(55, 105, 125, 145),
+            centroid=(90.0, 125.0),
         )
         comp21 = ComponentRecord(
-            class_name="door_arc", component_id=21,
-            area_px=40 * 70, bbox=(55, 57, 125, 97), centroid=(90.0, 77.0),
+            class_name="door_arc",
+            component_id=21,
+            area_px=40 * 70,
+            bbox=(55, 57, 125, 97),
+            centroid=(90.0, 77.0),
         )
         comps = {20: comp20, 21: comp21}
 
@@ -1460,7 +1679,8 @@ class TestTask36DoubleSwing:
     def test_double_swing_svg_renders_two_leaves_and_arcs(self):
         """SVG output for double_swing_shared_origin contains secondary leaf and arc."""
         from src.vectorization.phase4.door_geometry import (
-            compute_door_geometry, compute_door_geometry_double_swing,
+            compute_door_geometry,
+            compute_door_geometry_double_swing,
         )
         from src.vectorization.phase4.export_svg import _door_to_svg
 
@@ -1472,18 +1692,21 @@ class TestTask36DoubleSwing:
         assert double_geom.secondary_leaf_end is not None
 
         svg = _door_to_svg(door, idx=0, geom=double_geom)
-        assert 'door_0_leaf_b' in svg, "secondary leaf primitive must be in SVG"
-        assert 'door_0_arc_b' in svg, "secondary arc primitive must be in SVG"
+        assert "door_0_leaf_b" in svg, "secondary leaf primitive must be in SVG"
+        assert "door_0_arc_b" in svg, "secondary arc primitive must be in SVG"
         assert 'data-door-type="double_swing_shared_origin"' in svg
 
     # ── Part E: JSON fields ──────────────────────────────────────────────────
 
     def test_json_includes_task36_classification_fields(self):
         """door_geometry_to_dict() must record door_type, classification_reason, source ids."""
-        from src.vectorization.phase4.door_geometry import (
-            compute_door_geometry, compute_door_geometry_double_swing, door_geometry_to_dict,
-        )
         from dataclasses import replace as _dc_replace
+
+        from src.vectorization.phase4.door_geometry import (
+            compute_door_geometry,
+            compute_door_geometry_double_swing,
+            door_geometry_to_dict,
+        )
 
         door = self._make_door(comp_id=60)
         geom = compute_door_geometry(door, door_arc_mask=self._mask_below())

@@ -12,42 +12,42 @@ Constants are module-level for easy tuning; they are not hidden in expressions.
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 
 from .door_geometry import _score_side_by_red_pixels
-from .opening_hosting import HostedOpening, RejectedOpening
+from .opening_hosting import HostedOpening
 
 # ─── Thresholds ────────────────────────────────────────────────────────────────
-MIN_SIDE_PIXELS: int = 10          # minimum pixels on a side to consider it "supported"
-MIN_DOUBLE_SWING_RATIO: float = 0.30   # weaker / stronger pixel count ratio for double-swing
-SAME_ORIGIN_OVERLAP_RATIO: float = 0.75   # min fraction of shorter interval that must overlap
+MIN_SIDE_PIXELS: int = 10  # minimum pixels on a side to consider it "supported"
+MIN_DOUBLE_SWING_RATIO: float = 0.30  # weaker / stronger pixel count ratio for double-swing
+SAME_ORIGIN_OVERLAP_RATIO: float = 0.75  # min fraction of shorter interval that must overlap
 SAME_ORIGIN_ENDPOINT_TOL_PX: float = 10.0  # endpoint proximity for "same origin" check
 
 
 @dataclass
 class DoorClassification:
     """Classification decision for one final door entry (parallel to final_doors list)."""
-    door_type: str                  # "single_swing" | "double_swing_shared_origin"
-    classification: str             # same, or "ignored_duplicate"
-    source_component_ids: list      # all component IDs that contributed to this door
+
+    door_type: str  # "single_swing" | "double_swing_shared_origin"
+    classification: str  # same, or "ignored_duplicate"
+    source_component_ids: list  # all component IDs that contributed to this door
     decision_reason: str
     red_positive_count: int = 0
     red_negative_count: int = 0
-    double_swing_ratio: Optional[float] = None
+    double_swing_ratio: float | None = None
     merged_from_component_ids: list = field(default_factory=list)
-    ignored_as_duplicate_of: Optional[int] = None  # component_id of the surviving door
+    ignored_as_duplicate_of: int | None = None  # component_id of the surviving door
 
 
 @dataclass
 class ClassificationResult:
     """Return value of classify_door_openings()."""
-    final_doors: list              # HostedOpening list to pass to trim_wall_intervals()
-    classifications: list          # DoorClassification, one per entry in final_doors
-    ignored_doors: list            # HostedOpening objects classified as ignored_duplicate
+
+    final_doors: list  # HostedOpening list to pass to trim_wall_intervals()
+    classifications: list  # DoorClassification, one per entry in final_doors
+    ignored_doors: list  # HostedOpening objects classified as ignored_duplicate
     double_swing_count: int = 0
     ignored_duplicate_count: int = 0
 
@@ -78,10 +78,10 @@ def _interval_overlap_ratio(
 
 def _local_mask_for_door(
     door: HostedOpening,
-    door_arc_mask: Optional[np.ndarray],
+    door_arc_mask: np.ndarray | None,
     comp,
     pad: int = 8,
-) -> Optional[np.ndarray]:
+) -> np.ndarray | None:
     """Crop door_arc_mask to the component bbox + pad, zeroing the rest."""
     if door_arc_mask is None:
         return None
@@ -118,7 +118,7 @@ def _build_merged_hosted_opening(
     t_start = min(t_primary[0], t_secondary[0])
     t_end = max(t_primary[1], t_secondary[1])
     p0 = (x1 + t_start * (x2 - x1), y1 + t_start * (y2 - y1))
-    p1 = (x1 + t_end   * (x2 - x1), y1 + t_end   * (y2 - y1))
+    p1 = (x1 + t_end * (x2 - x1), y1 + t_end * (y2 - y1))
     return HostedOpening(
         opening_type="door",
         source_component_id=primary.source_component_id,
@@ -135,7 +135,7 @@ def _build_merged_hosted_opening(
 
 def classify_door_openings(
     hosted_doors: list[HostedOpening],
-    door_arc_mask: Optional[np.ndarray],
+    door_arc_mask: np.ndarray | None,
     door_arc_comps: dict,
 ) -> ClassificationResult:
     """Classify hosted doors and merge shared-origin pairs.
@@ -151,8 +151,11 @@ def classify_door_openings(
     n = len(hosted_doors)
     if n == 0:
         return ClassificationResult(
-            final_doors=[], classifications=[], ignored_doors=[],
-            double_swing_count=0, ignored_duplicate_count=0,
+            final_doors=[],
+            classifications=[],
+            ignored_doors=[],
+            double_swing_count=0,
+            ignored_duplicate_count=0,
         )
 
     # ─── Step 1: per-door evidence ───────────────────────────────────────────
@@ -167,8 +170,9 @@ def classify_door_openings(
         else:
             pos, neg, side = 0, 0, "fallback"
         two_sided, ratio = _is_two_sided(pos, neg)
-        evidences.append({"pos": pos, "neg": neg, "side": side,
-                          "two_sided": two_sided, "ratio": ratio})
+        evidences.append(
+            {"pos": pos, "neg": neg, "side": side, "two_sided": two_sided, "ratio": ratio}
+        )
 
     # ─── Step 2: find pairs on same edge with overlapping intervals ──────────
     t_values = [_snapped_to_t(d.snapped_points, d.host_edge_raw) for d in hosted_doors]
@@ -190,7 +194,7 @@ def classify_door_openings(
     double_swing_count = 0
     ignored_duplicate_count = 0
 
-    for (i, j) in pairs:
+    for i, j in pairs:
         if i in assigned or j in assigned:
             continue  # already consumed by an earlier pair
         assigned.add(i)
@@ -200,9 +204,9 @@ def classify_door_openings(
         di, dj = hosted_doors[i], hosted_doors[j]
 
         opposite = (
-            ev_i["side"] in ("positive", "negative") and
-            ev_j["side"] in ("positive", "negative") and
-            ev_i["side"] != ev_j["side"]
+            ev_i["side"] in ("positive", "negative")
+            and ev_j["side"] in ("positive", "negative")
+            and ev_i["side"] != ev_j["side"]
         )
 
         if opposite:
@@ -215,16 +219,24 @@ def classify_door_openings(
             stronger = max(combined_pos, combined_neg)
             ratio = min(combined_pos, combined_neg) / stronger if stronger > 0 else 0.0
             final_doors.append(merged)
-            classifications.append(DoorClassification(
-                door_type="double_swing_shared_origin",
-                classification="double_swing_shared_origin",
-                source_component_ids=[primary.source_component_id, secondary.source_component_id],
-                decision_reason="opposite_side_evidence_merged_from_pair",
-                red_positive_count=combined_pos,
-                red_negative_count=combined_neg,
-                double_swing_ratio=ratio,
-                merged_from_component_ids=[primary.source_component_id, secondary.source_component_id],
-            ))
+            classifications.append(
+                DoorClassification(
+                    door_type="double_swing_shared_origin",
+                    classification="double_swing_shared_origin",
+                    source_component_ids=[
+                        primary.source_component_id,
+                        secondary.source_component_id,
+                    ],
+                    decision_reason="opposite_side_evidence_merged_from_pair",
+                    red_positive_count=combined_pos,
+                    red_negative_count=combined_neg,
+                    double_swing_ratio=ratio,
+                    merged_from_component_ids=[
+                        primary.source_component_id,
+                        secondary.source_component_id,
+                    ],
+                )
+            )
             double_swing_count += 1
         else:
             # Same side or no evidence — keep the stronger, ignore the weaker duplicate
@@ -234,14 +246,16 @@ def classify_door_openings(
             dup_idx = j if i_str >= j_str else i
             survivor_ev = ev_i if survivor_idx == i else ev_j
             final_doors.append(hosted_doors[survivor_idx])
-            classifications.append(DoorClassification(
-                door_type="single_swing",
-                classification="single_swing",
-                source_component_ids=[hosted_doors[survivor_idx].source_component_id],
-                decision_reason="same_origin_same_side_weaker_ignored",
-                red_positive_count=survivor_ev["pos"],
-                red_negative_count=survivor_ev["neg"],
-            ))
+            classifications.append(
+                DoorClassification(
+                    door_type="single_swing",
+                    classification="single_swing",
+                    source_component_ids=[hosted_doors[survivor_idx].source_component_id],
+                    decision_reason="same_origin_same_side_weaker_ignored",
+                    red_positive_count=survivor_ev["pos"],
+                    red_negative_count=survivor_ev["neg"],
+                )
+            )
             ignored_doors.append(hosted_doors[dup_idx])
             ignored_duplicate_count += 1
 
@@ -253,27 +267,31 @@ def classify_door_openings(
         ev = evidences[i]
         if ev["two_sided"]:
             final_doors.append(door)
-            classifications.append(DoorClassification(
-                door_type="double_swing_shared_origin",
-                classification="double_swing_shared_origin",
-                source_component_ids=[door.source_component_id],
-                decision_reason="single_component_two_sided_red_evidence",
-                red_positive_count=ev["pos"],
-                red_negative_count=ev["neg"],
-                double_swing_ratio=ev["ratio"],
-                merged_from_component_ids=[],
-            ))
+            classifications.append(
+                DoorClassification(
+                    door_type="double_swing_shared_origin",
+                    classification="double_swing_shared_origin",
+                    source_component_ids=[door.source_component_id],
+                    decision_reason="single_component_two_sided_red_evidence",
+                    red_positive_count=ev["pos"],
+                    red_negative_count=ev["neg"],
+                    double_swing_ratio=ev["ratio"],
+                    merged_from_component_ids=[],
+                )
+            )
             double_swing_count += 1
         else:
             final_doors.append(door)
-            classifications.append(DoorClassification(
-                door_type="single_swing",
-                classification="single_swing",
-                source_component_ids=[door.source_component_id],
-                decision_reason="one_sided_red_evidence",
-                red_positive_count=ev["pos"],
-                red_negative_count=ev["neg"],
-            ))
+            classifications.append(
+                DoorClassification(
+                    door_type="single_swing",
+                    classification="single_swing",
+                    source_component_ids=[door.source_component_id],
+                    decision_reason="one_sided_red_evidence",
+                    red_positive_count=ev["pos"],
+                    red_negative_count=ev["neg"],
+                )
+            )
 
     return ClassificationResult(
         final_doors=final_doors,

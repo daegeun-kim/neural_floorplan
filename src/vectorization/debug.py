@@ -10,12 +10,19 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from PIL import Image, ImageDraw
 
-from .graph_types import ComponentRecord, DoorCandidateRecord, GraphEdge, GraphPoint, RejectedEvidence, ValidationIssue
+from .graph_types import (
+    ComponentRecord,
+    DoorCandidateRecord,
+    GraphEdge,
+    GraphPoint,
+    RejectedEvidence,
+    ValidationIssue,
+)
 
 POINT_COLORS: dict[str, tuple[int, int, int]] = {
     "wall_point": (80, 80, 200),
@@ -63,7 +70,9 @@ def _add_legend(img: Image.Image, scale_info) -> Image.Image:
     row_h = 18
     pad = 8
     rows = len(POINT_COLORS) + len(EDGE_COLORS) + len(DOOR_CANDIDATE_LEGEND_ROWS) + 4
-    out = Image.new("RGB", (img.width + legend_width, max(img.height, pad * 2 + rows * row_h)), (245, 245, 245))
+    out = Image.new(
+        "RGB", (img.width + legend_width, max(img.height, pad * 2 + rows * row_h)), (245, 245, 245)
+    )
     out.paste(img, (0, 0))
 
     draw = ImageDraw.Draw(out)
@@ -126,7 +135,9 @@ def _draw_scale_bar(draw: ImageDraw.ImageDraw, img_width: int, img_height: int, 
     label = f"{label_mm:.0f} mm"
     text_w = draw.textlength(label) if hasattr(draw, "textlength") else len(label) * 6
     backing_w = max(bar_px, text_w) + 6
-    draw.rectangle([x0 - 3, y - 21, x0 - 3 + backing_w, y + 6], fill=(255, 255, 255), outline=(200, 200, 200))
+    draw.rectangle(
+        [x0 - 3, y - 21, x0 - 3 + backing_w, y + 6], fill=(255, 255, 255), outline=(200, 200, 200)
+    )
     draw.line([(x0, y), (x1, y)], fill=(0, 0, 0), width=2)
     tick_h = 5
     draw.line([(x0, y - tick_h), (x0, y + tick_h)], fill=(0, 0, 0), width=2)
@@ -140,7 +151,7 @@ def build_debug_overlay(
     edges: list[GraphEdge],
     rejected_evidence: list[RejectedEvidence],
     scale_info,
-    door_candidates: Optional[list[DoorCandidateRecord]] = None,
+    door_candidates: list[DoorCandidateRecord] | None = None,
 ) -> Image.Image:
     """Render searched points by type and graph edges, plus every accepted
     red door_arc candidate's bbox and hinge-to-end connector (task13 "Debug
@@ -170,8 +181,16 @@ def build_debug_overlay(
         color = POINT_COLORS.get(p.point_type, (255, 255, 255))
         draw.ellipse([cx - 3, cy - 3, cx + 3, cy + 3], outline=color, width=2)
 
-    hinge_by_arc = {p.source_component_ids[0]: p for p in points if p.point_type == "wall_door_hinge_point" and p.source_component_ids}
-    end_by_arc = {p.source_component_ids[0]: p for p in points if p.point_type == "wall_door_end_point" and p.source_component_ids}
+    hinge_by_arc = {
+        p.source_component_ids[0]: p
+        for p in points
+        if p.point_type == "wall_door_hinge_point" and p.source_component_ids
+    }
+    end_by_arc = {
+        p.source_component_ids[0]: p
+        for p in points
+        if p.point_type == "wall_door_end_point" and p.source_component_ids
+    }
     for cand in door_candidates or []:
         if not cand.created_door_candidate:
             continue
@@ -209,7 +228,7 @@ def build_metrics(
     edges: list[GraphEdge],
     validation_issues: list[ValidationIssue],
     scale_info,
-    door_candidates: Optional[list[DoorCandidateRecord]] = None,
+    door_candidates: list[DoorCandidateRecord] | None = None,
 ) -> dict[str, Any]:
     point_counts: dict[str, int] = {}
     for p in points:
@@ -230,7 +249,8 @@ def build_metrics(
         },
         "rejected_evidence": rejected_by_kind,
         "validation_issues": [
-            {"rule": v.rule, "message": v.message, "severity": v.severity} for v in validation_issues
+            {"rule": v.rule, "message": v.message, "severity": v.severity}
+            for v in validation_issues
         ],
         "scale": {
             "unit": scale_info.unit,

@@ -1,0 +1,26 @@
+{
+  "cases": {
+    "failure": {
+      "sample_id": "10341_model_clean_png",
+      "score": 0.2986235198431474
+    },
+    "mixed": {
+      "sample_id": "3597_model_clean_png",
+      "score": 0.6380336167100873
+    },
+    "success": {
+      "sample_id": "11931_model_clean_png",
+      "score": 0.9110644257703081
+    }
+  },
+  "metrics_used": [
+    "junction_degree_exact_f1",
+    "edge_f1",
+    "door_f1",
+    "window_f1",
+    "host_accuracy",
+    "reachability_agreement"
+  ],
+  "rule": "end_to_end_score = unweighted mean of junction_degree_exact_f1, edge_f1, door_f1, window_f1, host_accuracy, reachability_agreement; success = max, failure = min, mixed = closest to median; ties broken by ascending sample_id",
+  "scored_sample_count": 36
+}

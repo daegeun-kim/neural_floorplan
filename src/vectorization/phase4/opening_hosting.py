@@ -19,32 +19,33 @@ Algorithm per opening:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
-from .opening_detection import DoorCandidate, WindowCandidate
 from ..primitives.scale import DOOR_MODULES_MM, ScaleInfo, snap_to_module_mm
+from .opening_detection import DoorCandidate, WindowCandidate
 
 
 @dataclass
 class HostedOpening:
     """An opening successfully hosted on one wall edge."""
-    opening_type: str           # "door" or "window"
+
+    opening_type: str  # "door" or "window"
     source_component_id: int
-    host_edge_idx: int          # index into aligned_edges list
+    host_edge_idx: int  # index into aligned_edges list
     host_edge_raw: list[float]  # [x1, y1, x2, y2]
     raw_points: list[tuple[float, float]]
     snapped_points: list[tuple[float, float]]
     width_px: float
-    width_mm: Optional[float]
+    width_mm: float | None
     confidence: float
     # For doors: which module was snapped to
-    snapped_module_mm: Optional[float] = None
+    snapped_module_mm: float | None = None
 
 
 @dataclass
 class RejectedOpening:
     """An opening that could not be hosted on any single wall edge."""
+
     opening_type: str
     source_component_id: int
     raw_points: list[tuple[float, float]]
@@ -86,7 +87,7 @@ def _try_host_on_edge(
     edge: list[float],
     max_perp_dist_px: float = 20.0,
     min_width_px: float = 5.0,
-) -> Optional[tuple[tuple[float, float], tuple[float, float], float, float]]:
+) -> tuple[tuple[float, float], tuple[float, float], float, float] | None:
     """Try to host both opening points onto one edge.
 
     Returns (snapped_a, snapped_b, avg_perp_dist, width_px) or None if
@@ -149,24 +150,26 @@ def host_openings(
                     best_edge_idx = ei
 
         if best_result is None:
-            rejected.append(RejectedOpening(
-                opening_type=opening_type,
-                source_component_id=component_id,
-                raw_points=[pt_a, pt_b],
-                rejection_reason=(
-                    "no single wall edge could host both endpoints "
-                    f"within {max_perp_dist_px:.0f}px"
-                ),
-                debug_confidence=confidence,
-            ))
+            rejected.append(
+                RejectedOpening(
+                    opening_type=opening_type,
+                    source_component_id=component_id,
+                    raw_points=[pt_a, pt_b],
+                    rejection_reason=(
+                        "no single wall edge could host both endpoints "
+                        f"within {max_perp_dist_px:.0f}px"
+                    ),
+                    debug_confidence=confidence,
+                )
+            )
             return
 
         snap_a, snap_b, width_px = best_result
         host_edge = aligned_graph_edges[best_edge_idx]
 
         # Scale to mm if resolved
-        width_mm: Optional[float] = None
-        snapped_module: Optional[float] = None
+        width_mm: float | None = None
+        snapped_module: float | None = None
         if scale_info.px_to_mm is not None and scale_info.scale_status in ("resolved", "estimated"):
             width_mm = width_px * scale_info.px_to_mm
             if opening_type == "door":
@@ -182,8 +185,10 @@ def host_openings(
                         dir_x = (ex2 - ex1) / seg_len
                         dir_y = (ey2 - ey1) / seg_len
                         # Keep snap_a fixed, adjust snap_b
-                        snap_b = (snap_a[0] + dir_x * snapped_width_px,
-                                  snap_a[1] + dir_y * snapped_width_px)
+                        snap_b = (
+                            snap_a[0] + dir_x * snapped_width_px,
+                            snap_a[1] + dir_y * snapped_width_px,
+                        )
                         # Re-project snap_b to keep it on the edge
                         snap_b = _project_onto_edge(snap_b, ex1, ey1, ex2, ey2)
                         width_px = math.hypot(snap_b[0] - snap_a[0], snap_b[1] - snap_a[1])
@@ -191,58 +196,74 @@ def host_openings(
 
             # Window minimum width check
             if opening_type == "window" and width_mm is not None and width_mm < min_window_width_mm:
-                rejected.append(RejectedOpening(
-                    opening_type=opening_type,
-                    source_component_id=component_id,
-                    raw_points=[pt_a, pt_b],
-                    rejection_reason=f"window width {width_mm:.0f}mm < min {min_window_width_mm:.0f}mm",
-                    debug_confidence=confidence,
-                ))
+                rejected.append(
+                    RejectedOpening(
+                        opening_type=opening_type,
+                        source_component_id=component_id,
+                        raw_points=[pt_a, pt_b],
+                        rejection_reason=f"window width {width_mm:.0f}mm < min {min_window_width_mm:.0f}mm",
+                        debug_confidence=confidence,
+                    )
+                )
                 return
 
-        hosted.append(HostedOpening(
-            opening_type=opening_type,
-            source_component_id=component_id,
-            host_edge_idx=best_edge_idx,
-            host_edge_raw=host_edge,
-            raw_points=[pt_a, pt_b],
-            snapped_points=[snap_a, snap_b],
-            width_px=width_px,
-            width_mm=width_mm,
-            confidence=confidence,
-            snapped_module_mm=snapped_module,
-        ))
+        hosted.append(
+            HostedOpening(
+                opening_type=opening_type,
+                source_component_id=component_id,
+                host_edge_idx=best_edge_idx,
+                host_edge_raw=host_edge,
+                raw_points=[pt_a, pt_b],
+                snapped_points=[snap_a, snap_b],
+                width_px=width_px,
+                width_mm=width_mm,
+                confidence=confidence,
+                snapped_module_mm=snapped_module,
+            )
+        )
 
     # Host doors
     for door in door_candidates:
         if len(door.raw_points) < 2:
-            rejected.append(RejectedOpening(
-                opening_type="door",
-                source_component_id=door.component_id,
-                raw_points=door.raw_points,
-                rejection_reason="no raw points from detection",
-                debug_confidence=0.0,
-            ))
+            rejected.append(
+                RejectedOpening(
+                    opening_type="door",
+                    source_component_id=door.component_id,
+                    raw_points=door.raw_points,
+                    rejection_reason="no raw points from detection",
+                    debug_confidence=0.0,
+                )
+            )
             continue
         _host_one(
-            door.raw_points[0], door.raw_points[1],
-            "door", door.component_id, door.confidence, min_door_width_px,
+            door.raw_points[0],
+            door.raw_points[1],
+            "door",
+            door.component_id,
+            door.confidence,
+            min_door_width_px,
         )
 
     # Host windows
     for win in window_candidates:
         if len(win.raw_points) < 2:
-            rejected.append(RejectedOpening(
-                opening_type="window",
-                source_component_id=win.component_id,
-                raw_points=win.raw_points,
-                rejection_reason="no raw points from detection",
-                debug_confidence=0.0,
-            ))
+            rejected.append(
+                RejectedOpening(
+                    opening_type="window",
+                    source_component_id=win.component_id,
+                    raw_points=win.raw_points,
+                    rejection_reason="no raw points from detection",
+                    debug_confidence=0.0,
+                )
+            )
             continue
         _host_one(
-            win.raw_points[0], win.raw_points[1],
-            "window", win.component_id, win.confidence, min_window_width_px,
+            win.raw_points[0],
+            win.raw_points[1],
+            "window",
+            win.component_id,
+            win.confidence,
+            min_window_width_px,
         )
 
     return hosted, rejected

@@ -17,7 +17,7 @@ _SEG_MODEL_CACHE: dict[str, Any] = {}
 
 # Imagenet normalization (same as training)
 _MEAN = [0.485, 0.456, 0.406]
-_STD  = [0.229, 0.224, 0.225]
+_STD = [0.229, 0.224, 0.225]
 
 NUM_CLASSES = 7
 
@@ -29,6 +29,7 @@ def _load_seg_model(checkpoint_path: str | Path, device_str: str = "cuda") -> An
         return _SEG_MODEL_CACHE[key]
 
     import torch
+
     from src.models import (  # type: ignore[import]
         BACKBONE_HIDDEN_SIZES,
         FloorplanDecoder,
@@ -65,7 +66,6 @@ def run_segmentation(
     Returns a 512x512 uint8 class-ID mask (values 0-6).
     """
     import torch
-    import torch.nn.functional as F
     from PIL import Image
 
     model, dev = _load_seg_model(checkpoint_path, device)
@@ -87,6 +87,7 @@ def run_segmentation(
 def seg_mask_to_color_preview(class_map: np.ndarray) -> np.ndarray:
     """Convert a class-ID mask to an RGB preview image."""
     from ..decode_prediction import CLASS_PALETTE
+
     h, w = class_map.shape
     rgb = np.zeros((h, w, 3), dtype=np.uint8)
     for cls_id, color in CLASS_PALETTE.items():

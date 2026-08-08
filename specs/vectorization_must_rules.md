@@ -4,6 +4,33 @@ These rules assume the vectorizer is given an already segmented 7-class raster i
 
 The rules are written so they can be checked from `vector.svg`, `debug_overlay.png`, and `metrics.json`.
 
+## Goal Hierarchy
+
+These rules are architectural invariants. They are **not** a pixel-matching target.
+
+```txt
+primary    : spatial logic - wall topology, circulation, and correct
+             door/window relationships
+secondary  : semantic segmentation quality, including per-class mIoU
+not a goal : pixel-perfect tracing of the source floorplan raster
+```
+
+Consequences for reading every rule below:
+
+1. The raster is *evidence*, never the target. Agreement with source pixels is a
+   diagnostic, never the success criterion.
+2. Output that is a few pixels off but whose rooms, openings, and connectivity
+   are correct is a **better** result than output that overlaps the raster
+   closely while leaving a room unreachable or a door unhosted.
+3. Conversely, a clean-looking render does not excuse broken topology. Rules
+   120 and 75/82 (openings hosted on wall topology) exist precisely because a
+   floating door can still look plausible.
+4. Where a rule prescribes a snapped module (`700`/`900 mm` doors, `100`/`200 mm`
+   walls), that is architectural regularization, deliberately *departing* from
+   the raster. Such a departure is correct behavior, not error.
+
+The quantitative contract that measures all of this is `specs/spec_v006_evaluation.md`.
+
 ## Input Assumption
 
 1. The vectorizer must start from an already segmented raster with these semantic classes:
@@ -68,7 +95,7 @@ The rules are written so they can be checked from `vector.svg`, `debug_overlay.p
 38. Every accepted red `door_arc` cluster must produce exactly one `wall_door_end_point`.
 39. Door hinge count must equal door end count.
 40. Door hinge count must equal accepted red `door_arc` cluster count.
-1
+
 ## Red Door-Arc Rules
 
 41. A connected red `door_arc` pixel cluster must become a door object once it survives component cleanup.

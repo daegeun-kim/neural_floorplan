@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from lxml import etree
 from PIL import Image
 
 from src.generate_semantic_masks import (
@@ -18,7 +19,6 @@ from src.generate_semantic_masks import (
     generate_masks,
     process_dataset,
 )
-from lxml import etree
 
 
 def _make_g(elem_id: str = "", cls: str = "") -> etree._Element:
@@ -28,6 +28,7 @@ def _make_g(elem_id: str = "", cls: str = "") -> etree._Element:
     if cls:
         el.set("class", cls)
     return el
+
 
 # ---------------------------------------------------------------------------
 # Synthetic SVGs
@@ -94,8 +95,12 @@ def _masks_dir(sample_dir: Path) -> Path:
 
 
 _MASK_FILENAMES = (
-    "floor_mask.png", "wall_mask.png", "window_mask.png",
-    "door_origin_mask.png", "door_arc_mask.png", "door_leaf_mask.png",
+    "floor_mask.png",
+    "wall_mask.png",
+    "window_mask.png",
+    "door_origin_mask.png",
+    "door_arc_mask.png",
+    "door_leaf_mask.png",
 )
 
 

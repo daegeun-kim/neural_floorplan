@@ -11,11 +11,11 @@ import numpy as np
 CLASS_PALETTE: dict[int, tuple[int, int, int]] = {
     0: (200, 200, 200),  # background
     1: (245, 240, 232),  # floor
-    2: (30, 30, 30),     # wall
-    3: (60, 120, 220),   # window
-    4: (220, 90, 90),    # door_arc
-    5: (235, 140, 80),   # door_leaf
-    6: (160, 70, 180),   # door_origin
+    2: (30, 30, 30),  # wall
+    3: (60, 120, 220),  # window
+    4: (220, 90, 90),  # door_arc
+    5: (235, 140, 80),  # door_leaf
+    6: (160, 70, 180),  # door_origin
 }
 
 PALETTE_ARRAY = np.array(list(CLASS_PALETTE.values()), dtype=np.int32)
@@ -41,11 +41,11 @@ def decode_color_mask(rgb: np.ndarray, tolerance: int = 20) -> np.ndarray:
 
     # Broadcast: (N, 1, 3) vs (1, C, 3) -> (N, C)
     diff = flat[:, None, :] - PALETTE_ARRAY[None, :, :]
-    dist = np.sum(diff ** 2, axis=2)
+    dist = np.sum(diff**2, axis=2)
     best = np.argmin(dist, axis=1)
     min_dist = dist[np.arange(len(flat)), best]
 
-    class_ids = np.where(min_dist <= tolerance ** 2, PALETTE_IDS[best], -1)
+    class_ids = np.where(min_dist <= tolerance**2, PALETTE_IDS[best], -1)
     unmatched_frac = (class_ids == -1).mean()
     if unmatched_frac > 0.05:
         raise IncompatibleMaskError(

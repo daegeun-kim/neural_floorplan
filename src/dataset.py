@@ -26,7 +26,9 @@ _IMAGENET_STD = [0.229, 0.224, 0.225]
 def build_image_transform(image_size: int) -> transforms.Compose:
     return transforms.Compose(
         [
-            transforms.Resize((image_size, image_size), interpolation=transforms.InterpolationMode.BILINEAR),
+            transforms.Resize(
+                (image_size, image_size), interpolation=transforms.InterpolationMode.BILINEAR
+            ),
             transforms.ToTensor(),
             transforms.Normalize(mean=_IMAGENET_MEAN, std=_IMAGENET_STD),
         ]

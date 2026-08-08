@@ -64,10 +64,10 @@ def compute_config_hash(config: dict) -> str:
     relevant: dict = {
         "image_size": config.get("image_size"),
         "model_name": config.get("model", {}).get("name"),
-        "pretrained":  config.get("model", {}).get("pretrained"),
+        "pretrained": config.get("model", {}).get("pretrained"),
         # ImageNet normalization is fixed for pretrained SegFormer backbones
         "mean": [0.485, 0.456, 0.406],
-        "std":  [0.229, 0.224, 0.225],
+        "std": [0.229, 0.224, 0.225],
     }
     raw = json.dumps(relevant, sort_keys=True).encode()
     return hashlib.md5(raw).hexdigest()[:12]  # noqa: S324  (non-security use)
@@ -141,7 +141,7 @@ def extract_features_for_split(
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    cache_dir   = Path(cache_dir)
+    cache_dir = Path(cache_dir)
     dataset_root = Path(dataset_root)
     cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -152,14 +152,14 @@ def extract_features_for_split(
 
     # Fast-path: all files already cached
     if not force_rebuild and _all_cached(cache_dir, entries, config_hash):
-        logger.info(
-            "Feature cache up-to-date (%d samples): %s", len(entries), cache_dir
-        )
+        logger.info("Feature cache up-to-date (%d samples): %s", len(entries), cache_dir)
         return
 
     logger.info(
         "Extracting backbone features for %d samples → %s  [device=%s]",
-        len(entries), cache_dir, device,
+        len(entries),
+        cache_dir,
+        device,
     )
     backbone = backbone.to(device)
     backbone.eval()
@@ -167,14 +167,14 @@ def extract_features_for_split(
     transform = build_image_transform(config["image_size"])
 
     for idx, entry in enumerate(entries):
-        sid  = _sample_id_from_entry(entry)
+        sid = _sample_id_from_entry(entry)
         path = _cache_path(cache_dir, sid)
 
         # Skip valid caches unless forced
         if not force_rebuild and _is_cache_valid(path, config_hash):
             continue
 
-        image_abs  = dataset_root / entry["image"]
+        image_abs = dataset_root / entry["image"]
         target_abs = dataset_root / entry["target"]
 
         try:
@@ -196,11 +196,11 @@ def extract_features_for_split(
                 hs.squeeze(0).half().cpu()  # [N_i, C_i] in float16
                 for hs in hidden_states
             ],
-            "sample_id":                sid,
-            "image_path":               str(image_abs),
-            "target_mask_path":         str(target_abs),
-            "feature_shape":            [list(hs.squeeze(0).shape) for hs in hidden_states],
-            "backbone_name":            backbone.variant,
+            "sample_id": sid,
+            "image_path": str(image_abs),
+            "target_mask_path": str(target_abs),
+            "feature_shape": [list(hs.squeeze(0).shape) for hs in hidden_states],
+            "backbone_name": backbone.variant,
             "preprocessing_config_hash": config_hash,
         }
         torch.save(payload, path)
@@ -244,8 +244,8 @@ class CachedFloorplanDataset(Dataset):
         image_size: int = 512,
     ) -> None:
         self.dataset_root = Path(dataset_root)
-        self.cache_dir    = Path(cache_dir)
-        self.image_size   = image_size
+        self.cache_dir = Path(cache_dir)
+        self.image_size = image_size
 
         with open(index_path) as f:
             self.entries: list[dict[str, Any]] = json.load(f)
@@ -254,14 +254,13 @@ class CachedFloorplanDataset(Dataset):
 
         # Warn about missing cache files so the user knows to run extraction
         missing = sum(
-            1
-            for sid in self._sample_ids
-            if not _cache_path(self.cache_dir, sid).exists()
+            1 for sid in self._sample_ids if not _cache_path(self.cache_dir, sid).exists()
         )
         if missing:
             logger.warning(
                 "%d / %d cache files missing — run extract_features_for_split() first.",
-                missing, len(self.entries),
+                missing,
+                len(self.entries),
             )
 
     def __len__(self) -> int:
@@ -271,9 +270,9 @@ class CachedFloorplanDataset(Dataset):
         # Retry up to len(dataset) times to skip corrupted cache files
         for attempt in range(len(self.entries)):
             real_idx = (idx + attempt) % len(self.entries)
-            entry    = self.entries[real_idx]
-            sid      = self._sample_ids[real_idx]
-            path     = _cache_path(self.cache_dir, sid)
+            entry = self.entries[real_idx]
+            sid = self._sample_ids[real_idx]
+            path = _cache_path(self.cache_dir, sid)
 
             try:
                 payload = torch.load(path, map_location="cpu", weights_only=False)
@@ -296,12 +295,12 @@ class CachedFloorplanDataset(Dataset):
             mask_tensor = torch.as_tensor(np.array(mask_resized), dtype=torch.long)
 
             return {
-                "hidden_states": hidden_states,        # list[Tensor]  [N_i, C_i]
-                "mask":          mask_tensor,           # [H, W] long
-                "sample_id":     sid,
-                "image_path":    entry.get("image", ""),
-                "mask_path":     str(mask_path),
-                "input_type":    entry.get("input_type", "unknown"),
+                "hidden_states": hidden_states,  # list[Tensor]  [N_i, C_i]
+                "mask": mask_tensor,  # [H, W] long
+                "sample_id": sid,
+                "image_path": entry.get("image", ""),
+                "mask_path": str(mask_path),
+                "input_type": entry.get("input_type", "unknown"),
             }
 
         raise RuntimeError(f"No valid cached sample found starting from idx={idx}")

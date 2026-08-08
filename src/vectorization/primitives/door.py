@@ -18,7 +18,7 @@ single-class DoorPrimitive implementation - only the data model changed.
 from __future__ import annotations
 
 import math
-from typing import Literal, Optional
+from typing import Literal
 
 from .base import BasePrimitive, ScaleInfo
 
@@ -56,10 +56,10 @@ class DoorOriginPrimitive(BasePrimitive):
         center: tuple[float, float],
         width: float,
         orientation_angle: float = 0.0,
-        width_mm: Optional[float] = None,
-        host_wall_id: Optional[str] = None,
+        width_mm: float | None = None,
+        host_wall_id: str | None = None,
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
+        scale_info: ScaleInfo | None = None,
         **base_kwargs,
     ) -> None:
         super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
@@ -123,9 +123,9 @@ class DoorLeafPrimitive(BasePrimitive):
         width: float,
         orientation_angle: float = 0.0,
         swing_direction: SwingSide = "left",
-        host_wall_id: Optional[str] = None,
+        host_wall_id: str | None = None,
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
+        scale_info: ScaleInfo | None = None,
         **base_kwargs,
     ) -> None:
         super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
@@ -184,9 +184,9 @@ class DoorArcPrimitive(BasePrimitive):
         width: float,
         orientation_angle: float = 0.0,
         swing_direction: SwingSide = "left",
-        host_wall_id: Optional[str] = None,
+        host_wall_id: str | None = None,
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
+        scale_info: ScaleInfo | None = None,
         **base_kwargs,
     ) -> None:
         super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
@@ -241,6 +241,9 @@ class DoorArcPrimitive(BasePrimitive):
         sy: float = 1.0,
     ) -> None:
         self.hinge_point = (self.hinge_point[0] * sx + dx, self.hinge_point[1] * sy + dy)
-        self.origin_far_point = (self.origin_far_point[0] * sx + dx, self.origin_far_point[1] * sy + dy)
+        self.origin_far_point = (
+            self.origin_far_point[0] * sx + dx,
+            self.origin_far_point[1] * sy + dy,
+        )
         self.width *= sx
         self.orientation_angle += angle_deg

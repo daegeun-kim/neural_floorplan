@@ -10,7 +10,7 @@ render the loop, and they are the segments that get split at openings.
 from __future__ import annotations
 
 import math
-from typing import Literal, Optional
+from typing import Literal
 
 from .base import BasePrimitive, ScaleInfo
 
@@ -26,10 +26,10 @@ class WallPrimitive(BasePrimitive):
         start: tuple[float, float],
         end: tuple[float, float],
         thickness: float = 8.0,
-        thickness_mm: Optional[float] = None,
+        thickness_mm: float | None = None,
         wall_type: WallType = "unknown",
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
+        scale_info: ScaleInfo | None = None,
         **base_kwargs,
     ) -> None:
         super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
@@ -108,9 +108,9 @@ class OuterWallLoopPrimitive(BasePrimitive):
         primitive_id: str,
         centerline: list[tuple[float, float]],
         thickness: float = 8.0,
-        thickness_mm: Optional[float] = None,
+        thickness_mm: float | None = None,
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
+        scale_info: ScaleInfo | None = None,
         **base_kwargs,
     ) -> None:
         super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
@@ -126,7 +126,9 @@ class OuterWallLoopPrimitive(BasePrimitive):
         n = len(pts)
         if n < 3:
             return False
-        area2 = sum(pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1] for i in range(n))
+        area2 = sum(
+            pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1] for i in range(n)
+        )
         return abs(area2) > 1e-6
 
     def to_svg(self) -> str:

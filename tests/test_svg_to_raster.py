@@ -4,7 +4,6 @@ import struct
 from pathlib import Path
 
 import numpy as np
-import pytest
 from PIL import Image
 
 from src.svg_to_raster import (
@@ -167,6 +166,7 @@ def test_normalize_floors_compose_stays_hidden():
     normalized, _ = normalize_svg_visibility(FLOORS_COMPOSE_SVG.encode())
     # FloorsCompose style must still contain display:none
     import re
+
     # Find FloorsCompose in output
     assert b"FloorsCompose" in normalized
     # The FloorsCompose group must retain display:none
@@ -192,6 +192,7 @@ def test_normalize_nested_hidden_elements_untouched():
     decoded = normalized.decode("utf-8", errors="replace")
     # Find the Visual element's style
     import re
+
     match = re.search(r'class="Visual"[^>]*style="([^"]*)"', decoded)
     if not match:
         match = re.search(r'style="([^"]*)"[^>]*class="Visual"', decoded)

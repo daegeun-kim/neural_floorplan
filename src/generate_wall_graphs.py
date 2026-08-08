@@ -161,8 +161,12 @@ def _opening_from_points(
     ys = [p[1] for p in px_points]
     bbox = (min(xs), min(ys), max(xs), max(ys))
     return OpeningEvidence(
-        kind=kind, center=center, width_px=width, orientation=orientation,
-        polygon_px=px_points, source_bbox=bbox,
+        kind=kind,
+        center=center,
+        width_px=width,
+        orientation=orientation,
+        polygon_px=px_points,
+        source_bbox=bbox,
     )
 
 
@@ -195,7 +199,9 @@ def collect_openings(
     return openings
 
 
-def strip_door_swing_evidence(wall_mask: np.ndarray, masks_dir: Path, dilate_px: int = 5) -> np.ndarray:
+def strip_door_swing_evidence(
+    wall_mask: np.ndarray, masks_dir: Path, dilate_px: int = 5
+) -> np.ndarray:
     """Remove the door swing-arc/leaf stroke from the wall mask.
 
     The original SVG's Door > Panel > path (the swing-arc/leaf visual) has no
@@ -423,7 +429,12 @@ def _renumber_nodes(
     kept_points = [p for p in points if p.id in keep_ids]
     id_map = {p.id: i for i, p in enumerate(kept_points)}
     nodes = [
-        {"id": id_map[p.id], "type": "wall_node", "x": round(p.coordinate[0], 2), "y": round(p.coordinate[1], 2)}
+        {
+            "id": id_map[p.id],
+            "type": "wall_node",
+            "x": round(p.coordinate[0], 2),
+            "y": round(p.coordinate[1], 2),
+        }
         for p in kept_points
     ]
     final_edges: list[_FinalEdge] = []
@@ -432,16 +443,17 @@ def _renumber_nodes(
             continue
         final_edges.append(
             _FinalEdge(
-                id=len(final_edges), start_node=id_map[pa_id], end_node=id_map[pb_id],
-                start=pa_xy, end=pb_xy,
+                id=len(final_edges),
+                start_node=id_map[pa_id],
+                end_node=id_map[pb_id],
+                start=pa_xy,
+                end=pb_xy,
             )
         )
     return nodes, final_edges
 
 
-def _host_opening(
-    center: tuple[float, float], final_edges: list[_FinalEdge], max_dist_px: float
-):
+def _host_opening(center: tuple[float, float], final_edges: list[_FinalEdge], max_dist_px: float):
     best, best_dist = None, max_dist_px
     for fe in final_edges:
         dist = _point_to_wall_distance(center, fe)
@@ -461,7 +473,8 @@ def _mask_coverage_ratio(
             canvas,
             (int(round(fe.start[0])), int(round(fe.start[1]))),
             (int(round(fe.end[0])), int(round(fe.end[1]))),
-            255, thickness=thickness,
+            255,
+            thickness=thickness,
         )
     wall_fg = bridged_mask > 0
     graph_fg = canvas > 0
@@ -530,8 +543,9 @@ def write_debug_outputs(
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
         f'viewBox="0 0 {width} {height}">'
         f'<image href="data:image/png;base64,{b64}" x="0" y="0" width="{width}" height="{height}" />'
-        + "".join(lines) + "".join(circles) +
-        "</svg>"
+        + "".join(lines)
+        + "".join(circles)
+        + "</svg>"
     )
     (masks_dir / DEBUG_SVG_FILENAME).write_text(svg, encoding="utf-8")
 
@@ -542,7 +556,10 @@ def write_debug_outputs(
 
 
 def generate_wall_graph(
-    sample_dir: Path, overwrite: bool = False, verbose: bool = False, config: dict | None = None,
+    sample_dir: Path,
+    overwrite: bool = False,
+    verbose: bool = False,
+    config: dict | None = None,
 ) -> dict:
     """Process one sample directory. Returns a status dict."""
     cfg = {**DEFAULTS, **(config or {})}
@@ -583,8 +600,12 @@ def generate_wall_graph(
     wall_mask = strip_door_swing_evidence(wall_mask, masks_dir, cfg["door_swing_strip_dilate_px"])
     bridged = bridge_wall_mask(wall_mask, openings)
 
-    components, _rejected_small = extract_components(bridged, "wall", min_area_px=cfg["min_area_px"])
-    node_edges, diagonal_rejected = build_wall_skeleton_graph(components, cfg["cardinal_tolerance_deg"])
+    components, _rejected_small = extract_components(
+        bridged, "wall", min_area_px=cfg["min_area_px"]
+    )
+    node_edges, diagonal_rejected = build_wall_skeleton_graph(
+        components, cfg["cardinal_tolerance_deg"]
+    )
     junction_points, free_ends = _classify_wall_nodes(node_edges)
     free_points, _free_rejected = _finalize_free_ends(
         free_ends, junction_points, cfg["free_end_merge_tol_px"], {}, 0.0
@@ -608,7 +629,9 @@ def generate_wall_graph(
 
     snap_shared_axes(merged_points, wall_edge_list)
 
-    raw_edges, dropped_short = _build_raw_edges(merged_points, wall_edge_list, cfg["min_edge_length_px"])
+    raw_edges, dropped_short = _build_raw_edges(
+        merged_points, wall_edge_list, cfg["min_edge_length_px"]
+    )
     keep_ids, dropped_components, dropped_nodes, kept_components = _filter_small_components(
         merged_points, raw_edges, cfg["min_component_nodes"]
     )
@@ -654,7 +677,8 @@ def generate_wall_graph(
     if not edges_json:
         reasons.append("no_edges")
     diagonal_budget = (
-        cfg["diagonal_chains_per_node_budget"] * max(len(nodes), 1) + cfg["diagonal_chains_absolute_floor"]
+        cfg["diagonal_chains_per_node_budget"] * max(len(nodes), 1)
+        + cfg["diagonal_chains_absolute_floor"]
     )
     if len(diagonal_rejected) > diagonal_budget:
         reasons.append("too_many_diagonal_chains")
@@ -701,7 +725,12 @@ def generate_wall_graph(
     if verbose:
         logger.info(
             "%s -> %s (%d wall nodes, %d edges, %d openings hosted, %d unhosted)",
-            sample_dir.name, status, len(nodes), len(edges_json), len(opening_nodes), unhosted,
+            sample_dir.name,
+            status,
+            len(nodes),
+            len(edges_json),
+            len(opening_nodes),
+            unhosted,
         )
 
     return {"status": status, "reasons": reasons}
@@ -725,8 +754,12 @@ def process_dataset(
         sample_dirs = sample_dirs[:limit]
     total = len(sample_dirs)
     counts = {
-        "processed": 0, "ok": 0, "unusable": 0,
-        "skipped_existing": 0, "missing_svg": 0, "failed": 0,
+        "processed": 0,
+        "ok": 0,
+        "unusable": 0,
+        "skipped_existing": 0,
+        "missing_svg": 0,
+        "failed": 0,
     }
 
     for i, sample_dir in enumerate(sample_dirs, 1):
@@ -753,8 +786,12 @@ def process_dataset(
 
     logger.info(
         "Done. processed=%d ok=%d unusable=%d skipped=%d missing_svg=%d failed=%d",
-        counts["processed"], counts["ok"], counts["unusable"],
-        counts["skipped_existing"], counts["missing_svg"], counts["failed"],
+        counts["processed"],
+        counts["ok"],
+        counts["unusable"],
+        counts["skipped_existing"],
+        counts["missing_svg"],
+        counts["failed"],
     )
     return counts
 
@@ -764,7 +801,9 @@ def main() -> None:
         description="Generate orthogonal wall graph labels from CubiCasa model.svg files."
     )
     parser.add_argument("root_dir", type=Path, help="Dataset root with per-sample subdirectories.")
-    parser.add_argument("--overwrite", action="store_true", help="Re-generate existing wall graphs.")
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Re-generate existing wall graphs."
+    )
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--limit", type=int, default=None, help="Process at most N samples.")
     args = parser.parse_args()

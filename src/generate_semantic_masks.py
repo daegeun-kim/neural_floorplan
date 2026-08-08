@@ -30,10 +30,11 @@ import tempfile
 from copy import deepcopy
 from pathlib import Path
 
-import cairosvg
 import numpy as np
 from lxml import etree
 from PIL import Image
+
+from src.cairo_runtime import load_cairosvg
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +171,8 @@ def _classify_floor_child(el: etree._Element) -> str | None:
 def _get_window_children(wall_el: etree._Element) -> list[etree._Element]:
     """Return direct Window child elements of a wall element."""
     return [
-        child for child in wall_el
+        child
+        for child in wall_el
         if child.tag is not etree.Comment
         and _local_name(child) == "g"
         and (child.get("id") or "").strip() == "Window"
@@ -180,7 +182,8 @@ def _get_window_children(wall_el: etree._Element) -> list[etree._Element]:
 def _get_door_children(wall_el: etree._Element) -> list[etree._Element]:
     """Return direct Door child elements of a wall element."""
     return [
-        child for child in wall_el
+        child
+        for child in wall_el
         if child.tag is not etree.Comment
         and _local_name(child) == "g"
         and (child.get("id") or "").strip() == "Door"
@@ -208,7 +211,7 @@ def _parse_points(points_str: str) -> list[tuple[float, float]]:
     """Parse an SVG polygon "points" attribute into a list of (x, y) pairs."""
     tokens = points_str.replace(",", " ").split()
     coords = [float(t) for t in tokens]
-    return list(zip(coords[0::2], coords[1::2]))
+    return list(zip(coords[0::2], coords[1::2], strict=False))
 
 
 def _bbox_centerline(
@@ -306,7 +309,8 @@ def _door_origin_stroke_width(native_size: int) -> float:
 
 
 def _collect_elements_by_category(
-    svg_root: etree._Element, native_size: int,
+    svg_root: etree._Element,
+    native_size: int,
 ) -> dict[str, list[etree._Element]]:
     """Return all semantic elements grouped by category.
 
@@ -382,7 +386,12 @@ def _collect_elements_by_category(
 
     logger.debug(
         "Collected: walls=%d  floors=%d  windows=%d  door_origin=%d  door_arc=%d  door_leaf=%d",
-        len(walls), len(floors), len(windows), len(door_origins), len(door_arcs), len(door_leaves),
+        len(walls),
+        len(floors),
+        len(windows),
+        len(door_origins),
+        len(door_arcs),
+        len(door_leaves),
     )
     return {
         "wall": walls,
@@ -457,6 +466,8 @@ def _make_renderable_svg(
 
 def _render_mask(svg_bytes: bytes, width: int, height: int) -> np.ndarray:
     """Render SVG to a binary uint8 mask (0 = absent, 255 = present)."""
+    cairosvg = load_cairosvg()
+
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
         tmp_path = Path(tmp.name)
     try:
@@ -553,9 +564,7 @@ def generate_masks(
 
     Image.fromarray(semantic_map, mode="L").save(semantic_map_path)
 
-    counts = {
-        name: int(np.sum(semantic_map == cid)) for name, cid in CLASS_IDS.items()
-    }
+    counts = {name: int(np.sum(semantic_map == cid)) for name, cid in CLASS_IDS.items()}
     suspicious = counts["wall"] == 0
 
     metadata = {

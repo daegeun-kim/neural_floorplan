@@ -112,8 +112,12 @@ def process_single(
         components.get("door_origin", []),
         components.get("wall", []),
         explicit_px_to_mm=explicit_px_to_mm,
-        door_modules_mm=tuple(scale_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM)),
-        wall_modules_mm=tuple(scale_cfg.get("wall_thickness_modules_mm", DEFAULT_WALL_THICKNESS_MODULES_MM)),
+        door_modules_mm=tuple(
+            scale_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM)
+        ),
+        wall_modules_mm=tuple(
+            scale_cfg.get("wall_thickness_modules_mm", DEFAULT_WALL_THICKNESS_MODULES_MM)
+        ),
         min_confidence=scale_cfg.get("min_scale_confidence_for_metric", 0.70),
     )
     result.scale_info = resolved_scale
@@ -142,16 +146,22 @@ def process_single(
         # outright - the long/short side ratio must be at most 2:1.
         "max_door_bbox_aspect_ratio": doors_cfg.get("max_bbox_aspect_ratio", 2.0),
         "hinge_snap_to_wall_max_dist_px": doors_cfg.get("hinge_snap_to_wall_max_dist_px", 100000.0),
-        "door_width_modules_mm": tuple(doors_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM)),
+        "door_width_modules_mm": tuple(
+            doors_cfg.get("door_width_modules_mm", DEFAULT_DOOR_WIDTH_MODULES_MM)
+        ),
         "min_window_width_mm": windows_cfg.get("min_width_mm", 300.0),
         "free_end_opening_proximity_px": geometry_cfg.get("free_end_opening_proximity_px", 20.0),
         # Rule 17 fixes this at 200mm exactly - not a tunable search radius,
         # kept unchanged.
-        "door_point_max_dist_from_arc_mm": doors_cfg.get("max_hinge_end_distance_from_arc_mm", 200.0),
+        "door_point_max_dist_from_arc_mm": doors_cfg.get(
+            "max_hinge_end_distance_from_arc_mm", 200.0
+        ),
     }
 
     # --- 1. Search the seven allowed point types directly (SS9) ---
-    points, point_rejected, wall_skeleton_edges = detect_points(components, masks, resolved_scale, detect_cfg)
+    points, point_rejected, wall_skeleton_edges = detect_points(
+        components, masks, resolved_scale, detect_cfg
+    )
     result.rejected_evidence.extend(point_rejected)
     result.raw_points = points
 
@@ -178,8 +188,12 @@ def process_single(
 
     # task13: one door-candidate report per accepted red door_arc cluster.
     result.door_candidates = build_door_candidate_records(
-        components.get("door_arc", []), aligned_points, result.rejected_evidence,
-        masks, components.get("wall", []), resolved_scale,
+        components.get("door_arc", []),
+        aligned_points,
+        result.rejected_evidence,
+        masks,
+        components.get("wall", []),
+        resolved_scale,
     )
 
     # --- 4. Connect aligned points into wall/window/door-origin edges (SS12) ---
@@ -197,7 +211,11 @@ def process_single(
     # --- 5. Generate door leaf and door arc geometry (SS13) ---
     door_origin_edges = [e for e in edges if e.edge_type == "door_origin"]
     door_origins, door_leaves, door_arcs = generate_door_geometry(
-        aligned_points, door_origin_edges, masks.get("door_leaf"), masks.get("door_origin"), resolved_scale,
+        aligned_points,
+        door_origin_edges,
+        masks.get("door_leaf"),
+        masks.get("door_origin"),
+        resolved_scale,
     )
     result.door_origins = door_origins
     result.door_leaves = door_leaves
@@ -215,10 +233,15 @@ def process_single(
     h, w = rgb.shape[:2]
     svg_cfg = config.get("svg", {})
     svg_content = build_svg(
-        image_width=w, image_height=h,
-        walls=walls, windows=windows,
-        door_origins=door_origins, door_leaves=door_leaves, door_arcs=door_arcs,
-        scale_info=resolved_scale, svg_config=svg_cfg,
+        image_width=w,
+        image_height=h,
+        walls=walls,
+        windows=windows,
+        door_origins=door_origins,
+        door_leaves=door_leaves,
+        door_arcs=door_arcs,
+        scale_info=resolved_scale,
+        svg_config=svg_cfg,
     )
     result.svg = svg_content
 
@@ -282,8 +305,12 @@ def run(config_path: str | Path = "configs/vectorization_v008.yaml") -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Orthogonal point-graph mask-to-vector pipeline (v008)")
-    parser.add_argument("--config", default="configs/vectorization_v008.yaml", help="Path to YAML config file")
+    parser = argparse.ArgumentParser(
+        description="Orthogonal point-graph mask-to-vector pipeline (v008)"
+    )
+    parser.add_argument(
+        "--config", default="configs/vectorization_v008.yaml", help="Path to YAML config file"
+    )
     args = parser.parse_args()
     run(args.config)
 

@@ -1,0 +1,89 @@
+{
+  "baseline_available": true,
+  "claim_hierarchy": "primary: wall topology, circulation, and opening logic; secondary: seven-class segmentation including per-class mIoU; not a goal: pixel-perfect tracing",
+  "denominators": {
+    "excluded": 1,
+    "matched_openings": 449,
+    "population_size": 37,
+    "scored": 36
+  },
+  "primary_spatial_logic": {
+    "macro_adjacency_f1": 0.8164735772578912,
+    "macro_component_count_abs_error": 1.1666666666666667,
+    "macro_door_f1": 0.6969380371714977,
+    "macro_edge_f1": 0.4784638638557668,
+    "macro_edge_overlap_f1": 0.7206487168948821,
+    "macro_gap_accuracy": 0.9388558201058201,
+    "macro_host_accuracy": 0.4791998641849451,
+    "macro_junction_degree_exact_f1": 0.4272725475300074,
+    "macro_junction_degree_within_1_f1": 0.6276524548694169,
+    "macro_node_f1": 0.7147075230482242,
+    "macro_reachability_agreement": 0.7465986394557824,
+    "macro_window_f1": 0.8809854331444602,
+    "micro_adjacency_f1": 0.8224299065420562,
+    "micro_door_f1": 0.6676300578034682,
+    "micro_edge_f1": 0.42972247090420773,
+    "micro_host_accuracy": 0.42316258351893093,
+    "micro_node_f1": 0.6815034619188921,
+    "micro_window_f1": 0.8466019417475729
+  },
+  "secondary_segmentation": {
+    "boundary_f1": {
+      "door_arc": 0.44524358394279334,
+      "door_leaf": 0.5986108866781461,
+      "door_origin": 0.5592423564620168,
+      "wall": 0.6216143407583633,
+      "window": 0.5522706573140532
+    },
+    "boundary_f1_tolerance_px": 2,
+    "checkpoint": {
+      "arch_version": "v4_seven_class_doors",
+      "best_metric_name": "val_vector_ready_score",
+      "best_metric_value": 0.48708944367284457,
+      "epoch": 46,
+      "run_name": "segformer_b0_run3"
+    },
+    "denominator": 74,
+    "macro": {
+      "contributing_samples": {
+        "background": 74,
+        "door_arc": 74,
+        "door_leaf": 74,
+        "door_origin": 74,
+        "floor": 74,
+        "wall": 74,
+        "window": 74
+      },
+      "foreground_miou": 0.4848763586688884,
+      "miou_background_included": 0.5245737945290543,
+      "per_class_iou": {
+        "background": 0.76275840969005,
+        "door_arc": 0.5334449457225916,
+        "door_leaf": 0.2581498187885509,
+        "door_origin": 0.23626009838955234,
+        "floor": 0.7810327424041085,
+        "wall": 0.5525349111825474,
+        "window": 0.5478356355259797
+      },
+      "pixel_accuracy": 0.8303256679225612
+    },
+    "micro": {
+      "foreground_miou": 0.43573552659205156,
+      "miou_background_included": 0.4816062684691881,
+      "per_class_iou": {
+        "background": 0.7568307197320068,
+        "door_arc": 0.3709958365894181,
+        "door_leaf": 0.28198617576527013,
+        "door_origin": 0.24163049197579584,
+        "floor": 0.7746045068478516,
+        "wall": 0.5028343932020525,
+        "window": 0.4423617551719213
+      },
+      "pixel_accuracy": 0.8303256679225612
+    },
+    "note": "Required secondary evidence. Primary claim is wall topology, circulation, and opening logic.",
+    "sample_count": 74,
+    "skipped": []
+  },
+  "spec": "spec_v006_evaluation"
+}

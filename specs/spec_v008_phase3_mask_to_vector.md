@@ -1,4 +1,4 @@
-﻿# Spec v008: Orthogonal Point-Graph Mask-to-Vector Reconstruction
+# Spec v008: Orthogonal Point-Graph Mask-to-Vector Reconstruction
 
 ## 0. Purpose
 

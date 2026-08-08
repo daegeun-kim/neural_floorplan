@@ -41,7 +41,9 @@ CLEAN_IMAGE_NAMES = ["model_clean.png", "model_clean01.png"]
 # ---------------------------------------------------------------------------
 
 
-def _apply_flip(img: Image.Image, masks: list[Image.Image], flip: str) -> tuple[Image.Image, list[Image.Image]]:
+def _apply_flip(
+    img: Image.Image, masks: list[Image.Image], flip: str
+) -> tuple[Image.Image, list[Image.Image]]:
     """horizontal or vertical flip."""
     if flip == "horizontal":
         method = Image.FLIP_LEFT_RIGHT
@@ -52,7 +54,9 @@ def _apply_flip(img: Image.Image, masks: list[Image.Image], flip: str) -> tuple[
     return img.transpose(method), [m.transpose(method) for m in masks]
 
 
-def _apply_rotate90(img: Image.Image, masks: list[Image.Image], k: int) -> tuple[Image.Image, list[Image.Image]]:
+def _apply_rotate90(
+    img: Image.Image, masks: list[Image.Image], k: int
+) -> tuple[Image.Image, list[Image.Image]]:
     """Rotate by k * 90 degrees counter-clockwise."""
     if k == 0:
         return img, masks
@@ -67,6 +71,7 @@ def _apply_translation(
     img: Image.Image, masks: list[Image.Image], dx: int, dy: int
 ) -> tuple[Image.Image, list[Image.Image]]:
     """Translate by (dx, dy) pixels, padding with white / zero."""
+
     def _shift_image(im: Image.Image, fill: int | tuple) -> Image.Image:
         shifted = Image.new(im.mode, im.size, fill)
         shifted.paste(im, (dx, dy))
@@ -246,7 +251,9 @@ def augment_sample(
 
             # Save each augmented mask under its original name
             for mask_name, aug_mask in zip(
-                [k for k in SPATIAL_MASK_NAMES if k in mask_images], aug_masks
+                [k for k in SPATIAL_MASK_NAMES if k in mask_images],
+                aug_masks,
+                strict=False,
             ):
                 aug_mask.save(aug_dir / mask_name)
 
@@ -262,7 +269,9 @@ def augment_sample(
                 {
                     "sample_id": f"{sample_dir.name}_aug_{aug_idx:04d}",
                     "image": str((aug_dir / "augmented_image.png").relative_to(sample_dir.parent)),
-                    "target": str((aug_dir / "semantic_class_map.png").relative_to(sample_dir.parent)),
+                    "target": str(
+                        (aug_dir / "semantic_class_map.png").relative_to(sample_dir.parent)
+                    ),
                     "input_type": "augmented",
                 }
             )

@@ -25,21 +25,23 @@ from pathlib import Path
 
 import torch
 
+# Allow running this file directly from a checkout that has not been installed
+# with `pip install -e .`. The src imports below must therefore follow this.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.checkpointing import load_checkpoint
-from src.models import FloorplanSegModel, build_backbone, build_decoder
-from src.train_segmentation import make_preview_loader, save_sample_artifacts
-from src.vectorization.run_mask_to_vector import (
+from src.checkpointing import load_checkpoint  # noqa: E402
+from src.models import FloorplanSegModel, build_backbone, build_decoder  # noqa: E402
+from src.train_segmentation import make_preview_loader, save_sample_artifacts  # noqa: E402
+from src.vectorization.run_mask_to_vector import (  # noqa: E402
     _scale_info_from_config,
     load_config,
     process_single,
 )
 
 SUPPORTED_RUNS = {"run1", "run2", "run3"}
-IMAGE_SIZE  = 512
-N_SAMPLES   = 4
+IMAGE_SIZE = 512
+N_SAMPLES = 4
 
 # run1/run2 are the retired 5-class models; run3 is the active 7-class model.
 # Running --run run1/run2 against this pipeline is expected to fail with a
@@ -54,13 +56,15 @@ _TRAIN_CONFIG_BY_RUN = {
 
 
 def main(model_run: str, output_name: str | None = None) -> None:
-    assert model_run in SUPPORTED_RUNS, f"Unsupported run: {model_run!r}. Choose from {SUPPORTED_RUNS}"
+    assert model_run in SUPPORTED_RUNS, (
+        f"Unsupported run: {model_run!r}. Choose from {SUPPORTED_RUNS}"
+    )
 
     num_classes = _NUM_CLASSES_BY_RUN[model_run]
     checkpoint_path = PROJECT_ROOT / f"checkpoints/segformer_b0_{model_run}/best.pt"
-    output_dir      = PROJECT_ROOT / "outputs/vectorization/v008" / (output_name or model_run)
-    train_config    = PROJECT_ROOT / _TRAIN_CONFIG_BY_RUN[model_run]
-    vectz_config    = PROJECT_ROOT / "configs/vectorization_v008.yaml"
+    output_dir = PROJECT_ROOT / "outputs/vectorization/v008" / (output_name or model_run)
+    train_config = PROJECT_ROOT / _TRAIN_CONFIG_BY_RUN[model_run]
+    vectz_config = PROJECT_ROOT / "configs/vectorization_v008.yaml"
 
     assert checkpoint_path.exists(), f"Checkpoint not found: {checkpoint_path}"
 
@@ -69,21 +73,23 @@ def main(model_run: str, output_name: str | None = None) -> None:
     print(f"Output dir : {output_dir}")
 
     # --- Load vectorization config ---
-    vcfg       = load_config(vectz_config)
+    vcfg = load_config(vectz_config)
     scale_info = _scale_info_from_config(vcfg)
     print(f"Config     : {vectz_config.name}")
 
     # --- Load model ---
-    device   = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device     : {device}")
 
     backbone = build_backbone(variant="segformer_b0", pretrained=True)
-    decoder  = build_decoder(variant="segformer_b0", num_classes=num_classes, output_size=IMAGE_SIZE)
+    decoder = build_decoder(variant="segformer_b0", num_classes=num_classes, output_size=IMAGE_SIZE)
 
     payload = load_checkpoint(checkpoint_path, decoder, device=device)
     print(f"arch_version : {payload.get('arch_version')}")
     print(f"epoch        : {payload.get('epoch')}")
-    print(f"best metric  : {payload.get('best_metric_name')} = {payload.get('best_metric_value', 0.0):.4f}")
+    print(
+        f"best metric  : {payload.get('best_metric_name')} = {payload.get('best_metric_value', 0.0):.4f}"
+    )
 
     model = FloorplanSegModel(backbone=backbone, decoder=decoder)
     model.eval().to(device)
@@ -132,10 +138,16 @@ def main(model_run: str, output_name: str | None = None) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run v008 vectorization pipeline")
-    parser.add_argument("--run", default="run3", choices=list(SUPPORTED_RUNS),
-                        help="Model run to use (default: run3, the active 7-class model)")
-    parser.add_argument("--output-name", default=None,
-                        help="Output subfolder name under outputs/vectorization/v008/ "
-                             "(default: same as --run)")
+    parser.add_argument(
+        "--run",
+        default="run3",
+        choices=list(SUPPORTED_RUNS),
+        help="Model run to use (default: run3, the active 7-class model)",
+    )
+    parser.add_argument(
+        "--output-name",
+        default=None,
+        help="Output subfolder name under outputs/vectorization/v008/ (default: same as --run)",
+    )
     args = parser.parse_args()
     main(args.run, args.output_name)

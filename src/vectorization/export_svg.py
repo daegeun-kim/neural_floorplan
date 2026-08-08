@@ -76,7 +76,9 @@ def build_svg(
 
         door_groups = []
         for idx, parts in sorted(doors_by_id.items()):
-            inner = "".join(parts[key].to_svg() for key in ("origin", "leaf", "arc") if key in parts)
+            inner = "".join(
+                parts[key].to_svg() for key in ("origin", "leaf", "arc") if key in parts
+            )
             door_groups.append(f'<g id="door_{idx}" data-type="door">{inner}</g>')
         door_svg = "\n    ".join(door_groups)
 

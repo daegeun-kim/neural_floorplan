@@ -11,7 +11,7 @@ window/door group.
 from __future__ import annotations
 
 import math
-from typing import Literal, Optional
+from typing import Literal
 
 from .base import BasePrimitive, ScaleInfo
 
@@ -27,10 +27,10 @@ class OpeningPrimitive(BasePrimitive):
         center: tuple[float, float],
         width: float,
         orientation_angle: float = 0.0,
-        host_wall_id: Optional[str] = None,
+        host_wall_id: str | None = None,
         opening_type: OpeningType = "generic",
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
+        scale_info: ScaleInfo | None = None,
         **base_kwargs,
     ) -> None:
         super().__init__(primitive_id, confidence, scale_info, **base_kwargs)

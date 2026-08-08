@@ -1,4 +1,4 @@
-﻿# Vectorization Phase History
+# Vectorization Phase History
 
 ## Purpose
 
@@ -28,7 +28,7 @@ Existing outputs are organized by phase under:
 outputs/vectorization/
 ```
 
-(task20: previously flat under `outputs/vectorization/v008/<name>`; see `outputs/vectorization/README.md` for the old-to-new path mapping and the rationale for retiring the `v008` folder name)
+(task20 moved these out of a flat `outputs/vectorization/v008/<name>` layout. The `v008` name described a spec version rather than a vectorization phase, so it was retired and kept only in `configs/vectorization_v008.yaml`'s filename. `outputs/` is generated and is not tracked in Git.)
 
 | Output folder | Phase | CNN run | Vectorization iteration | Status |
 |---|---:|---:|---:|---|
@@ -313,8 +313,73 @@ iteration7_run3
 
 If a new vectorization concept is introduced, document which phase it belongs to or create a new phase section before adding more output folders.
 
+## Intention Changes Across Phases
+
+The durable record of *why* the project changed direction at each step.
+
+| Stage | Segmentation intention | Vectorization intention | Main failure | Resulting change |
+|---|---|---|---|---|
+| 5-class | predict broad architectural classes | infer geometry from broad masks | openings too generic | split openings into richer classes |
+| 7-class | predict vectorization-useful wall/window/door evidence | convert richer masks into vectors | geometry still failed; topology was implicit | redesign vectorization rules |
+| early semantic vectorization | keep class-to-object mapping simple | convert masks to walls/floor/openings | output looked contour-like and disconnected | add architectural primitive rules |
+| wall/opening refinement | keep 7-class CNN | fix wall connectivity and hosted openings | component heuristics unstable | restart vectorization from graph points |
+| point-graph restart | keep 7-class CNN as evidence | detect points, align, connect | point/scale detection brittle | move to Raster-to-Graph wall graph prediction |
+| Raster-to-Graph inference | clean SVG-rendered raster as graph-model input | adapt pretrained checkpoint via preprocessing, thresholds, multistart, scoring, merge cleanup | direct checkpoint inference too often empty | settled on generous inference from `model_clean.png`; no fine-tuning needed |
+
+The single most important conclusion:
+
+```txt
+The CNN predicts semantic evidence.
+Raster-to-Graph produces the wall topology.
+The vector/CAD stage attaches classification and openings afterwards.
+```
+
+The CNN was never going to solve wall-graph vectorization on its own. Every
+phase before Phase 4 failed in the same underlying way — topology was left
+implicit and had to be recovered from pixels by heuristics.
+
+## Phase 4 Implementation Lessons
+
+Durable refinements from the Phase 4 graph-to-vector work. The enforced
+invariants live in `specs/vectorization_must_rules.md`; this section records the
+reasoning behind them.
+
+**Door primitives must stay a three-part contract.** The first graph-to-vector
+attempt collapsed the hosted door edge into a single stroke. The correct
+decomposition is `door_origin` (purple line along the wall gap), `door_leaf`
+(orange perpendicular from the hinge), and `door_arc` (red 90° arc centred on
+the hinge, from the origin far point to the leaf endpoint). Phase 3 already had
+this right; Phase 4 regressed it by drawing doors locally instead of reusing the
+existing primitive behavior.
+
+**Overlapping openings are a placement problem, not an evidence problem.** When
+a door and a window trim overlapping intervals on one wall, the first instinct —
+reject the lower-confidence opening — was wrong: the 7-class raster usually
+detects both correctly. The rule is to keep the stronger opening fixed and
+move or shrink the weaker one (door beats window; otherwise higher confidence
+wins). Reject an opening only when no feasible non-overlapping interval exists
+on the host wall chain, and record both original and adjusted intervals.
+
+**Partial implementation of a pipeline contract reads as "no change".** After the
+de-overlap work, output barely moved because only part of the intended process
+was implemented. Pipeline stages need explicit contract enforcement rather than
+best-effort application.
+
+**Door swing direction comes from red-side evidence.** Generated arc or leaf
+sampling is secondary and must not override strong local red/orange raster
+evidence. Hosted opening segments must render with flat endpoints
+(`stroke-linecap="butt"` or explicit flat-ended geometry) so buffering and stroke
+caps cannot lengthen them past their wall trim nodes.
+
+**Some doors are genuinely double-swing.** When red door-arc evidence appears on
+both sides of one origin, forcing a single side is wrong. Classification
+distinguishes `single_swing`, `double_swing_shared_origin`,
+`separate_single_swing_doors`, and `ignored_duplicate`. A merged double-swing
+door draws one shared origin with leaves and arcs on both sides, and trims the
+wall only once. Nearby doors stay separate unless they share the origin edge.
+
 ## Task20 Reorganization Notes
 
 task20 moved the output folders from a flat `outputs/vectorization/v008/<name>` layout into the phase folders this document already described conceptually, via `git mv`/content-identical copy (one folder needed a copy+remove instead of `git mv` due to a transient OS file-lock; verified byte-identical and zero-diff before deleting the original). The `v008` folder name was retired since it described a spec version, not a vectorization phase, and was kept implicit in `configs/vectorization_v008.yaml`'s naming instead.
 
-Two non-source-code references were updated so they keep resolving: `configs/vectorization_v008.yaml`'s `output.output_dir` (now points at `phase3_7class_point_vectorization`, the active phase) and the literal example path in `notebooks/run_single_image_run3_vectorization.ipynb`. `scripts/run_vectorization_v008.py` and `notebooks/run_vectorization_v008_run1.ipynb` still default to the old `outputs/vectorization/v008/...` base - left unchanged per task20's "do not change vectorization source code" constraint; see `outputs/vectorization/README.md`'s "Known drift" note. Historical narrative mentioning the old `iteration5_run3` path in `specs/spec_v008_phase3_mask_to_vector.md`'s Task14-19 Debugging Notes was also left as-is (accurate at the time it was written) rather than rewritten - the old-to-new mapping above resolves it if needed.
+Two non-source-code references were updated so they keep resolving: `configs/vectorization_v008.yaml`'s `output.output_dir` (now pointing at `phase3_7class_point_vectorization`) and a literal example path in the Phase 3 notebook. `scripts/run_vectorization_v008.py` still defaults to the old `outputs/vectorization/v008/...` base, left unchanged under task20's "do not change vectorization source code" constraint. Historical narrative in `specs/spec_v008_phase3_mask_to_vector.md` still mentions the old `iteration5_run3` path; it was accurate when written and the mapping above resolves it.

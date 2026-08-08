@@ -16,8 +16,7 @@ For windows:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 import cv2
 import numpy as np
@@ -28,11 +27,12 @@ from ..graph_types import ComponentRecord
 @dataclass
 class DoorCandidate:
     """Raw door candidate before graph hosting."""
+
     component_id: int
-    bbox: tuple[int, int, int, int]       # x0, y0, x1, y1
+    bbox: tuple[int, int, int, int]  # x0, y0, x1, y1
     bbox_long_edge_px: float
     raw_points: list[tuple[float, float]]  # the two wall-facing bbox vertices
-    wall_facing_edge: str                  # "top","bottom","left","right"
+    wall_facing_edge: str  # "top","bottom","left","right"
     confidence: float = 1.0
     rejection_reason: str = ""
 
@@ -40,6 +40,7 @@ class DoorCandidate:
 @dataclass
 class WindowCandidate:
     """Raw window candidate before graph hosting."""
+
     component_id: int
     bbox: tuple[int, int, int, int]
     raw_points: list[tuple[float, float]]  # two major-axis endpoints
@@ -48,16 +49,16 @@ class WindowCandidate:
     rejection_reason: str = ""
 
 
-def _bbox_edges(bbox: tuple[int, int, int, int]) -> dict[str, tuple[tuple[float, float], tuple[float, float]]]:
+def _bbox_edges(
+    bbox: tuple[int, int, int, int],
+) -> dict[str, tuple[tuple[float, float], tuple[float, float]]]:
     """Return the 4 bbox edges as {name: (pt_a, pt_b)}."""
     x0, y0, x1, y1 = bbox
-    cx = (x0 + x1) / 2.0
-    cy = (y0 + y1) / 2.0
     return {
-        "top":    ((float(x0), float(y0)), (float(x1), float(y0))),
+        "top": ((float(x0), float(y0)), (float(x1), float(y0))),
         "bottom": ((float(x0), float(y1)), (float(x1), float(y1))),
-        "left":   ((float(x0), float(y0)), (float(x0), float(y1))),
-        "right":  ((float(x1), float(y0)), (float(x1), float(y1))),
+        "left": ((float(x0), float(y0)), (float(x0), float(y1))),
+        "right": ((float(x1), float(y0)), (float(x1), float(y1))),
     }
 
 
@@ -117,9 +118,7 @@ def detect_door_candidates(
 
         # Reject implausible aspect ratios
         if short_edge < 1e-3 or long_edge / short_edge > max_bbox_aspect_ratio:
-            candidate.rejection_reason = (
-                f"bbox aspect ratio {long_edge/max(short_edge,1e-3):.2f} > {max_bbox_aspect_ratio}"
-            )
+            candidate.rejection_reason = f"bbox aspect ratio {long_edge / max(short_edge, 1e-3):.2f} > {max_bbox_aspect_ratio}"
             rejected.append(candidate)
             continue
 
@@ -127,7 +126,9 @@ def detect_door_candidates(
         edges = _bbox_edges(comp.bbox)
         best_edge_name = min(
             edges.keys(),
-            key=lambda name: _min_dist_edge_to_graph(edges[name][0], edges[name][1], aligned_graph_edges),
+            key=lambda name: _min_dist_edge_to_graph(
+                edges[name][0], edges[name][1], aligned_graph_edges
+            ),
         )
         pt_a, pt_b = edges[best_edge_name]
         candidate.raw_points = [pt_a, pt_b]
@@ -155,28 +156,31 @@ def detect_window_candidates(
 
         ys, xs = np.nonzero(comp.mask)
         if len(xs) < 2:
-            rejected.append(WindowCandidate(
-                component_id=comp.component_id,
-                bbox=comp.bbox,
-                raw_points=[],
-                major_axis_px=0.0,
-                rejection_reason="too few pixels for axis estimation",
-            ))
+            rejected.append(
+                WindowCandidate(
+                    component_id=comp.component_id,
+                    bbox=comp.bbox,
+                    raw_points=[],
+                    major_axis_px=0.0,
+                    rejection_reason="too few pixels for axis estimation",
+                )
+            )
             continue
 
         pts = np.column_stack([xs, ys]).astype(np.float32)
         _center, (rw, rh), angle = cv2.minAreaRect(pts)
         major_len = float(max(rw, rh))
-        minor_len = float(min(rw, rh))
 
         if major_len < min_major_axis_px:
-            rejected.append(WindowCandidate(
-                component_id=comp.component_id,
-                bbox=comp.bbox,
-                raw_points=[],
-                major_axis_px=major_len,
-                rejection_reason=f"major axis {major_len:.1f}px < {min_major_axis_px}px",
-            ))
+            rejected.append(
+                WindowCandidate(
+                    component_id=comp.component_id,
+                    bbox=comp.bbox,
+                    raw_points=[],
+                    major_axis_px=major_len,
+                    rejection_reason=f"major axis {major_len:.1f}px < {min_major_axis_px}px",
+                )
+            )
             continue
 
         # The major axis direction
@@ -196,11 +200,13 @@ def detect_window_candidates(
         pt_a = (cx - dx, cy - dy)
         pt_b = (cx + dx, cy + dy)
 
-        accepted.append(WindowCandidate(
-            component_id=comp.component_id,
-            bbox=comp.bbox,
-            raw_points=[pt_a, pt_b],
-            major_axis_px=major_len,
-        ))
+        accepted.append(
+            WindowCandidate(
+                component_id=comp.component_id,
+                bbox=comp.bbox,
+                raw_points=[pt_a, pt_b],
+                major_axis_px=major_len,
+            )
+        )
 
     return accepted, rejected

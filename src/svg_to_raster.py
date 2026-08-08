@@ -20,10 +20,11 @@ import re
 from io import BytesIO
 from pathlib import Path
 
-import cairosvg
 import numpy as np
 from lxml import etree
 from PIL import Image
+
+from src.cairo_runtime import load_cairosvg
 
 logger = logging.getLogger(__name__)
 
@@ -84,9 +85,7 @@ def normalize_svg_visibility(svg_bytes: bytes) -> tuple[bytes, list[str]]:
             style = child.get("style", "")
             child.set("style", _strip_display_none(style))
             floor_id = child.get("id") or child.get("class") or "?"
-            changes.append(
-                f"Unhid Floor group '{floor_id}' (class='{child.get('class')}')"
-            )
+            changes.append(f"Unhid Floor group '{floor_id}' (class='{child.get('class')}')")
 
     out = BytesIO()
     tree.write(out, xml_declaration=True, encoding="UTF-8")
@@ -104,6 +103,8 @@ def convert_svg_to_png(svg_path: Path, output_path: Path) -> list[str]:
 
     Returns a list of visibility-fix descriptions (empty when no fixes were needed).
     """
+    cairosvg = load_cairosvg()
+
     svg_bytes = svg_path.read_bytes()
     normalized, changes = normalize_svg_visibility(svg_bytes)
     cairosvg.svg2png(
@@ -142,12 +143,18 @@ def process_dataset(root_dir: Path, overwrite: bool = False) -> tuple[int, int]:
             if non_white < _MIN_NON_WHITE_PIXELS:
                 logger.warning(
                     "[%d/%d] Suspicious blank output: %d non-white pixels in %s",
-                    i, total, non_white, output_path,
+                    i,
+                    total,
+                    non_white,
+                    output_path,
                 )
             else:
                 logger.info(
                     "[%d/%d] Converted: %s (%d non-white px)",
-                    i, total, output_path, non_white,
+                    i,
+                    total,
+                    output_path,
+                    non_white,
                 )
             converted += 1
         except Exception:

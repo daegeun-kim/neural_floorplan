@@ -20,20 +20,20 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Optional
 
-from .opening_hosting import HostedOpening, RejectedOpening
+from .opening_hosting import HostedOpening
 
 # Configurable conflict-resolution parameters
-_MIN_OPENING_SEPARATOR_MM: float = 50.0   # desired gap between adjacent openings
-_MAX_OPENING_ADJUSTMENT_MM: float = 200.0 # flag large adjustments as suspicious
-_MIN_SEPARATOR_FALLBACK_PX: float = 3.0   # used when scale is unknown
-_MAX_ADJUSTMENT_FALLBACK_PX: float = 30.0 # used when scale is unknown
+_MIN_OPENING_SEPARATOR_MM: float = 50.0  # desired gap between adjacent openings
+_MAX_OPENING_ADJUSTMENT_MM: float = 200.0  # flag large adjustments as suspicious
+_MIN_SEPARATOR_FALLBACK_PX: float = 3.0  # used when scale is unknown
+_MAX_ADJUSTMENT_FALLBACK_PX: float = 30.0  # used when scale is unknown
 
 
 @dataclass
 class AdjustedOpening:
     """Opening with interval adjustment metadata from conflict resolution."""
+
     opening: HostedOpening
     original_t_start: float
     original_t_end: float
@@ -43,7 +43,7 @@ class AdjustedOpening:
     was_adjusted: bool
     adjustment_reason: str
     adjustment_px: float
-    adjustment_mm: Optional[float]
+    adjustment_mm: float | None
     overlap_resolution_priority: str  # "door_fixed"|"higher_confidence_fixed"|"not_needed"
     large_adjustment_flagged: bool = False
 
@@ -51,15 +51,16 @@ class AdjustedOpening:
 @dataclass
 class TrimmedGraph:
     """Wall graph after opening intervals are removed."""
+
     wall_edges: list[list[float]]
-    opening_gaps: list[dict]              # one per accepted opening (includes adjustment meta)
+    opening_gaps: list[dict]  # one per accepted opening (includes adjustment meta)
     inserted_nodes: list[list[float]]
-    last_resort_rejected: list[dict] = field(default_factory=list)  # openings rejected during conflict resolution
+    last_resort_rejected: list[dict] = field(
+        default_factory=list
+    )  # openings rejected during conflict resolution
 
 
-def _project_t(
-    pt: tuple[float, float], x1: float, y1: float, x2: float, y2: float
-) -> float:
+def _project_t(pt: tuple[float, float], x1: float, y1: float, x2: float, y2: float) -> float:
     """Parametric t in [0,1] of point projected onto segment."""
     dx, dy = x2 - x1, y2 - y1
     seg_len_sq = dx * dx + dy * dy
@@ -81,7 +82,7 @@ def _opening_priority(op: HostedOpening) -> tuple[int, float]:
 def _resolve_conflicts(
     openings: list[HostedOpening],
     aligned_edges: list[list[float]],
-    px_to_mm: Optional[float] = None,
+    px_to_mm: float | None = None,
     min_sep_mm: float = _MIN_OPENING_SEPARATOR_MM,
     max_adj_mm: float = _MAX_OPENING_ADJUSTMENT_MM,
     min_sep_fallback_px: float = _MIN_SEPARATOR_FALLBACK_PX,
@@ -115,9 +116,17 @@ def _resolve_conflicts(
         if edge_idx >= len(aligned_edges):
             # Edge index out of bounds — accept without adjustment
             for op in group:
-                adjusted.append(_make_adjusted(op, op_t=(0.0, 1.0), edge_len=1.0,
-                                               px_to_mm=px_to_mm, priority="not_needed",
-                                               reason="", adjusted=False))
+                adjusted.append(
+                    _make_adjusted(
+                        op,
+                        op_t=(0.0, 1.0),
+                        edge_len=1.0,
+                        px_to_mm=px_to_mm,
+                        priority="not_needed",
+                        reason="",
+                        adjusted=False,
+                    )
+                )
             continue
 
         edge = aligned_edges[edge_idx]
@@ -127,10 +136,8 @@ def _resolve_conflicts(
         # Separator and max-adjustment in t-units
         if px_to_mm is not None and edge_len > 1e-6:
             min_sep_t = (min_sep_mm / px_to_mm) / edge_len
-            max_adj_t = (max_adj_mm / px_to_mm) / edge_len
         else:
             min_sep_t = min_sep_fallback_px / max(edge_len, 1.0)
-            max_adj_t = max_adj_fallback_px / max(edge_len, 1.0)
 
         # Compute initial t-intervals
         intervals: list[tuple[float, float, HostedOpening]] = []
@@ -141,11 +148,15 @@ def _resolve_conflicts(
             intervals.append((tmin, tmax, op))
 
         # Sort by position, then by decreasing priority (so equal-start fixed > moved)
-        intervals.sort(key=lambda x: (x[0], -_opening_priority(x[2])[0], -_opening_priority(x[2])[1]))
+        intervals.sort(
+            key=lambda x: (x[0], -_opening_priority(x[2])[0], -_opening_priority(x[2])[1])
+        )
 
         # Greedy sweep: fix higher-priority, move lower-priority
         # We process left-to-right; for each new interval check against all already-placed ones
-        placed: list[tuple[float, float, HostedOpening, str]] = []  # (t_start, t_end, op, priority_label)
+        placed: list[
+            tuple[float, float, HostedOpening, str]
+        ] = []  # (t_start, t_end, op, priority_label)
 
         for tmin, tmax, op in intervals:
             cur_t_start = tmin
@@ -175,8 +186,11 @@ def _resolve_conflicts(
                         if new_start >= 0.0:
                             adj_px = abs(new_start - tmin) * edge_len
                             adj_mm = adj_px / px_to_mm if px_to_mm else None
-                            large_flag = (adj_px > max_adj_fallback_px if px_to_mm is None
-                                          else (adj_mm or 0) > max_adj_mm)
+                            large_flag = (
+                                adj_px > max_adj_fallback_px
+                                if px_to_mm is None
+                                else (adj_mm or 0) > max_adj_mm
+                            )
                             cur_t_start = new_start
                             cur_t_end = new_end
                             was_adjusted = True
@@ -185,7 +199,8 @@ def _resolve_conflicts(
                                 f"lower-priority {p_op.opening_type} (type/confidence)"
                             )
                             priority_label = (
-                                "door_fixed" if op.opening_type == "door" and p_op.opening_type == "window"
+                                "door_fixed"
+                                if op.opening_type == "door" and p_op.opening_type == "window"
                                 else "higher_confidence_fixed"
                             )
                         else:
@@ -197,8 +212,11 @@ def _resolve_conflicts(
                         new_end = new_start + width_t
                         adj_px = abs(new_start - tmin) * edge_len
                         adj_mm = adj_px / px_to_mm if px_to_mm else None
-                        large_flag = (adj_px > max_adj_fallback_px if px_to_mm is None
-                                      else (adj_mm or 0) > max_adj_mm)
+                        large_flag = (
+                            adj_px > max_adj_fallback_px
+                            if px_to_mm is None
+                            else (adj_mm or 0) > max_adj_mm
+                        )
                         cur_t_start = new_start
                         cur_t_end = new_end
                         was_adjusted = True
@@ -207,7 +225,8 @@ def _resolve_conflicts(
                             f"{p_op.opening_type} (lower priority)"
                         )
                         priority_label = (
-                            "door_fixed" if p_op.opening_type == "door" and op.opening_type == "window"
+                            "door_fixed"
+                            if p_op.opening_type == "door" and op.opening_type == "window"
                             else "higher_confidence_fixed"
                         )
 
@@ -223,15 +242,17 @@ def _resolve_conflicts(
                         feasible = False
                         break
                 if not feasible or cur_t_start >= cur_t_end:
-                    last_resort_rejected.append({
-                        "opening_type": op.opening_type,
-                        "source_component_id": op.source_component_id,
-                        "host_edge_idx": edge_idx,
-                        "original_t_start": tmin,
-                        "original_t_end": tmax,
-                        "rejection_reason": "no_feasible_non_overlapping_interval",
-                        "confidence": op.confidence,
-                    })
+                    last_resort_rejected.append(
+                        {
+                            "opening_type": op.opening_type,
+                            "source_component_id": op.source_component_id,
+                            "host_edge_idx": edge_idx,
+                            "original_t_start": tmin,
+                            "original_t_end": tmax,
+                            "rejection_reason": "no_feasible_non_overlapping_interval",
+                            "confidence": op.confidence,
+                        }
+                    )
                     continue
                 was_adjusted = True
                 if not adjustment_reason:
@@ -247,15 +268,17 @@ def _resolve_conflicts(
                         feasible = False
                         break
                 if not feasible or cur_t_start >= cur_t_end:
-                    last_resort_rejected.append({
-                        "opening_type": op.opening_type,
-                        "source_component_id": op.source_component_id,
-                        "host_edge_idx": edge_idx,
-                        "original_t_start": tmin,
-                        "original_t_end": tmax,
-                        "rejection_reason": "no_feasible_non_overlapping_interval",
-                        "confidence": op.confidence,
-                    })
+                    last_resort_rejected.append(
+                        {
+                            "opening_type": op.opening_type,
+                            "source_component_id": op.source_component_id,
+                            "host_edge_idx": edge_idx,
+                            "original_t_start": tmin,
+                            "original_t_end": tmax,
+                            "rejection_reason": "no_feasible_non_overlapping_interval",
+                            "confidence": op.confidence,
+                        }
+                    )
                     continue
                 was_adjusted = True
                 if not adjustment_reason:
@@ -316,23 +339,25 @@ def apply_adjusted_intervals_to_hosted_openings(
         if gap is None:
             continue  # last-resort rejected or not found
 
-        adj_pts = gap["snapped_points"]   # [[x,y],[x,y]] from adjusted t values
+        adj_pts = gap["snapped_points"]  # [[x,y],[x,y]] from adjusted t values
         snap_a = (float(adj_pts[0][0]), float(adj_pts[0][1]))
         snap_b = (float(adj_pts[1][0]), float(adj_pts[1][1]))
         width_px = math.hypot(snap_b[0] - snap_a[0], snap_b[1] - snap_a[1])
 
-        result.append(HostedOpening(
-            opening_type=op.opening_type,
-            source_component_id=op.source_component_id,
-            host_edge_idx=op.host_edge_idx,
-            host_edge_raw=op.host_edge_raw,
-            raw_points=op.raw_points,
-            snapped_points=[snap_a, snap_b],
-            width_px=width_px,
-            width_mm=gap.get("width_mm"),
-            confidence=op.confidence,
-            snapped_module_mm=op.snapped_module_mm,
-        ))
+        result.append(
+            HostedOpening(
+                opening_type=op.opening_type,
+                source_component_id=op.source_component_id,
+                host_edge_idx=op.host_edge_idx,
+                host_edge_raw=op.host_edge_raw,
+                raw_points=op.raw_points,
+                snapped_points=[snap_a, snap_b],
+                width_px=width_px,
+                width_mm=gap.get("width_mm"),
+                confidence=op.confidence,
+                snapped_module_mm=op.snapped_module_mm,
+            )
+        )
 
     return result
 
@@ -341,7 +366,7 @@ def _make_adjusted(
     op: HostedOpening,
     op_t: tuple[float, float],
     edge_len: float,
-    px_to_mm: Optional[float],
+    px_to_mm: float | None,
     priority: str,
     reason: str,
     adjusted: bool,
@@ -365,7 +390,7 @@ def _make_adjusted(
 def trim_wall_intervals(
     aligned_edges: list[list[float]],
     hosted_openings: list[HostedOpening],
-    px_to_mm: Optional[float] = None,
+    px_to_mm: float | None = None,
     min_sep_mm: float = _MIN_OPENING_SEPARATOR_MM,
     max_adj_mm: float = _MAX_OPENING_ADJUSTMENT_MM,
 ) -> TrimmedGraph:
@@ -434,28 +459,32 @@ def trim_wall_intervals(
             inserted_nodes.extend([[snap_a[0], snap_a[1]], [snap_b[0], snap_b[1]]])
 
             op = adj.opening
-            opening_gaps.append({
-                "opening_type": op.opening_type,
-                "source_component_id": op.source_component_id,
-                "host_edge_idx": ei,
-                "host_edge_raw": edge,
-                "snapped_points": [list(snap_a), list(snap_b)],
-                # Interval data
-                "original_interval": [adj.original_t_start, adj.original_t_end],
-                "adjusted_interval": [adj.adjusted_t_start, adj.adjusted_t_end],
-                "t_start": tmin,
-                "t_end": tmax,
-                "width_px": op.width_px,
-                "width_mm": op.width_mm,
-                "confidence": op.confidence,
-                # Adjustment metadata
-                "was_adjusted": adj.was_adjusted,
-                "adjustment_reason": adj.adjustment_reason,
-                "adjustment_px": round(adj.adjustment_px, 2),
-                "adjustment_mm": round(adj.adjustment_mm, 2) if adj.adjustment_mm is not None else None,
-                "overlap_resolution_priority": adj.overlap_resolution_priority,
-                "large_adjustment_flagged": adj.large_adjustment_flagged,
-            })
+            opening_gaps.append(
+                {
+                    "opening_type": op.opening_type,
+                    "source_component_id": op.source_component_id,
+                    "host_edge_idx": ei,
+                    "host_edge_raw": edge,
+                    "snapped_points": [list(snap_a), list(snap_b)],
+                    # Interval data
+                    "original_interval": [adj.original_t_start, adj.original_t_end],
+                    "adjusted_interval": [adj.adjusted_t_start, adj.adjusted_t_end],
+                    "t_start": tmin,
+                    "t_end": tmax,
+                    "width_px": op.width_px,
+                    "width_mm": op.width_mm,
+                    "confidence": op.confidence,
+                    # Adjustment metadata
+                    "was_adjusted": adj.was_adjusted,
+                    "adjustment_reason": adj.adjustment_reason,
+                    "adjustment_px": round(adj.adjustment_px, 2),
+                    "adjustment_mm": round(adj.adjustment_mm, 2)
+                    if adj.adjustment_mm is not None
+                    else None,
+                    "overlap_resolution_priority": adj.overlap_resolution_priority,
+                    "large_adjustment_flagged": adj.large_adjustment_flagged,
+                }
+            )
             t_cursor = tmax
 
         # Remaining wall segment after last opening

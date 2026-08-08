@@ -24,8 +24,8 @@ Absolute side → per-hinge swing mapping (in image-y↓ coords):
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field, replace as _dc_replace
-from typing import Optional
+from dataclasses import dataclass, field
+from dataclasses import replace as _dc_replace
 
 import numpy as np
 
@@ -35,28 +35,29 @@ from .opening_hosting import HostedOpening
 @dataclass
 class DoorGeometry:
     """Resolved geometry for one door's three SVG primitives."""
+
     hinge_point: tuple[float, float]
     origin_far_point: tuple[float, float]
     leaf_end: tuple[float, float]
-    swing_side: str          # "left" | "right" | "fallback_left" | "fallback_right"
+    swing_side: str  # "left" | "right" | "fallback_left" | "fallback_right"
     width_px: float
     orientation_angle_deg: float  # angle from hinge toward origin_far_point, degrees
-    hinge_source: str        # "red_orange_purple_evidence" | "fallback_pt0"
-    swing_source: str        # "red_door_arc_side" | "fallback"
+    hinge_source: str  # "red_orange_purple_evidence" | "fallback_pt0"
+    swing_source: str  # "red_door_arc_side" | "fallback"
     # task35 evidence debug fields (default-valued; existing construction is unaffected)
     red_side_positive_count: int = 0
     red_side_negative_count: int = 0
-    red_side_selected: str = ""       # "positive" | "negative" | "fallback"
+    red_side_selected: str = ""  # "positive" | "negative" | "fallback"
     orange_hinge_p0_score: float = 0.0
     orange_hinge_p1_score: float = 0.0
-    hinge_selected: str = ""          # "p0" | "p1"
+    hinge_selected: str = ""  # "p0" | "p1"
     fallback_used: bool = False
     # task36 double-swing fields (default-valued)
-    door_type: str = "single_swing"               # "single_swing" | "double_swing_shared_origin"
-    secondary_leaf_end: Optional[tuple] = None    # for double_swing: leaf endpoint on the other side
+    door_type: str = "single_swing"  # "single_swing" | "double_swing_shared_origin"
+    secondary_leaf_end: tuple | None = None  # for double_swing: leaf endpoint on the other side
     secondary_swing_side: str = ""
     classification_reason: str = ""
-    double_swing_ratio: Optional[float] = None
+    double_swing_ratio: float | None = None
     source_door_component_ids: list = field(default_factory=list)
 
 
@@ -206,13 +207,13 @@ def _score_hinge_by_orange_pixels(
 
     rel_x = px_arr - endpoint[0]
     rel_y = py_arr - endpoint[1]
-    along_proj = rel_x * perp_x + rel_y * perp_y   # leaf axis: 0..door_width_px
-    across_proj = rel_x * ux + rel_y * uy           # origin axis: ±corridor_half_width
+    along_proj = rel_x * perp_x + rel_y * perp_y  # leaf axis: 0..door_width_px
+    across_proj = rel_x * ux + rel_y * uy  # origin axis: ±corridor_half_width
 
     corridor_mask_arr = (
-        (along_proj > 0) &
-        (along_proj <= door_width_px) &
-        (np.abs(across_proj) <= corridor_half_width)
+        (along_proj > 0)
+        & (along_proj <= door_width_px)
+        & (np.abs(across_proj) <= corridor_half_width)
     )
     return near_score + float(np.sum(corridor_mask_arr))
 
@@ -220,8 +221,8 @@ def _score_hinge_by_orange_pixels(
 def infer_door_direction_from_evidence(
     p0: tuple[float, float],
     p1: tuple[float, float],
-    door_arc_mask: Optional[np.ndarray],
-    door_leaf_mask: Optional[np.ndarray] = None,
+    door_arc_mask: np.ndarray | None,
+    door_leaf_mask: np.ndarray | None = None,
     n_arc_samples: int = 16,
     min_score_threshold: float = 0.05,
 ) -> tuple[str, str, str, str]:
@@ -240,8 +241,8 @@ def infer_door_direction_from_evidence(
 def _infer_with_evidence_fields(
     p0: tuple[float, float],
     p1: tuple[float, float],
-    door_arc_mask: Optional[np.ndarray],
-    door_leaf_mask: Optional[np.ndarray],
+    door_arc_mask: np.ndarray | None,
+    door_leaf_mask: np.ndarray | None,
     n_arc_samples: int = 16,
     min_score_threshold: float = 0.05,
 ) -> tuple[tuple[str, str, str, str], dict]:
@@ -280,7 +281,9 @@ def _infer_with_evidence_fields(
                 if door_leaf_mask is not None:
                     orientation_deg = math.degrees(math.atan2(far[1] - hinge[1], far[0] - hinge[0]))
                     leaf_end = _perp_end(hinge, width, orientation_deg, swing)
-                    score += 0.3 * _score_line_pixels(hinge, leaf_end, door_leaf_mask, n_arc_samples)
+                    score += 0.3 * _score_line_pixels(
+                        hinge, leaf_end, door_leaf_mask, n_arc_samples
+                    )
                 candidates.append((score, hinge_name, swing))
         best_score, best_hinge, best_swing = max(candidates, key=lambda x: x[0])
         if best_score < min_score_threshold:
@@ -329,9 +332,9 @@ def _infer_with_evidence_fields(
 
 def compute_door_geometry(
     hosted_door: HostedOpening,
-    swing_side: Optional[str] = None,
-    door_arc_mask: Optional[np.ndarray] = None,
-    door_leaf_mask: Optional[np.ndarray] = None,
+    swing_side: str | None = None,
+    door_arc_mask: np.ndarray | None = None,
+    door_leaf_mask: np.ndarray | None = None,
 ) -> DoorGeometry:
     """Derive hinge, far-point, leaf-end, and arc geometry from a hosted door."""
     p0 = tuple(hosted_door.snapped_points[0])
@@ -339,9 +342,13 @@ def compute_door_geometry(
     width = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
 
     _empty_ev: dict = {
-        "red_side_positive_count": 0, "red_side_negative_count": 0,
-        "red_side_selected": "", "orange_hinge_p0_score": 0.0,
-        "orange_hinge_p1_score": 0.0, "hinge_selected": "p0", "fallback_used": False,
+        "red_side_positive_count": 0,
+        "red_side_negative_count": 0,
+        "red_side_selected": "",
+        "orange_hinge_p0_score": 0.0,
+        "orange_hinge_p1_score": 0.0,
+        "hinge_selected": "p0",
+        "fallback_used": False,
     }
 
     if swing_side is not None:
@@ -355,7 +362,7 @@ def compute_door_geometry(
             p0, p1, door_arc_mask, door_leaf_mask
         )
         hinge = p0 if hinge_pt == "p0" else p1
-        far   = p1 if hinge_pt == "p0" else p0
+        far = p1 if hinge_pt == "p0" else p0
     else:
         hinge = p0
         far = p1
@@ -394,7 +401,9 @@ def compute_door_geometry_double_swing(geom: DoorGeometry) -> DoorGeometry:
     """
     primary_base = geom.swing_side.replace("fallback_", "")
     secondary_swing = "right" if primary_base == "left" else "left"
-    secondary_leaf = _perp_end(geom.hinge_point, geom.width_px, geom.orientation_angle_deg, secondary_swing)
+    secondary_leaf = _perp_end(
+        geom.hinge_point, geom.width_px, geom.orientation_angle_deg, secondary_swing
+    )
     return _dc_replace(
         geom,
         door_type="double_swing_shared_origin",
@@ -403,11 +412,14 @@ def compute_door_geometry_double_swing(geom: DoorGeometry) -> DoorGeometry:
     )
 
 
-def door_geometry_to_dict(geom: DoorGeometry, width_mm: Optional[float] = None) -> dict:
+def door_geometry_to_dict(geom: DoorGeometry, width_mm: float | None = None) -> dict:
     """Serialize DoorGeometry to the final_vector.json door_geometry sub-dict."""
     d: dict = {
         "hinge_point": [round(geom.hinge_point[0], 2), round(geom.hinge_point[1], 2)],
-        "origin_far_point": [round(geom.origin_far_point[0], 2), round(geom.origin_far_point[1], 2)],
+        "origin_far_point": [
+            round(geom.origin_far_point[0], 2),
+            round(geom.origin_far_point[1], 2),
+        ],
         "leaf_end": [round(geom.leaf_end[0], 2), round(geom.leaf_end[1], 2)],
         "swing_side": geom.swing_side,
         "width_px": round(geom.width_px, 2),
@@ -431,6 +443,9 @@ def door_geometry_to_dict(geom: DoorGeometry, width_mm: Optional[float] = None) 
         "source_door_component_ids": list(geom.source_door_component_ids),
     }
     if geom.secondary_leaf_end is not None:
-        d["secondary_leaf_end"] = [round(geom.secondary_leaf_end[0], 2), round(geom.secondary_leaf_end[1], 2)]
+        d["secondary_leaf_end"] = [
+            round(geom.secondary_leaf_end[0], 2),
+            round(geom.secondary_leaf_end[1], 2),
+        ]
         d["secondary_swing_side"] = geom.secondary_swing_side
     return d

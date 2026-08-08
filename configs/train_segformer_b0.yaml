@@ -1,3 +1,5 @@
+# Historical five-class configuration retained only to reproduce Phase 3 run1/run2.
+# The active seven-class model uses configs/train_segformer_b0_run3.yaml.
 run:
   version: "v005"
   run_name: "segformer_b0_v005_opening_weighted"

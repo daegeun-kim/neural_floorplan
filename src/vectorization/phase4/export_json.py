@@ -12,12 +12,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+from ..primitives.scale import ScaleInfo
 from .door_geometry import DoorGeometry, compute_door_geometry, door_geometry_to_dict
 from .opening_hosting import HostedOpening, RejectedOpening
 from .wall_interval_editing import TrimmedGraph
-from ..primitives.scale import ScaleInfo
 
 
 def _scale_to_dict(scale: ScaleInfo) -> dict:
@@ -30,7 +30,7 @@ def _scale_to_dict(scale: ScaleInfo) -> dict:
     }
 
 
-def _hosted_opening_to_dict(op: HostedOpening, gap: Optional[dict] = None) -> dict:
+def _hosted_opening_to_dict(op: HostedOpening, gap: dict | None = None) -> dict:
     """Serialize a hosted opening; include interval + point adjustment fields.
 
     op.snapped_points are the FINAL (adjusted) endpoints used for wall trimming
@@ -46,8 +46,8 @@ def _hosted_opening_to_dict(op: HostedOpening, gap: Optional[dict] = None) -> di
         "host_edge_idx": op.host_edge_idx,
         "host_edge_raw": op.host_edge_raw,
         "raw_points": [[round(p[0], 2), round(p[1], 2)] for p in op.raw_points],
-        "snapped_points": final_pts,          # == snapped_points_adjusted == final_points
-        "final_points": final_pts,            # explicit "source of truth" alias
+        "snapped_points": final_pts,  # == snapped_points_adjusted == final_points
+        "final_points": final_pts,  # explicit "source of truth" alias
         "width_px": round(op.width_px, 2),
         "width_mm": round(op.width_mm, 1) if op.width_mm is not None else None,
         "snapped_module_mm": op.snapped_module_mm,
@@ -55,14 +55,14 @@ def _hosted_opening_to_dict(op: HostedOpening, gap: Optional[dict] = None) -> di
     }
     if gap is not None:
         orig_interval = gap.get("original_interval", [])
-        adj_interval  = gap.get("adjusted_interval",  [])
-        d["original_interval"]        = orig_interval
-        d["adjusted_interval"]        = adj_interval
-        d["snapped_points_adjusted"]  = final_pts
-        d["was_adjusted"]             = gap.get("was_adjusted", False)
-        d["adjustment_reason"]        = gap.get("adjustment_reason", "")
-        d["adjustment_px"]            = gap.get("adjustment_px", 0.0)
-        d["adjustment_mm"]            = gap.get("adjustment_mm")
+        adj_interval = gap.get("adjusted_interval", [])
+        d["original_interval"] = orig_interval
+        d["adjusted_interval"] = adj_interval
+        d["snapped_points_adjusted"] = final_pts
+        d["was_adjusted"] = gap.get("was_adjusted", False)
+        d["adjustment_reason"] = gap.get("adjustment_reason", "")
+        d["adjustment_px"] = gap.get("adjustment_px", 0.0)
+        d["adjustment_mm"] = gap.get("adjustment_mm")
         d["overlap_resolution_priority"] = gap.get("overlap_resolution_priority", "not_needed")
         # Reconstruct original snapped points from the edge + original interval
         hr = gap.get("host_edge_raw", op.host_edge_raw)
@@ -72,8 +72,10 @@ def _hosted_opening_to_dict(op: HostedOpening, gap: Optional[dict] = None) -> di
             oy = y1 + orig_interval[0] * (y2 - y1)
             ox2 = x1 + orig_interval[1] * (x2 - x1)
             oy2 = y1 + orig_interval[1] * (y2 - y1)
-            d["snapped_points_original"] = [[round(ox, 2), round(oy, 2)],
-                                             [round(ox2, 2), round(oy2, 2)]]
+            d["snapped_points_original"] = [
+                [round(ox, 2), round(oy, 2)],
+                [round(ox2, 2), round(oy2, 2)],
+            ]
         else:
             d["snapped_points_original"] = final_pts
     return d
@@ -89,12 +91,14 @@ def _rejected_opening_to_dict(op: RejectedOpening) -> dict:
     }
 
 
-def _find_gap(op: HostedOpening, trimmed: TrimmedGraph) -> Optional[dict]:
+def _find_gap(op: HostedOpening, trimmed: TrimmedGraph) -> dict | None:
     """Find the opening_gap dict that corresponds to a hosted opening."""
     for gap in trimmed.opening_gaps:
-        if (gap.get("source_component_id") == op.source_component_id
-                and gap.get("opening_type") == op.opening_type
-                and gap.get("host_edge_idx") == op.host_edge_idx):
+        if (
+            gap.get("source_component_id") == op.source_component_id
+            and gap.get("opening_type") == op.opening_type
+            and gap.get("host_edge_idx") == op.host_edge_idx
+        ):
             return gap
     return None
 
@@ -109,8 +113,8 @@ def build_final_vector_json(
     hosted_windows: list[HostedOpening],
     rejected_openings: list[RejectedOpening],
     wall_geometry: Any,  # WallGeometry from wall_buffering
-    metrics: Optional[dict] = None,
-    door_geometries: Optional[list[DoorGeometry]] = None,
+    metrics: dict | None = None,
+    door_geometries: list[DoorGeometry] | None = None,
 ) -> dict:
     """Build the complete final_vector.json structure (spec_v008 §11 + task34).
 
@@ -127,14 +131,16 @@ def build_final_vector_json(
             polys = [poly]
         for p in polys:
             if hasattr(p, "exterior"):
-                walls_geom.append({
-                    "type": "Polygon",
-                    "exterior": [[round(x, 2), round(y, 2)] for x, y in p.exterior.coords],
-                    "interiors": [
-                        [[round(x, 2), round(y, 2)] for x, y in ring.coords]
-                        for ring in p.interiors
-                    ],
-                })
+                walls_geom.append(
+                    {
+                        "type": "Polygon",
+                        "exterior": [[round(x, 2), round(y, 2)] for x, y in p.exterior.coords],
+                        "interiors": [
+                            [[round(x, 2), round(y, 2)] for x, y in ring.coords]
+                            for ring in p.interiors
+                        ],
+                    }
+                )
 
     # Merge topology-snap metrics from WallGeometry into the metrics dict
     merged_metrics: dict = dict(metrics or {})
@@ -143,7 +149,9 @@ def build_final_vector_json(
         merged_metrics.setdefault("post_snap_node_count", wall_geometry.post_snap_node_count)
         merged_metrics.setdefault("pre_buffer_edge_count", wall_geometry.pre_buffer_edge_count)
         merged_metrics.setdefault("wall_chain_count", wall_geometry.chain_count)
-        merged_metrics.setdefault("disconnected_endpoint_count", wall_geometry.disconnected_endpoint_count)
+        merged_metrics.setdefault(
+            "disconnected_endpoint_count", wall_geometry.disconnected_endpoint_count
+        )
 
     def _door_geom_for(idx: int, door: HostedOpening) -> DoorGeometry:
         if door_geometries and idx < len(door_geometries):
@@ -170,12 +178,10 @@ def build_final_vector_json(
         },
         "openings": {
             "doors": [
-                _hosted_opening_to_dict(d, _find_gap(d, trimmed_graph))
-                for d in hosted_doors
+                _hosted_opening_to_dict(d, _find_gap(d, trimmed_graph)) for d in hosted_doors
             ],
             "windows": [
-                _hosted_opening_to_dict(w, _find_gap(w, trimmed_graph))
-                for w in hosted_windows
+                _hosted_opening_to_dict(w, _find_gap(w, trimmed_graph)) for w in hosted_windows
             ],
             "rejected": (
                 [_rejected_opening_to_dict(r) for r in rejected_openings]

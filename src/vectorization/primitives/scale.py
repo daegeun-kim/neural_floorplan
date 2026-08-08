@@ -111,9 +111,7 @@ def resolve_scale(
     door_px_to_mm, door_conf = _best_px_to_mm_from_lengths(
         door_origin_lengths_px or [], door_modules_mm
     )
-    wall_px_to_mm, wall_conf = _best_px_to_mm_from_lengths(
-        wall_thickness_px or [], wall_modules_mm
-    )
+    wall_px_to_mm, wall_conf = _best_px_to_mm_from_lengths(wall_thickness_px or [], wall_modules_mm)
 
     if door_px_to_mm is not None and wall_px_to_mm is not None:
         rel_diff = abs(door_px_to_mm - wall_px_to_mm) / max(door_px_to_mm, wall_px_to_mm)
@@ -181,7 +179,9 @@ def resolve_scale_from_door_arc_bboxes(
     ``(selected_px_to_mm, confidence, diagnostics)``.
     """
     lengths = [length for length in bbox_long_edges_px if length > 1e-3]
-    candidates_px_to_mm = sorted({module / length for length in lengths for module in door_modules_mm})
+    candidates_px_to_mm = sorted(
+        {module / length for length in lengths for module in door_modules_mm}
+    )
 
     diagnostics: dict[str, Any] = {
         "red_arc_bbox_long_edges_px": list(bbox_long_edges_px),
@@ -215,7 +215,9 @@ def resolve_scale_from_door_arc_bboxes(
 
     diagnostics["red_arc_selected_modules_mm"] = sorted({module for _, _, module in best_members})
     diagnostics["selected_px_to_mm"] = median_px_to_mm
-    diagnostics["scale_rejected_outliers"] = [length for i, length in enumerate(lengths) if i not in member_indices]
+    diagnostics["scale_rejected_outliers"] = [
+        length for i, length in enumerate(lengths) if i not in member_indices
+    ]
 
     confidence = min(1.0, len(best_members) / len(lengths))
     return median_px_to_mm, confidence, diagnostics
@@ -243,7 +245,9 @@ def resolve_scale_with_door_arc_priority(
     door_origin_px_to_mm, _door_origin_conf = _best_px_to_mm_from_lengths(
         door_origin_lengths_px or [], door_modules_mm
     )
-    wall_px_to_mm, _wall_conf = _best_px_to_mm_from_lengths(wall_thickness_px or [], wall_modules_mm)
+    wall_px_to_mm, _wall_conf = _best_px_to_mm_from_lengths(
+        wall_thickness_px or [], wall_modules_mm
+    )
 
     if explicit_px_to_mm is not None and explicit_px_to_mm > 0:
         return ScaleInfo(

@@ -91,10 +91,7 @@ def compute_foreground_miou(
 ) -> float:
     """Mean IoU over foreground classes only (excludes background_class)."""
     ious = compute_iou_per_class(preds, targets, num_classes)
-    fg_ious = [
-        v for i, v in enumerate(ious)
-        if i != background_class and not (v != v)
-    ]
+    fg_ious = [v for i, v in enumerate(ious) if i != background_class and not (v != v)]
     return float(sum(fg_ious) / len(fg_ious)) if fg_ious else float("nan")
 
 
@@ -127,9 +124,15 @@ def _binary_erode_np(mask: np.ndarray) -> np.ndarray:
     h, w = m.shape
     p = np.pad(m, 1, constant_values=False)
     return (
-        p[0:h, 0:w] & p[0:h, 1:w+1] & p[0:h, 2:w+2] &
-        p[1:h+1, 0:w] & p[1:h+1, 1:w+1] & p[1:h+1, 2:w+2] &
-        p[2:h+2, 0:w] & p[2:h+2, 1:w+1] & p[2:h+2, 2:w+2]
+        p[0:h, 0:w]
+        & p[0:h, 1 : w + 1]
+        & p[0:h, 2 : w + 2]
+        & p[1 : h + 1, 0:w]
+        & p[1 : h + 1, 1 : w + 1]
+        & p[1 : h + 1, 2 : w + 2]
+        & p[2 : h + 2, 0:w]
+        & p[2 : h + 2, 1 : w + 1]
+        & p[2 : h + 2, 2 : w + 2]
     )
 
 
@@ -144,7 +147,7 @@ def _binary_dilate_np(mask: np.ndarray, radius: int) -> np.ndarray:
     size = 2 * radius + 1
     for dy in range(size):
         for dx in range(size):
-            result |= p[dy:dy + h, dx:dx + w]
+            result |= p[dy : dy + h, dx : dx + w]
     return result
 
 
@@ -165,36 +168,36 @@ class BoundaryF1Accumulator:
         self.class_id = class_id
         self.tolerance_px = tolerance_px
         self._tp_p = 0  # predicted boundary pixels within tol of target boundary
-        self._n_p  = 0  # total predicted boundary pixels
+        self._n_p = 0  # total predicted boundary pixels
         self._tp_r = 0  # target boundary pixels within tol of predicted boundary
-        self._n_r  = 0  # total target boundary pixels
+        self._n_r = 0  # total target boundary pixels
 
     def update(self, pred_hw: np.ndarray, target_hw: np.ndarray) -> None:
         """Add one sample (2-D class-ID arrays, HW)."""
-        pred_bin   = (pred_hw   == self.class_id)
-        target_bin = (target_hw == self.class_id)
+        pred_bin = pred_hw == self.class_id
+        target_bin = target_hw == self.class_id
 
-        pred_boundary   = _extract_boundary_np(pred_bin)
+        pred_boundary = _extract_boundary_np(pred_bin)
         target_boundary = _extract_boundary_np(target_bin)
 
         if not pred_boundary.any() and not target_boundary.any():
             return  # both empty → no contribution
 
-        pred_boundary_dilated   = _dilate_boundary_np(pred_boundary,   self.tolerance_px)
+        pred_boundary_dilated = _dilate_boundary_np(pred_boundary, self.tolerance_px)
         target_boundary_dilated = _dilate_boundary_np(target_boundary, self.tolerance_px)
 
         self._tp_p += int((pred_boundary & target_boundary_dilated).sum())
-        self._n_p  += int(pred_boundary.sum())
+        self._n_p += int(pred_boundary.sum())
         self._tp_r += int((target_boundary & pred_boundary_dilated).sum())
-        self._n_r  += int(target_boundary.sum())
+        self._n_r += int(target_boundary.sum())
 
     def compute(self) -> float:
         """Return boundary F1 over all accumulated samples."""
         if self._n_p == 0 and self._n_r == 0:
             return float("nan")
-        precision = self._tp_p / (self._n_p  + 1e-8)
-        recall    = self._tp_r / (self._n_r  + 1e-8)
-        denom     = precision + recall
+        precision = self._tp_p / (self._n_p + 1e-8)
+        recall = self._tp_r / (self._n_r + 1e-8)
+        denom = precision + recall
         if denom < 1e-8:
             return 0.0
         return float(2.0 * precision * recall / denom)
@@ -211,13 +214,13 @@ def compute_vector_ready_score(metrics: dict[str, float], weights: dict[str, flo
     Keys in *weights* must match keys in *metrics*.  NaN entries are skipped
     and the remaining weights are renormalized.
     """
-    score     = 0.0
-    total_w   = 0.0
+    score = 0.0
+    total_w = 0.0
     for key, w in weights.items():
         v = metrics.get(key, float("nan"))
         if v != v:  # NaN
             continue
-        score   += w * v
+        score += w * v
         total_w += w
     return float(score / total_w) if total_w > 1e-8 else float("nan")
 
@@ -228,7 +231,13 @@ def compute_vector_ready_score(metrics: dict[str, float], weights: dict[str, flo
 
 
 _DEFAULT_CLASS_NAMES = [
-    "background", "floor", "wall", "window", "door_arc", "door_leaf", "door_origin",
+    "background",
+    "floor",
+    "wall",
+    "window",
+    "door_arc",
+    "door_leaf",
+    "door_origin",
 ]
 
 
@@ -289,12 +298,12 @@ def compute_class_weights_auto(
             logger.info("  [%d / %d] masks scanned", i + 1, len(unique_targets))
 
     total = pixel_counts.sum() + 1e-10
-    freq  = pixel_counts / total
+    freq = pixel_counts / total
 
     base = 1.0 / np.sqrt(freq + 1e-6)
 
     fg_indices = [c for c in range(num_classes) if c != 0]
-    fg_mean    = base[fg_indices].mean() + 1e-10
+    fg_mean = base[fg_indices].mean() + 1e-10
     normalized = base / fg_mean
 
     mults = list(priority_multipliers) + [1.0] * num_classes
@@ -308,6 +317,6 @@ def compute_class_weights_auto(
     ]
     logger.info(
         "Class weights (%s)",
-        " ".join(f"{name}={w:.3f}" for name, w in zip(names, clipped)),
+        " ".join(f"{name}={w:.3f}" for name, w in zip(names, clipped, strict=False)),
     )
     return torch.tensor(clipped, dtype=torch.float32)

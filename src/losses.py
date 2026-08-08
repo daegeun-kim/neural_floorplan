@@ -35,9 +35,7 @@ class MulticlassDiceLoss(nn.Module):
         """
         probs = F.softmax(logits, dim=1)
         B, C, H, W = probs.shape
-        target_oh = (
-            F.one_hot(targets.clamp(0, C - 1), C).permute(0, 3, 1, 2).float()
-        )
+        target_oh = F.one_hot(targets.clamp(0, C - 1), C).permute(0, 3, 1, 2).float()
 
         start = 1 if self.exclude_background else 0
         scores: list[torch.Tensor] = []
@@ -80,7 +78,6 @@ class WeightedCEPlusDice(nn.Module):
         )
 
     def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        return (
-            self.ce_weight * self.ce(logits, targets)
-            + self.dice_weight * self.dice(logits, targets)
+        return self.ce_weight * self.ce(logits, targets) + self.dice_weight * self.dice(
+            logits, targets
         )

@@ -35,6 +35,7 @@ _MERGE_TOUCH_TOL_PX = 0.5
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 def _edge_angle_deg(x1: float, y1: float, x2: float, y2: float) -> float:
     return math.degrees(math.atan2(abs(y2 - y1), abs(x2 - x1)))
 
@@ -117,6 +118,7 @@ def _merge_collinear(
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def normalize_graph(
     graph: dict[str, Any],
     axis_cluster_tol_px: float = _AXIS_CLUSTER_TOL_PX,
@@ -133,8 +135,7 @@ def normalize_graph(
         Also carries "aligned_nodes"/"aligned_edges" as synonym keys.
     """
     raw_edges: list[tuple[float, float, float, float]] = [
-        (float(e[0]), float(e[1]), float(e[2]), float(e[3]))
-        for e in graph.get("edges", [])
+        (float(e[0]), float(e[1]), float(e[2]), float(e[3])) for e in graph.get("edges", [])
     ]
 
     # --- 1. Remove zero-length and reject non-orthogonal edges ---
@@ -213,13 +214,17 @@ def normalize_graph(
         xmin, xmax = min(hx1, hx2), max(hx1, hx2)
         for vi, (vx, vy1, _vx2, vy2) in v_indexed:
             ymin, ymax = min(vy1, vy2), max(vy1, vy2)
-            if (xmin + _INTERSECT_TOL_PX < vx < xmax - _INTERSECT_TOL_PX and
-                    ymin + _INTERSECT_TOL_PX < hy < ymax - _INTERSECT_TOL_PX):
+            if (
+                xmin + _INTERSECT_TOL_PX < vx < xmax - _INTERSECT_TOL_PX
+                and ymin + _INTERSECT_TOL_PX < hy < ymax - _INTERSECT_TOL_PX
+            ):
                 # Interior crossing (T or + junction inside edge extents)
                 split_pts[hi].append(vx)
                 split_pts[vi].append(hy)
-            elif (xmin - _INTERSECT_TOL_PX <= vx <= xmax + _INTERSECT_TOL_PX and
-                  ymin - _INTERSECT_TOL_PX <= hy <= ymax + _INTERSECT_TOL_PX):
+            elif (
+                xmin - _INTERSECT_TOL_PX <= vx <= xmax + _INTERSECT_TOL_PX
+                and ymin - _INTERSECT_TOL_PX <= hy <= ymax + _INTERSECT_TOL_PX
+            ):
                 # T-junction: vx at endpoint of H or hy at endpoint of V
                 # Only split the edge that does NOT already end at the junction
                 if abs(vx - hx1) > _INTERSECT_TOL_PX and abs(vx - hx2) > _INTERSECT_TOL_PX:
@@ -231,22 +236,22 @@ def normalize_graph(
     for i, e in enumerate(merged):
         x1, y1, x2, y2 = e
         pts = split_pts.get(i, [])
-        is_h = (y1 == y2)
+        is_h = y1 == y2
         if not pts:
             result_segments.append(e)
             continue
         if is_h:
-            xs = sorted({min(x1, x2), max(x1, x2)} | set(
-                max(min(x1, x2), min(max(x1, x2), p)) for p in pts
-            ))
-            for a, b in zip(xs, xs[1:]):
+            xs = sorted(
+                {min(x1, x2), max(x1, x2)} | set(max(min(x1, x2), min(max(x1, x2), p)) for p in pts)
+            )
+            for a, b in zip(xs, xs[1:], strict=False):
                 if abs(b - a) > 1e-6:
                     result_segments.append((a, y1, b, y1))
         else:
-            ys = sorted({min(y1, y2), max(y1, y2)} | set(
-                max(min(y1, y2), min(max(y1, y2), p)) for p in pts
-            ))
-            for a, b in zip(ys, ys[1:]):
+            ys = sorted(
+                {min(y1, y2), max(y1, y2)} | set(max(min(y1, y2), min(max(y1, y2), p)) for p in pts)
+            )
+            for a, b in zip(ys, ys[1:], strict=False):
                 if abs(b - a) > 1e-6:
                     result_segments.append((x1, a, x1, b))
 

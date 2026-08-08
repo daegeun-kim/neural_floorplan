@@ -22,8 +22,7 @@ When scale is unknown:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 from shapely.geometry import LineString, MultiPolygon, Polygon
 from shapely.ops import linemerge, unary_union
@@ -38,9 +37,10 @@ _DEFAULT_SNAP_TOL_PX = 1.5  # snap near-identical endpoints within this many pix
 @dataclass
 class WallGeometry:
     """Final wall polygon system."""
-    polygon: Optional[Polygon | MultiPolygon]
+
+    polygon: Polygon | MultiPolygon | None
     half_width_px: float
-    wall_thickness_mm: Optional[float]
+    wall_thickness_mm: float | None
     scale_blocked: bool
     chain_count: int
     edge_count: int
@@ -114,7 +114,7 @@ def _topology_snap_edges(
         clusters.setdefault(root, []).append(i)
 
     snapped: list[tuple[float, float]] = [(0.0, 0.0)] * n
-    for root, members in clusters.items():
+    for _root, members in clusters.items():
         cx = sum(all_pts[m][0] for m in members) / len(members)
         cy = sum(all_pts[m][1] for m in members) / len(members)
         for m in members:
@@ -123,7 +123,7 @@ def _topology_snap_edges(
     # Rebuild edges with snapped coordinates; drop zero-length and duplicates
     new_edges: list[list[float]] = []
     seen: set[tuple] = set()
-    for i, e in enumerate(edges):
+    for i, _e in enumerate(edges):
         p0 = snapped[2 * i]
         p1 = snapped[2 * i + 1]
         dx = p1[0] - p0[0]
@@ -237,8 +237,7 @@ def buffer_wall_chains(
 
     # Buffer each chain, union all into one wall system
     buffered = [
-        chain.buffer(half_width_px, cap_style="flat", join_style="mitre")
-        for chain in chains
+        chain.buffer(half_width_px, cap_style="flat", join_style="mitre") for chain in chains
     ]
     wall_system = unary_union(buffered)
 
@@ -278,10 +277,7 @@ def wall_polygon_to_svg_paths(
         d = exterior_d
         if interior_ds:
             d += " " + interior_ds
-        return (
-            f'<path d="{d}" fill="{fill}" stroke="{stroke}" '
-            f'fill-rule="evenodd" />'
-        )
+        return f'<path d="{d}" fill="{fill}" stroke="{stroke}" fill-rule="evenodd" />'
 
     poly = wall_geom.polygon
     if isinstance(poly, Polygon):

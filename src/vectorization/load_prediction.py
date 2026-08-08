@@ -8,13 +8,18 @@ import numpy as np
 from PIL import Image
 
 
-def find_prediction_images(preview_dir: str | Path, filename_contains: str = "prediction") -> list[Path]:
+def find_prediction_images(
+    preview_dir: str | Path, filename_contains: str = "prediction"
+) -> list[Path]:
     preview_dir = Path(preview_dir)
     if not preview_dir.exists():
         raise FileNotFoundError(f"Preview directory not found: {preview_dir}")
     matches = sorted(
-        p for p in preview_dir.iterdir()
-        if p.is_file() and filename_contains in p.name and p.suffix.lower() in {".png", ".jpg", ".jpeg"}
+        p
+        for p in preview_dir.iterdir()
+        if p.is_file()
+        and filename_contains in p.name
+        and p.suffix.lower() in {".png", ".jpg", ".jpeg"}
     )
     return matches
 

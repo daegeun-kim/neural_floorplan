@@ -1,0 +1,192 @@
+Neural Floorplan — Raster Floor Plans to Classified CAD Geometry
+================================================================
+
+Copyright (C) 2025-2026 Daegeun Kim
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License, version 3 only, as published by
+the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <https://www.gnu.org/licenses/>.
+
+SPDX-License-Identifier: GPL-3.0-only
+
+The complete license text is in the file `LICENSE` at the repository root.
+
+
+1. Scope of the repository license
+----------------------------------
+
+The entire repository is licensed as a whole under GPL-3.0-only. This includes
+`src/`, `scripts/`, `tests/`, `configs/`, `specs/`, and the repository
+documentation.
+
+The repository is licensed GPL-3.0-only — not "or later" — as a deliberate
+decision by the repository owner.
+
+There is no mixed-license or dual-license structure in this repository. Anyone
+redistributing this project, or a derivative work based on it, must comply with
+the GNU GPL version 3.
+
+
+2. Vendored upstream code: `external/raster_to_graph/`
+------------------------------------------------------
+
+The directory `external/raster_to_graph/` contains code copied and adapted from
+the official Raster-to-Graph implementation. It is **not** original work of this
+repository's owner.
+
+  Upstream project : Raster-to-Graph
+  Upstream authors : Sizhe Hu, Wenming Wu, Ruolin Su, Wanni Hou,
+                     Liping Zheng, Benzhu Xu
+  Upstream source  : https://github.com/SizheHu/Raster-to-Graph
+  Upstream license : GNU General Public License v3.0
+
+  Paper:
+    Hu, S., Wu, W., Su, R., Hou, W., Zheng, L., and Xu, B.
+    "Raster-to-Graph: Floorplan Recognition via Autoregressive Graph Prediction
+    with an Attention Transformer."
+    Computer Graphics Forum, 43(2), e15007, 2024.
+    DOI: https://doi.org/10.1111/cgf.15007
+
+  BibTeX:
+    @article{hu2024rastertograph,
+      author  = {Hu, Sizhe and Wu, Wenming and Su, Ruolin and Hou, Wanni and
+                 Zheng, Liping and Xu, Benzhu},
+      title   = {Raster-to-Graph: Floorplan Recognition via Autoregressive Graph
+                 Prediction with an Attention Transformer},
+      journal = {Computer Graphics Forum},
+      year    = {2024},
+      volume  = {43},
+      number  = {2},
+      pages   = {e15007},
+      doi     = {10.1111/cgf.15007},
+      url     = {https://onlinelibrary.wiley.com/doi/abs/10.1111/cgf.15007}
+    }
+
+Copyright in the upstream Raster-to-Graph code remains with its original
+authors. This project has made local modifications inside
+`external/raster_to_graph/` — principally preprocessing, inference driver
+scripts, candidate scoring, and graph post-processing adapted to this project's
+inputs. Those modifications are additions on top of upstream work; they do not
+transfer, replace, or erase upstream copyright or attribution, and the modified
+files remain subject to the upstream GPL-3.0 terms.
+
+Files added by this project inside that directory include:
+
+  external/raster_to_graph/run_inference_generous_phase4.py
+  external/raster_to_graph/run_single_image_phase4.py
+
+Because GPL-3.0 code is incorporated into this project, GPL-3.0 is the
+governing license for the combined work. This is the reason the repository as a
+whole is GPL-3.0-only.
+
+
+3. Third-party code carried inside the vendored directory
+---------------------------------------------------------
+
+The upstream Raster-to-Graph code itself incorporates code derived from
+Deformable DETR and DETR. Those files retain their original notices in place and
+must not have them removed. The affected files are:
+
+  external/raster_to_graph/models/deformable_transformer.py
+  external/raster_to_graph/models/matcher.py
+  external/raster_to_graph/models/position_encoding.py
+  external/raster_to_graph/models/ops/modules/__init__.py
+  external/raster_to_graph/models/ops/modules/ms_deform_attn.py
+  external/raster_to_graph/util/__init__.py
+  external/raster_to_graph/util/misc.py
+  external/raster_to_graph/util/plot_utils.py
+
+Their in-file headers identify:
+
+  Deformable DETR — Copyright (c) 2020 SenseTime. All Rights Reserved.
+                    Licensed under the Apache License, Version 2.0
+  DETR           — Copyright (c) Facebook, Inc. and its affiliates.
+                   All Rights Reserved.
+
+These headers are preserved verbatim. This project claims no authorship over
+that code.
+
+
+4. Model weights and checkpoints
+--------------------------------
+
+Model weights are not source code, are not covered by this repository's
+GPL-3.0-only grant, and are not stored in this repository.
+
+  * SegFormer backbone. The segmentation model uses the pretrained
+    `nvidia/mit-b0` SegFormer encoder obtained from Hugging Face. Those weights
+    are NVIDIA's work and are distributed under NVIDIA's own terms; consult the
+    `nvidia/mit-b0` model card before any redistribution or commercial use.
+    This project did not train the backbone and claims no ownership of it.
+
+  * Raster-to-Graph checkpoint. The pretrained wall-graph checkpoint used by
+    Phase 4 is published by the upstream Raster-to-Graph authors and must be
+    obtained from them. It is not redistributed here and is not included in any
+    release artifact produced by this repository.
+
+  * Decoder weights trained in this project. Only the custom `FloorplanDecoder`
+    head was trained here. Any release bundle produced from this repository
+    contains that trained head together with the configuration needed to load
+    it, and remains subject to the upstream terms above for the frozen backbone
+    it depends on.
+
+
+5. Dataset
+----------
+
+Training, validation, and test data come from the CubiCasa5K dataset
+(`high_quality_architectural` subset). CubiCasa5K is obtained separately from
+its own official source under its own terms. It is **not** redistributed in this
+repository and is **not** included in any release artifact produced from it.
+
+  Kalervo, A., Ylioinas, J., Häikiö, M., Karhu, A., and Kannala, J.
+  "CubiCasa5K: A Dataset and an Improved Multi-Task Model for Floorplan Image
+  Analysis." Scandinavian Conference on Image Analysis (SCIA), 2019.
+  https://github.com/CubiCasa/CubiCasa5k
+
+CubiCasa5K is licensed under Creative Commons Attribution-NonCommercial 4.0
+International (CC BY-NC 4.0). That license permits sharing and adaptation with
+attribution, but prohibits commercial use.
+
+  * `docs/images/` — the curated README images are renderings of, and pipeline
+    output derived from, CubiCasa5K floor plans. They are therefore
+    **CC BY-NC 4.0, not GPL-3.0**, and are expressly excluded from this
+    repository's GPL grant. They may be redistributed with attribution to
+    CubiCasa5K, but not used commercially.
+
+  * This carve-out applies to those documentation images only. It does not
+    create a mixed-license structure for source code: every source file in this
+    repository remains GPL-3.0-only.
+
+  * No CubiCasa5K source file, mask, or split content is redistributed here.
+    Only the small curated image set above is derived from it.
+
+
+6. Runtime dependencies
+-----------------------
+
+PyTorch, Hugging Face Transformers, OpenCV, Shapely, NumPy, Pillow, and the
+other declared dependencies are third-party projects distributed under their own
+licenses by their own authors. Installing this project does not place those
+projects under this repository's license, and this repository claims no
+authorship over them.
+
+
+7. What this means if you want to reuse this code
+--------------------------------------------------
+
+  * Any work that copies or derives from this repository must be distributed
+    under GPL-3.0.
+  * You must keep this NOTICE, the `LICENSE` file, and the upstream attributions
+    in section 2 and section 3 intact.
+  * You cannot relicense `external/raster_to_graph/` under more permissive
+    terms; that code is not this project's to relicense.
+  * Model weights and dataset files are governed by their own separate terms
+    described in sections 4 and 5, not by this repository's GPL grant.

@@ -1,7 +1,7 @@
 Goal:
 Convert CubiCasa SVG annotations into raster masks.
 
-Vector data: Located in "C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\high_quality_architectural" as svg format.
+Vector data: CubiCasa SVG files under the user-supplied dataset root.
 Job:
 - for all svg files in the folder, convert to a png file with white background
 - name of the converted png files are model_clean.png
@@ -28,6 +28,9 @@ Solution implemented in src/svg_to_raster.py:
   offsets that would misalign the raster from the masks, and cairosvg cannot render
   display:none elements referenced by <use> anyway.
 - convert_svg_to_png() normalizes in-memory before passing bytes to cairosvg.
+- CairoSVG is loaded through `src/cairo_runtime.py`. On Windows, the helper
+  resolves Conda-forge's `Library/bin/cairo.dll` without copying or modifying
+  files in the environment; other platforms retain CairoSVG's normal loading.
 - process_dataset() logs each visibility fix and warns when a PNG has fewer than 100
   non-white pixels (suspicious blank output).
 

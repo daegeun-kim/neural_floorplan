@@ -64,7 +64,7 @@ def _skeleton_and_endpoints(
     """
     skel = skeletonize(component_mask > 0)
     ys, xs = np.nonzero(skel)
-    skeleton_points = list(zip(xs.tolist(), ys.tolist()))
+    skeleton_points = list(zip(xs.tolist(), ys.tolist(), strict=False))
     if not skeleton_points:
         return [], []
     skel_set = set(skeleton_points)

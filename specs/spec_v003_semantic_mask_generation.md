@@ -2,7 +2,7 @@
 
 ## 0. Active Version Notice
 
-This spec has been refreshed (task07) to match the 7-class scheme implemented by `src/generate_semantic_masks.py` and trained as `segformer_b0_run3` (see `spec_v005_segformer_train.md`). Earlier revisions of this document described a 5-class `background/wall/opening/room/icon` mapping — that mapping is retired and must not be treated as current. It survives only inside `spec_v005_segformer_train_outdated.md` as historical context.
+This spec has been refreshed (task07) to match the 7-class scheme implemented by `src/generate_semantic_masks.py` and trained as `segformer_b0_run3` (see `spec_v005_segformer_train.md`). Earlier revisions of this document described a 5-class `background/wall/opening/room/icon` mapping — that mapping is retired and must not be treated as current.
 
 ## 1. Purpose
 
@@ -232,7 +232,7 @@ There is no separate furniture/icon/fixture class in the active scheme — furni
 
 ### Historical Classes (retired, do not implement)
 
-Earlier revisions of this spec described a 5-class `background/wall/opening/room/icon` scheme, later sketched as an 8-class `door/window/room/furniture/fixture/stair/text_or_annotation` expansion. Neither was implemented as described; both are retired in favor of the 7-class table above. They remain documented only in `spec_v005_segformer_train_outdated.md` for historical reference.
+Earlier revisions of this spec described a 5-class `background/wall/opening/room/icon` scheme, later sketched as an 8-class `door/window/room/furniture/fixture/stair/text_or_annotation` expansion. Neither was implemented as described; both are retired in favor of the 7-class table above. See `specs/vectorization_phase_history.md` for why the class scheme changed.
 
 ---
 
@@ -406,6 +406,10 @@ Advantages:
 - Handles paths, polygons, transforms, strokes better than manual geometry parsing
 - Consistent with the previous `svg_to_raster.py` workflow
 
+Runtime note: both render paths load CairoSVG through `src/cairo_runtime.py`.
+On Windows, this resolves Conda-forge's `Library/bin/cairo.dll` filename before
+CairoCFFI initializes. It does not copy the DLL or change mask-rendering behavior.
+
 ### Option B — Later Advanced Method
 
 Manually parse paths/polygons and rasterize with OpenCV/Shapely.
@@ -555,7 +559,7 @@ Optional arguments:
 
 ```powershell
 python -m src.generate_semantic_masks `
-"C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\high_quality_architectural" `
+"docs/high_quality_architectural" `
 --verbose
 ```
 
@@ -900,11 +904,14 @@ conda activate floorplan-cad
 python -m src.generate_semantic_masks <root_dir>
 ```
 
-If Cairo DLL path is required on Windows:
+On Windows, install Cairo into the active Conda environment if it is missing:
 
 ```powershell
-$env:PATH = "C:\Users\kdgki\anaconda3\envs\floorplan-cad\Library\bin;" + $env:PATH
+conda install -c conda-forge cairo
 ```
+
+`src/cairo_runtime.py` resolves Conda-forge's `Library/bin/cairo.dll`
+automatically; no machine-specific `PATH` entry is required.
 
 ---
 

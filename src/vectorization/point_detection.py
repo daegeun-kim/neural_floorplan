@@ -27,14 +27,13 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Optional
 
 import cv2
 import numpy as np
 
 from .graph_types import (
-    OPPOSITE_DIRECTION,
     ALL_POINT_TYPES,
+    OPPOSITE_DIRECTION,
     Attachment,
     ComponentRecord,
     Direction,
@@ -81,10 +80,10 @@ class WallSkeletonEdge:
     end: tuple[float, float]
     thickness: float
     component_id: int
-    dir_from_start: Optional[Direction]
-    dir_from_end: Optional[Direction]
-    point_id_at_start: Optional[str] = None
-    point_id_at_end: Optional[str] = None
+    dir_from_start: Direction | None
+    dir_from_end: Direction | None
+    point_id_at_start: str | None = None
+    point_id_at_end: str | None = None
 
     @property
     def orientation_angle(self) -> float:
@@ -111,7 +110,7 @@ def _neighbors8(pt: tuple[int, int], pts_set: set[tuple[int, int]]) -> list[tupl
     ]
 
 
-def _cardinal_direction(dx: float, dy: float, tolerance_deg: float) -> Optional[Direction]:
+def _cardinal_direction(dx: float, dy: float, tolerance_deg: float) -> Direction | None:
     length = math.hypot(dx, dy)
     if length < 1e-9:
         return None
@@ -145,7 +144,9 @@ def _walk_chain(
 
 
 def _chain_length(path: list[tuple[int, int]]) -> float:
-    return sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(path[:-1], path[1:]))
+    return sum(
+        math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(path[:-1], path[1:], strict=False)
+    )
 
 
 def _local_axis_labels(path: list[tuple[int, int]], window: int = 5) -> list[str]:
@@ -162,7 +163,9 @@ def _local_axis_labels(path: list[tuple[int, int]], window: int = 5) -> list[str
     return labels
 
 
-def _split_path_at_corners(path: list[tuple[int, int]], window: int = 5) -> list[list[tuple[int, int]]]:
+def _split_path_at_corners(
+    path: list[tuple[int, int]], window: int = 5
+) -> list[list[tuple[int, int]]]:
     """Split a skeleton chain wherever its dominant local axis changes.
 
     skeletonize represents an L-shaped wall corner as one continuous
@@ -175,8 +178,14 @@ def _split_path_at_corners(path: list[tuple[int, int]], window: int = 5) -> list
     if len(path) < 3:
         return [path]
     labels = _local_axis_labels(path, window)
-    split_indices = sorted({0, *(i for i in range(1, len(labels)) if labels[i] != labels[i - 1]), len(path) - 1})
-    sub_paths = [path[a:b + 1] for a, b in zip(split_indices[:-1], split_indices[1:]) if b > a]
+    split_indices = sorted(
+        {0, *(i for i in range(1, len(labels)) if labels[i] != labels[i - 1]), len(path) - 1}
+    )
+    sub_paths = [
+        path[a : b + 1]
+        for a, b in zip(split_indices[:-1], split_indices[1:], strict=False)
+        if b > a
+    ]
     return sub_paths if sub_paths else [path]
 
 
@@ -243,7 +252,10 @@ def build_wall_skeleton_graph(
                                 reason="wall skeleton sub-chain is not within cardinal tolerance",
                                 class_name="wall",
                                 bbox=comp.bbox,
-                                centroid=((sub_start[0] + sub_end[0]) / 2.0, (sub_start[1] + sub_end[1]) / 2.0),
+                                centroid=(
+                                    (sub_start[0] + sub_end[0]) / 2.0,
+                                    (sub_start[1] + sub_end[1]) / 2.0,
+                                ),
                                 component_id=comp.component_id,
                             )
                         )
@@ -299,7 +311,9 @@ def _classify_wall_nodes(
         attachments = []
         for e in edges:
             d = e.dir_from_start if e.start == (float(node[0]), float(node[1])) else e.dir_from_end
-            attachments.append(Attachment(type="wall", direction=d, source="wall", evidence_length_px=e.length))
+            attachments.append(
+                Attachment(type="wall", direction=d, source="wall", evidence_length_px=e.length)
+            )
         points.append(
             GraphPoint(
                 id=f"wallpt_{counter}",
@@ -312,7 +326,9 @@ def _classify_wall_nodes(
     return points, free_ends
 
 
-def _free_end_near_opening_evidence(node: tuple[int, int], masks: dict[str, np.ndarray], radius_px: float) -> bool:
+def _free_end_near_opening_evidence(
+    node: tuple[int, int], masks: dict[str, np.ndarray], radius_px: float
+) -> bool:
     """True if window/door_arc/door_leaf/door_origin mask evidence exists
     within ``radius_px`` of a candidate wall free-end pixel - such an end is
     not a true peninsula and must not finalize as a ``1_wall_point`` (task12
@@ -367,7 +383,11 @@ def _finalize_free_ends(
                 id=f"wallpt_free_{counter}",
                 point_type="wall_point",
                 coordinate=(nx, ny),
-                attachments=[Attachment(type="wall", direction=d, source="wall", evidence_length_px=edge.length)],
+                attachments=[
+                    Attachment(
+                        type="wall", direction=d, source="wall", evidence_length_px=edge.length
+                    )
+                ],
                 source_component_ids=[edge.component_id],
             )
         )
@@ -427,7 +447,9 @@ def _min_pixel_distance_to_wall(pixel_coords: np.ndarray, wall) -> float:
     seg_len_sq = dx * dx + dy * dy
     if seg_len_sq < 1e-9:
         return float(np.min(np.hypot(pixel_coords[:, 0] - x1, pixel_coords[:, 1] - y1)))
-    t = np.clip(((pixel_coords[:, 0] - x1) * dx + (pixel_coords[:, 1] - y1) * dy) / seg_len_sq, 0.0, 1.0)
+    t = np.clip(
+        ((pixel_coords[:, 0] - x1) * dx + (pixel_coords[:, 1] - y1) * dy) / seg_len_sq, 0.0, 1.0
+    )
     proj_x, proj_y = x1 + t * dx, y1 + t * dy
     return float(np.min(np.hypot(pixel_coords[:, 0] - proj_x, pixel_coords[:, 1] - proj_y)))
 
@@ -445,14 +467,17 @@ def nearest_wall(center: tuple[float, float], walls: list, max_dist: float = 40.
     return best_wall
 
 
-def _nearest_wall_matching_orientation(center: tuple[float, float], walls: list, orientation: str, max_dist: float):
+def _nearest_wall_matching_orientation(
+    center: tuple[float, float], walls: list, orientation: str, max_dist: float
+):
     """Prefer the nearest wall edge whose own running ``orientation``
     (``"horizontal"`` = ``dir_from_start`` in left/right, ``"vertical"`` =
     up/down) matches; fall back to plain nearest-by-distance only when no
     matching-orientation wall exists within ``max_dist`` (task17 - see
     ``_detect_door_points``'s hosting call for why this matters)."""
     matching = [
-        w for w in walls
+        w
+        for w in walls
         if ("horizontal" if w.dir_from_start in ("left", "right") else "vertical") == orientation
     ]
     host = nearest_wall(center, matching, max_dist=max_dist)
@@ -514,7 +539,11 @@ def select_host_wall_for_opening(
 ):
     if not walls or pixel_coords is None or len(pixel_coords) == 0:
         return None
-    scored = [(dist, wall) for wall in walls if (dist := _min_pixel_distance_to_wall(pixel_coords, wall)) <= max_dist]
+    scored = [
+        (dist, wall)
+        for wall in walls
+        if (dist := _min_pixel_distance_to_wall(pixel_coords, wall)) <= max_dist
+    ]
     if not scored:
         return None
     scored.sort(key=lambda item: item[0])
@@ -527,7 +556,9 @@ def select_host_wall_for_opening(
     return nearest if score_nearest >= score_second else second
 
 
-def project_pixels_onto_wall(pixel_coords: np.ndarray, wall) -> tuple[tuple[float, float], float, float, float]:
+def project_pixels_onto_wall(
+    pixel_coords: np.ndarray, wall
+) -> tuple[tuple[float, float], float, float, float]:
     x1, y1 = wall.start
     x2, y2 = wall.end
     dx, dy = x2 - x1, y2 - y1
@@ -563,23 +594,36 @@ def _detect_window_points(
         pixel_coords = np.column_stack([xs.astype(np.float64), ys.astype(np.float64)])
 
         host_edge = select_host_wall_for_opening(
-            pixel_coords, wall_edges, max_dist=cfg["max_wall_dist"],
-            corner_ambiguity_px=cfg["corner_ambiguity_px"], min_remainder_px=cfg["min_remainder_px"],
+            pixel_coords,
+            wall_edges,
+            max_dist=cfg["max_wall_dist"],
+            corner_ambiguity_px=cfg["corner_ambiguity_px"],
+            min_remainder_px=cfg["min_remainder_px"],
         )
         if host_edge is None:
             rejected.append(
-                RejectedEvidence(kind="window_unhosted", reason="no wall within max_wall_dist",
-                                  class_name="window", bbox=comp.bbox, centroid=comp.centroid,
-                                  component_id=comp.component_id)
+                RejectedEvidence(
+                    kind="window_unhosted",
+                    reason="no wall within max_wall_dist",
+                    class_name="window",
+                    bbox=comp.bbox,
+                    centroid=comp.centroid,
+                    component_id=comp.component_id,
+                )
             )
             continue
 
         _center, width_px, t_min, t_max = project_pixels_onto_wall(pixel_coords, host_edge)
         if width_px < cfg["min_hosted_width_px"]:
             rejected.append(
-                RejectedEvidence(kind="window_too_narrow", reason=f"{width_px:.1f}px hosted width",
-                                  class_name="window", bbox=comp.bbox, centroid=comp.centroid,
-                                  component_id=comp.component_id)
+                RejectedEvidence(
+                    kind="window_too_narrow",
+                    reason=f"{width_px:.1f}px hosted width",
+                    class_name="window",
+                    bbox=comp.bbox,
+                    centroid=comp.centroid,
+                    component_id=comp.component_id,
+                )
             )
             continue
 
@@ -590,31 +634,52 @@ def _detect_window_points(
             or scale_info.scale_status not in ("resolved", "estimated")
         ):
             rejected.append(
-                RejectedEvidence(kind="window_scale_blocked", reason="scale not resolved",
-                                  class_name="window", bbox=comp.bbox, centroid=comp.centroid,
-                                  component_id=comp.component_id)
+                RejectedEvidence(
+                    kind="window_scale_blocked",
+                    reason="scale not resolved",
+                    class_name="window",
+                    bbox=comp.bbox,
+                    centroid=comp.centroid,
+                    component_id=comp.component_id,
+                )
             )
             continue
         if width_px * scale_info.px_to_mm < cfg["min_window_width_mm"]:
             rejected.append(
-                RejectedEvidence(kind="window_too_narrow_mm", reason=f"{width_px * scale_info.px_to_mm:.1f}mm hosted width",
-                                  class_name="window", bbox=comp.bbox, centroid=comp.centroid,
-                                  component_id=comp.component_id)
+                RejectedEvidence(
+                    kind="window_too_narrow_mm",
+                    reason=f"{width_px * scale_info.px_to_mm:.1f}mm hosted width",
+                    class_name="window",
+                    bbox=comp.bbox,
+                    centroid=comp.centroid,
+                    component_id=comp.component_id,
+                )
             )
             continue
 
         seg_len = host_edge.length
         ux = (host_edge.end[0] - host_edge.start[0]) / seg_len
         uy = (host_edge.end[1] - host_edge.start[1]) / seg_len
-        p_min = (host_edge.start[0] + ux * t_min * seg_len, host_edge.start[1] + uy * t_min * seg_len)
-        p_max = (host_edge.start[0] + ux * t_max * seg_len, host_edge.start[1] + uy * t_max * seg_len)
+        p_min = (
+            host_edge.start[0] + ux * t_min * seg_len,
+            host_edge.start[1] + uy * t_min * seg_len,
+        )
+        p_max = (
+            host_edge.start[0] + ux * t_max * seg_len,
+            host_edge.start[1] + uy * t_max * seg_len,
+        )
         dx, dy = p_max[0] - p_min[0], p_max[1] - p_min[1]
         dir_min_to_max = _cardinal_direction(dx, dy, tolerance_deg=45.0)
         if dir_min_to_max is None:
             rejected.append(
-                RejectedEvidence(kind="window_axis_ambiguous", reason="hosted span is not cardinal",
-                                  class_name="window", bbox=comp.bbox, centroid=comp.centroid,
-                                  component_id=comp.component_id)
+                RejectedEvidence(
+                    kind="window_axis_ambiguous",
+                    reason="hosted span is not cardinal",
+                    class_name="window",
+                    bbox=comp.bbox,
+                    centroid=comp.centroid,
+                    component_id=comp.component_id,
+                )
             )
             continue
         dir_max_to_min = OPPOSITE_DIRECTION[dir_min_to_max]
@@ -622,11 +687,18 @@ def _detect_window_points(
         counter += 1
         points.append(
             GraphPoint(
-                id=f"winpt_{counter}_a", point_type="wall_window_point", coordinate=p_min,
+                id=f"winpt_{counter}_a",
+                point_type="wall_window_point",
+                coordinate=p_min,
                 attachments=[
                     Attachment(type="wall", direction=dir_max_to_min, source="wall"),
-                    Attachment(type="window", direction=dir_min_to_max, source="window", evidence_length_px=width_px,
-                               host_thickness_px=host_edge.thickness),
+                    Attachment(
+                        type="window",
+                        direction=dir_min_to_max,
+                        source="window",
+                        evidence_length_px=width_px,
+                        host_thickness_px=host_edge.thickness,
+                    ),
                 ],
                 source_component_ids=[comp.component_id],
                 host_wall_edge_id=host_edge.id,
@@ -635,11 +707,18 @@ def _detect_window_points(
         counter += 1
         points.append(
             GraphPoint(
-                id=f"winpt_{counter}_b", point_type="wall_window_point", coordinate=p_max,
+                id=f"winpt_{counter}_b",
+                point_type="wall_window_point",
+                coordinate=p_max,
                 attachments=[
                     Attachment(type="wall", direction=dir_min_to_max, source="wall"),
-                    Attachment(type="window", direction=dir_max_to_min, source="window", evidence_length_px=width_px,
-                               host_thickness_px=host_edge.thickness),
+                    Attachment(
+                        type="window",
+                        direction=dir_max_to_min,
+                        source="window",
+                        evidence_length_px=width_px,
+                        host_thickness_px=host_edge.thickness,
+                    ),
                 ],
                 host_wall_edge_id=host_edge.id,
                 source_component_ids=[comp.component_id],
@@ -668,7 +747,9 @@ def _nearest_door_module_mm(value_mm: float, modules_mm: tuple[float, ...]) -> f
     return best
 
 
-def _extend_point(origin: tuple[float, float], through: tuple[float, float], new_distance: float) -> tuple[float, float]:
+def _extend_point(
+    origin: tuple[float, float], through: tuple[float, float], new_distance: float
+) -> tuple[float, float]:
     ox, oy = origin
     tx, ty = through
     dx, dy = tx - ox, ty - oy
@@ -689,7 +770,7 @@ def _point_to_bbox_distance(point: tuple[float, float], bbox: tuple[int, int, in
     return math.hypot(dx, dy)
 
 
-def _band_pixel_count(mask: Optional[np.ndarray], x0: float, y0: float, x1: float, y1: float) -> int:
+def _band_pixel_count(mask: np.ndarray | None, x0: float, y0: float, x1: float, y1: float) -> int:
     """Count of nonzero ``mask`` pixels in the (clipped) box ``[x0,x1)x[y0,y1)``."""
     if mask is None:
         return 0
@@ -701,7 +782,9 @@ def _band_pixel_count(mask: Optional[np.ndarray], x0: float, y0: float, x1: floa
     return int(np.count_nonzero(mask[iy0:iy1, ix0:ix1]))
 
 
-def _bbox_edges(bbox: tuple[int, int, int, int]) -> dict[str, tuple[tuple[float, float], tuple[float, float]]]:
+def _bbox_edges(
+    bbox: tuple[int, int, int, int],
+) -> dict[str, tuple[tuple[float, float], tuple[float, float]]]:
     """The 4 edges of ``bbox``, each as its 2 endpoint vertices."""
     x0, y0, x1, y1 = bbox
     return {
@@ -713,8 +796,11 @@ def _bbox_edges(bbox: tuple[int, int, int, int]) -> dict[str, tuple[tuple[float,
 
 
 def _edge_band_score(
-    p1: tuple[float, float], p2: tuple[float, float],
-    purple_mask: Optional[np.ndarray], wall_mask: Optional[np.ndarray], probe_px: float,
+    p1: tuple[float, float],
+    p2: tuple[float, float],
+    purple_mask: np.ndarray | None,
+    wall_mask: np.ndarray | None,
+    probe_px: float,
 ) -> int:
     """Combined purple (``door_origin``) + black (``wall``) pixel count in a
     band straddling the bbox edge ``p1``-``p2`` (task16: a door's hinge and
@@ -725,10 +811,14 @@ def _edge_band_score(
     edge cannot also bleed into and tie with the top/bottom edges' bands.
     """
     x0, y0, x1, y1 = _edge_perpendicular_band(p1, p2, probe_px)
-    return _band_pixel_count(purple_mask, x0, y0, x1, y1) + _band_pixel_count(wall_mask, x0, y0, x1, y1)
+    return _band_pixel_count(purple_mask, x0, y0, x1, y1) + _band_pixel_count(
+        wall_mask, x0, y0, x1, y1
+    )
 
 
-def _corner_orange_score(corner: tuple[float, float], orange_mask: Optional[np.ndarray], probe_px: float) -> int:
+def _corner_orange_score(
+    corner: tuple[float, float], orange_mask: np.ndarray | None, probe_px: float
+) -> int:
     x, y = corner
     return _band_pixel_count(orange_mask, x - probe_px, y - probe_px, x + probe_px, y + probe_px)
 
@@ -752,9 +842,9 @@ class DoorVertexSelection:
 
 def select_door_hinge_end_from_bbox(
     bbox: tuple[int, int, int, int],
-    purple_mask: Optional[np.ndarray],
-    wall_mask: Optional[np.ndarray],
-    orange_mask: Optional[np.ndarray],
+    purple_mask: np.ndarray | None,
+    wall_mask: np.ndarray | None,
+    orange_mask: np.ndarray | None,
     probe_px: float,
 ) -> DoorVertexSelection:
     """task16/task17: hinge and end are 2 *adjacent* vertices of the red
@@ -781,8 +871,10 @@ def select_door_hinge_end_from_bbox(
     """
     x0, y0, x1, y1 = bbox
     all_vertices = {
-        "top_left": (float(x0), float(y0)), "top_right": (float(x1), float(y0)),
-        "bottom_left": (float(x0), float(y1)), "bottom_right": (float(x1), float(y1)),
+        "top_left": (float(x0), float(y0)),
+        "top_right": (float(x1), float(y0)),
+        "bottom_left": (float(x0), float(y1)),
+        "bottom_right": (float(x1), float(y1)),
     }
     edges = _bbox_edges(bbox)
     scored = [
@@ -791,7 +883,9 @@ def select_door_hinge_end_from_bbox(
     ]
     scored.sort(key=lambda item: item[0], reverse=True)
     best_score, edge_name, p1, p2 = scored[0]
-    if _corner_orange_score(p1, orange_mask, probe_px) >= _corner_orange_score(p2, orange_mask, probe_px):
+    if _corner_orange_score(p1, orange_mask, probe_px) >= _corner_orange_score(
+        p2, orange_mask, probe_px
+    ):
         hinge, end = p1, p2
     else:
         hinge, end = p2, p1
@@ -799,7 +893,11 @@ def select_door_hinge_end_from_bbox(
         wall_mask, *_edge_perpendicular_band(p1, p2, probe_px)
     )
     return DoorVertexSelection(
-        hinge=hinge, end=end, edge_name=edge_name, edge_score=best_score, all_vertices=all_vertices,
+        hinge=hinge,
+        end=end,
+        edge_name=edge_name,
+        edge_score=best_score,
+        all_vertices=all_vertices,
         host_wall_alignment_score=host_wall_alignment_score,
     )
 
@@ -817,9 +915,9 @@ def _edge_perpendicular_band(
 def _detect_door_points(
     door_arc_components: list[ComponentRecord],
     door_origin_components: list[ComponentRecord],
-    door_leaf_mask: Optional[np.ndarray],
-    door_origin_mask: Optional[np.ndarray],
-    wall_mask: Optional[np.ndarray],
+    door_leaf_mask: np.ndarray | None,
+    door_origin_mask: np.ndarray | None,
+    wall_mask: np.ndarray | None,
     wall_edges: list,
     cfg: dict,
 ) -> tuple[list[GraphPoint], list[RejectedEvidence]]:
@@ -847,21 +945,35 @@ def _detect_door_points(
         shorter, longer = sorted((width_px, height_px))
         aspect_ratio = longer / shorter if shorter > 0 else float("inf")
         if aspect_ratio > max_aspect_ratio:
-            rejected.append(RejectedEvidence(kind="unresolved_door_arc_aspect_ratio",
-                                               reason=f"bbox aspect ratio {aspect_ratio:.2f}:1 exceeds {max_aspect_ratio:.2f}:1",
-                                               class_name="door_arc", bbox=arc.bbox, centroid=arc.centroid,
-                                               component_id=arc.component_id))
+            rejected.append(
+                RejectedEvidence(
+                    kind="unresolved_door_arc_aspect_ratio",
+                    reason=f"bbox aspect ratio {aspect_ratio:.2f}:1 exceeds {max_aspect_ratio:.2f}:1",
+                    class_name="door_arc",
+                    bbox=arc.bbox,
+                    centroid=arc.centroid,
+                    component_id=arc.component_id,
+                )
+            )
             continue
 
-        selection = select_door_hinge_end_from_bbox(arc.bbox, door_origin_mask, wall_mask, door_leaf_mask, probe_px)
+        selection = select_door_hinge_end_from_bbox(
+            arc.bbox, door_origin_mask, wall_mask, door_leaf_mask, probe_px
+        )
         hinge_point, far_point = selection.hinge, selection.end
 
         raw_width_px = math.hypot(far_point[0] - hinge_point[0], far_point[1] - hinge_point[1])
         if raw_width_px < cfg["min_hosted_width_px"]:
-            rejected.append(RejectedEvidence(kind="unresolved_door_too_narrow",
-                                               reason=f"{raw_width_px:.1f}px bbox edge span",
-                                               class_name="door_arc", bbox=arc.bbox, centroid=hinge_point,
-                                               component_id=arc.component_id))
+            rejected.append(
+                RejectedEvidence(
+                    kind="unresolved_door_too_narrow",
+                    reason=f"{raw_width_px:.1f}px bbox edge span",
+                    class_name="door_arc",
+                    bbox=arc.bbox,
+                    centroid=hinge_point,
+                    component_id=arc.component_id,
+                )
+            )
             continue
 
         if (
@@ -869,13 +981,21 @@ def _detect_door_points(
             or scale_info.px_to_mm is None
             or scale_info.scale_status not in ("resolved", "estimated")
         ):
-            rejected.append(RejectedEvidence(kind="unresolved_door_scale_blocked",
-                                               reason="scale not resolved",
-                                               class_name="door_arc", bbox=arc.bbox, centroid=hinge_point,
-                                               component_id=arc.component_id))
+            rejected.append(
+                RejectedEvidence(
+                    kind="unresolved_door_scale_blocked",
+                    reason="scale not resolved",
+                    class_name="door_arc",
+                    bbox=arc.bbox,
+                    centroid=hinge_point,
+                    component_id=arc.component_id,
+                )
+            )
             continue
 
-        width_mm = _nearest_door_module_mm(raw_width_px * scale_info.px_to_mm, cfg["door_width_modules_mm"])
+        width_mm = _nearest_door_module_mm(
+            raw_width_px * scale_info.px_to_mm, cfg["door_width_modules_mm"]
+        )
         snapped_width_px = width_mm / scale_info.px_to_mm
         max_dist_px = cfg["door_point_max_dist_from_arc_mm"] / scale_info.px_to_mm
         snapped_far_point = _extend_point(hinge_point, far_point, snapped_width_px)
@@ -919,41 +1039,68 @@ def _detect_door_points(
             far_point, wall_edges, door_orientation, cfg["hinge_snap_to_wall_max_dist_px"]
         )
         if hinge_host is None or far_host is None:
-            rejected.append(RejectedEvidence(kind="unresolved_door_hinge",
-                                               reason="hinge/end vertex too far from any wall",
-                                               class_name="door_arc", bbox=arc.bbox, centroid=hinge_point,
-                                               component_id=arc.component_id))
+            rejected.append(
+                RejectedEvidence(
+                    kind="unresolved_door_hinge",
+                    reason="hinge/end vertex too far from any wall",
+                    class_name="door_arc",
+                    bbox=arc.bbox,
+                    centroid=hinge_point,
+                    component_id=arc.component_id,
+                )
+            )
             continue
 
         hinge_dist_px = _point_to_bbox_distance(hinge_point, arc.bbox)
         end_dist_px = _point_to_bbox_distance(far_point, arc.bbox)
         if hinge_dist_px > max_dist_px or end_dist_px > max_dist_px:
-            rejected.append(RejectedEvidence(kind="unresolved_door_too_far_from_arc",
-                                               reason=(f"hinge={hinge_dist_px:.1f}px end={end_dist_px:.1f}px "
-                                                       f"exceeds {max_dist_px:.1f}px from door_arc bbox"),
-                                               class_name="door_arc", bbox=arc.bbox, centroid=hinge_point,
-                                               component_id=arc.component_id))
+            rejected.append(
+                RejectedEvidence(
+                    kind="unresolved_door_too_far_from_arc",
+                    reason=(
+                        f"hinge={hinge_dist_px:.1f}px end={end_dist_px:.1f}px "
+                        f"exceeds {max_dist_px:.1f}px from door_arc bbox"
+                    ),
+                    class_name="door_arc",
+                    bbox=arc.bbox,
+                    centroid=hinge_point,
+                    component_id=arc.component_id,
+                )
+            )
             continue
 
         dx, dy = far_point[0] - hinge_point[0], far_point[1] - hinge_point[1]
         dir_hinge_to_far = _cardinal_direction(dx, dy, tolerance_deg=45.0)
         if dir_hinge_to_far is None:
-            rejected.append(RejectedEvidence(kind="unresolved_door_axis",
-                                               reason="hinge-to-end direction is not cardinal",
-                                               class_name="door_arc", bbox=arc.bbox, centroid=hinge_point,
-                                               component_id=arc.component_id))
+            rejected.append(
+                RejectedEvidence(
+                    kind="unresolved_door_axis",
+                    reason="hinge-to-end direction is not cardinal",
+                    class_name="door_arc",
+                    bbox=arc.bbox,
+                    centroid=hinge_point,
+                    component_id=arc.component_id,
+                )
+            )
             continue
         dir_far_to_hinge = OPPOSITE_DIRECTION[dir_hinge_to_far]
 
         counter += 1
         points.append(
             GraphPoint(
-                id=f"doorpt_{counter}_hinge", point_type="wall_door_hinge_point", coordinate=hinge_point,
+                id=f"doorpt_{counter}_hinge",
+                point_type="wall_door_hinge_point",
+                coordinate=hinge_point,
                 attachments=[
                     Attachment(type="wall", direction=dir_far_to_hinge, source="wall"),
-                    Attachment(type="door_origin", direction=dir_hinge_to_far, source="door_origin",
-                               evidence_length_px=snapped_width_px, host_thickness_px=hinge_host.thickness,
-                               confidence=1.0),
+                    Attachment(
+                        type="door_origin",
+                        direction=dir_hinge_to_far,
+                        source="door_origin",
+                        evidence_length_px=snapped_width_px,
+                        host_thickness_px=hinge_host.thickness,
+                        confidence=1.0,
+                    ),
                 ],
                 source_component_ids=[arc.component_id],
                 host_wall_edge_id=hinge_host.id,
@@ -961,12 +1108,19 @@ def _detect_door_points(
         )
         points.append(
             GraphPoint(
-                id=f"doorpt_{counter}_end", point_type="wall_door_end_point", coordinate=far_point,
+                id=f"doorpt_{counter}_end",
+                point_type="wall_door_end_point",
+                coordinate=far_point,
                 attachments=[
                     Attachment(type="wall", direction=dir_hinge_to_far, source="wall"),
-                    Attachment(type="door_origin", direction=dir_far_to_hinge, source="door_origin",
-                               evidence_length_px=snapped_width_px, host_thickness_px=far_host.thickness,
-                               confidence=1.0),
+                    Attachment(
+                        type="door_origin",
+                        direction=dir_far_to_hinge,
+                        source="door_origin",
+                        evidence_length_px=snapped_width_px,
+                        host_thickness_px=far_host.thickness,
+                        confidence=1.0,
+                    ),
                 ],
                 source_component_ids=[arc.component_id],
                 host_wall_edge_id=far_host.id,
@@ -978,10 +1132,16 @@ def _detect_door_points(
     # door_origin component is reported as supporting evidence only,
     # consistent with rule 52 (purple alone never creates a door).
     for comp in door_origin_components:
-        rejected.append(RejectedEvidence(kind="unresolved_door_origin",
-                                           reason="door_origin evidence is supporting evidence only, not paired to a specific red cluster",
-                                           class_name="door_origin", bbox=comp.bbox, centroid=comp.centroid,
-                                           component_id=comp.component_id))
+        rejected.append(
+            RejectedEvidence(
+                kind="unresolved_door_origin",
+                reason="door_origin evidence is supporting evidence only, not paired to a specific red cluster",
+                class_name="door_origin",
+                bbox=comp.bbox,
+                centroid=comp.centroid,
+                component_id=comp.component_id,
+            )
+        )
 
     return points, rejected
 
@@ -995,7 +1155,7 @@ def detect_points(
     components: dict[str, list[ComponentRecord]],
     masks: dict[str, np.ndarray],
     scale_info,
-    config: Optional[dict] = None,
+    config: dict | None = None,
 ) -> tuple[list[GraphPoint], list[RejectedEvidence], list[WallSkeletonEdge]]:
     """Search directly for the seven allowed point types (spec_v008 SS9/SS7
     step 5). ``masks`` must contain the cleaned per-class masks (at least
@@ -1014,7 +1174,9 @@ def detect_points(
     door_arc_components = components.get("door_arc", [])
     door_origin_components = components.get("door_origin", [])
 
-    node_edges, diag_rejected = build_wall_skeleton_graph(wall_components, cfg["cardinal_tolerance_deg"])
+    node_edges, diag_rejected = build_wall_skeleton_graph(
+        wall_components, cfg["cardinal_tolerance_deg"]
+    )
     junction_points, free_ends = _classify_wall_nodes(node_edges)
 
     all_edges: dict[str, WallSkeletonEdge] = {}
@@ -1025,9 +1187,13 @@ def detect_points(
 
     window_points, window_rejected = _detect_window_points(window_components, wall_edge_list, cfg)
     door_points, door_rejected = _detect_door_points(
-        door_arc_components, door_origin_components,
-        masks.get("door_leaf"), masks.get("door_origin"), masks.get("wall"),
-        wall_edge_list, cfg,
+        door_arc_components,
+        door_origin_components,
+        masks.get("door_leaf"),
+        masks.get("door_origin"),
+        masks.get("wall"),
+        wall_edge_list,
+        cfg,
     )
 
     free_points, free_end_rejected = _finalize_free_ends(
@@ -1044,13 +1210,15 @@ def detect_points(
     return points, rejected, wall_edge_list
 
 
-def _link_skeleton_edges_to_points(wall_edges: list[WallSkeletonEdge], points: list[GraphPoint], tol_px: float = 10.0) -> None:
+def _link_skeleton_edges_to_points(
+    wall_edges: list[WallSkeletonEdge], points: list[GraphPoint], tol_px: float = 10.0
+) -> None:
     """Record which final point id sits at each end of every skeleton edge,
     by exact (pre-alignment) coordinate match. point_connection.py uses these
     ids directly instead of re-matching by coordinate after point_alignment.py
     has potentially moved points by much more than a tight pixel tolerance."""
 
-    def _id_near(coord: tuple[float, float]) -> Optional[str]:
+    def _id_near(coord: tuple[float, float]) -> str | None:
         best_id, best_dist = None, tol_px
         for p in points:
             dist = math.hypot(p.coordinate[0] - coord[0], p.coordinate[1] - coord[1])
@@ -1063,7 +1231,9 @@ def _link_skeleton_edges_to_points(wall_edges: list[WallSkeletonEdge], points: l
         se.point_id_at_end = _id_near(se.end)
 
 
-def _mask_has_evidence_near(coord: tuple[float, float], mask: Optional[np.ndarray], radius_px: float) -> bool:
+def _mask_has_evidence_near(
+    coord: tuple[float, float], mask: np.ndarray | None, radius_px: float
+) -> bool:
     if mask is None:
         return False
     nx, ny = int(round(coord[0])), int(round(coord[1]))
@@ -1076,7 +1246,9 @@ def _mask_has_evidence_near(coord: tuple[float, float], mask: Optional[np.ndarra
     return bool(mask[y0:y1, x0:x1].any())
 
 
-def _wall_evidence_near(coord: tuple[float, float], wall_components: list[ComponentRecord], radius_px: float) -> bool:
+def _wall_evidence_near(
+    coord: tuple[float, float], wall_components: list[ComponentRecord], radius_px: float
+) -> bool:
     return any(_mask_has_evidence_near(coord, comp.mask, radius_px) for comp in wall_components)
 
 
@@ -1110,7 +1282,11 @@ def build_door_candidate_records(
 
     rejected_by_arc: dict[int, RejectedEvidence] = {}
     for r in rejected_evidence:
-        if r.class_name == "door_arc" and r.component_id is not None and r.component_id not in rejected_by_arc:
+        if (
+            r.class_name == "door_arc"
+            and r.component_id is not None
+            and r.component_id not in rejected_by_arc
+        ):
             rejected_by_arc[r.component_id] = r
 
     px_to_mm = scale_info.px_to_mm if scale_info is not None else None
@@ -1134,7 +1310,9 @@ def build_door_candidate_records(
             rej = rejected_by_arc.get(arc.component_id)
             records.append(
                 DoorCandidateRecord(
-                    red_component_id=arc.component_id, red_bbox=arc.bbox, red_bbox_long_edge_px=long_edge,
+                    red_component_id=arc.component_id,
+                    red_bbox=arc.bbox,
+                    red_bbox_long_edge_px=long_edge,
                     created_door_candidate=False,
                     door_inference_notes=rej.reason if rej else "no hinge/end pair produced",
                     all_four_bbox_vertices=selection.all_vertices,
@@ -1163,16 +1341,22 @@ def build_door_candidate_records(
             end_support.append("orange")
 
         confidence = (len(hinge_support) / 4.0 + len(end_support) / 3.0) / 2.0
-        width_px = math.hypot(end.coordinate[0] - hinge.coordinate[0], end.coordinate[1] - hinge.coordinate[1])
+        width_px = math.hypot(
+            end.coordinate[0] - hinge.coordinate[0], end.coordinate[1] - hinge.coordinate[1]
+        )
         records.append(
             DoorCandidateRecord(
-                red_component_id=arc.component_id, red_bbox=arc.bbox, red_bbox_long_edge_px=long_edge,
+                red_component_id=arc.component_id,
+                red_bbox=arc.bbox,
+                red_bbox_long_edge_px=long_edge,
                 created_door_candidate=True,
                 scale_candidate_px_to_mm=px_to_mm,
                 hinge_candidate_support_classes=hinge_support,
                 end_candidate_support_classes=end_support,
-                hinge_distance_to_red_bbox_mm=_point_to_bbox_distance(hinge.coordinate, arc.bbox) * (px_to_mm or 0.0),
-                end_distance_to_red_bbox_mm=_point_to_bbox_distance(end.coordinate, arc.bbox) * (px_to_mm or 0.0),
+                hinge_distance_to_red_bbox_mm=_point_to_bbox_distance(hinge.coordinate, arc.bbox)
+                * (px_to_mm or 0.0),
+                end_distance_to_red_bbox_mm=_point_to_bbox_distance(end.coordinate, arc.bbox)
+                * (px_to_mm or 0.0),
                 door_confidence=confidence,
                 door_inference_notes=(
                     "hinge/end inferred from orange/purple/black evidence near the red cluster"
@@ -1194,26 +1378,46 @@ def build_door_candidate_records(
 
 
 def validate_points(
-    points: list[GraphPoint], accepted_door_arc_count: Optional[int] = None
+    points: list[GraphPoint], accepted_door_arc_count: int | None = None
 ) -> list[ValidationIssue]:
     """Enforce spec_v008 SS10's point-search invariants."""
     issues: list[ValidationIssue] = []
 
     for p in points:
         if p.point_type not in ALL_POINT_TYPES:
-            issues.append(ValidationIssue("unresolved_point_type", f"{p.id} has unresolved point_type {p.point_type}", [p.id]))
+            issues.append(
+                ValidationIssue(
+                    "unresolved_point_type",
+                    f"{p.id} has unresolved point_type {p.point_type}",
+                    [p.id],
+                )
+            )
         for a in p.attachments:
             if a.direction not in ("left", "right", "up", "down"):
-                issues.append(ValidationIssue("non_cardinal_attachment", f"{p.id} direction {a.direction} is not cardinal", [p.id]))
+                issues.append(
+                    ValidationIssue(
+                        "non_cardinal_attachment",
+                        f"{p.id} direction {a.direction} is not cardinal",
+                        [p.id],
+                    )
+                )
 
     window_count = sum(1 for p in points if p.point_type == "wall_window_point")
     if window_count % 2 != 0:
-        issues.append(ValidationIssue("odd_window_point_count", f"wall_window_point count {window_count} is odd", []))
+        issues.append(
+            ValidationIssue(
+                "odd_window_point_count", f"wall_window_point count {window_count} is odd", []
+            )
+        )
 
     hinge_count = sum(1 for p in points if p.point_type == "wall_door_hinge_point")
     end_count = sum(1 for p in points if p.point_type == "wall_door_end_point")
     if hinge_count != end_count:
-        issues.append(ValidationIssue("door_hinge_end_mismatch", f"hinge count {hinge_count} != end count {end_count}", []))
+        issues.append(
+            ValidationIssue(
+                "door_hinge_end_mismatch", f"hinge count {hinge_count} != end count {end_count}", []
+            )
+        )
     if accepted_door_arc_count is not None and hinge_count != accepted_door_arc_count:
         issues.append(
             ValidationIssue(

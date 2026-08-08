@@ -18,55 +18,54 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Optional
 
 import cv2
 import numpy as np
 from PIL import Image
 
+from ..graph_types import ComponentRecord
+from ..primitives.scale import ScaleInfo
 from .door_geometry import DoorGeometry
 from .opening_detection import DoorCandidate, WindowCandidate
 from .opening_hosting import HostedOpening, RejectedOpening
 from .wall_interval_editing import TrimmedGraph
-from ..graph_types import ComponentRecord
-from ..primitives.scale import ScaleInfo
 
-_GRAPH_EDGE_COLOR    = (0, 200, 0)       # green
-_GRAPH_NODE_COLOR    = (0, 200, 0)
-_DOOR_BBOX_COLOR     = (220, 60, 60)     # red
-_WIN_BBOX_COLOR      = (60, 100, 220)    # blue
-_RAW_PT_COLOR        = (255, 220, 0)     # yellow
-_SNAP_PT_COLOR       = (0, 220, 220)     # cyan
-_HOST_EDGE_COLOR     = (220, 0, 220)     # magenta
-_REJECT_COLOR        = (220, 40, 40)     # red
-_SCALE_COLOR         = (255, 140, 0)     # orange
-_ORIG_INTERVAL_COLOR = (255, 100, 0)     # orange-red: original interval (pre-adjustment)
-_ADJ_INTERVAL_COLOR  = (0, 255, 160)     # teal-green: adjusted interval
-_HINGE_COLOR         = (255, 255, 0)     # yellow: door hinge point
-_FINAL_PT_COLOR      = (255, 255, 255)   # white: final primitive endpoints
-_RED_EVIDENCE_COLOR  = (180, 0, 80)      # dark-red: red-pixel evidence region
+_GRAPH_EDGE_COLOR = (0, 200, 0)  # green
+_GRAPH_NODE_COLOR = (0, 200, 0)
+_DOOR_BBOX_COLOR = (220, 60, 60)  # red
+_WIN_BBOX_COLOR = (60, 100, 220)  # blue
+_RAW_PT_COLOR = (255, 220, 0)  # yellow
+_SNAP_PT_COLOR = (0, 220, 220)  # cyan
+_HOST_EDGE_COLOR = (220, 0, 220)  # magenta
+_REJECT_COLOR = (220, 40, 40)  # red
+_SCALE_COLOR = (255, 140, 0)  # orange
+_ORIG_INTERVAL_COLOR = (255, 100, 0)  # orange-red: original interval (pre-adjustment)
+_ADJ_INTERVAL_COLOR = (0, 255, 160)  # teal-green: adjusted interval
+_HINGE_COLOR = (255, 255, 0)  # yellow: door hinge point
+_FINAL_PT_COLOR = (255, 255, 255)  # white: final primitive endpoints
+_RED_EVIDENCE_COLOR = (180, 0, 80)  # dark-red: red-pixel evidence region
 
-_LEGEND_BG        = (28, 28, 28)      # near-black panel background
-_LEGEND_TITLE     = (230, 230, 230)
-_LEGEND_TEXT      = (195, 195, 195)
-_LEGEND_DIM       = (130, 130, 130)
-_LEGEND_W         = 200               # px wide panel
+_LEGEND_BG = (28, 28, 28)  # near-black panel background
+_LEGEND_TITLE = (230, 230, 230)
+_LEGEND_TEXT = (195, 195, 195)
+_LEGEND_DIM = (130, 130, 130)
+_LEGEND_W = 200  # px wide panel
 
 # (label, color, shape)  where shape ∈ "line" | "circle" | "rect" | "cross"
 _LEGEND_ITEMS = [
-    ("wall graph edge",    _GRAPH_EDGE_COLOR,    "line"),
-    ("wall graph node",    _GRAPH_NODE_COLOR,    "circle"),
-    ("scale evidence bbox",_SCALE_COLOR,         "rect"),
-    ("door candidate bbox",_DOOR_BBOX_COLOR,     "rect"),
-    ("window cand. bbox",  _WIN_BBOX_COLOR,      "rect"),
-    ("raw endpoint",       _RAW_PT_COLOR,        "circle"),
-    ("snapped endpoint",   _SNAP_PT_COLOR,       "circle"),
-    ("host wall edge",     _HOST_EDGE_COLOR,     "line"),
-    ("orig. interval",     _ORIG_INTERVAL_COLOR, "line"),
-    ("adj. interval",      _ADJ_INTERVAL_COLOR,  "line"),
-    ("door hinge",         _HINGE_COLOR,         "circle"),
-    ("final endpoints",    _FINAL_PT_COLOR,       "circle"),
-    ("rejected opening",   _REJECT_COLOR,         "cross"),
+    ("wall graph edge", _GRAPH_EDGE_COLOR, "line"),
+    ("wall graph node", _GRAPH_NODE_COLOR, "circle"),
+    ("scale evidence bbox", _SCALE_COLOR, "rect"),
+    ("door candidate bbox", _DOOR_BBOX_COLOR, "rect"),
+    ("window cand. bbox", _WIN_BBOX_COLOR, "rect"),
+    ("raw endpoint", _RAW_PT_COLOR, "circle"),
+    ("snapped endpoint", _SNAP_PT_COLOR, "circle"),
+    ("host wall edge", _HOST_EDGE_COLOR, "line"),
+    ("orig. interval", _ORIG_INTERVAL_COLOR, "line"),
+    ("adj. interval", _ADJ_INTERVAL_COLOR, "line"),
+    ("door hinge", _HINGE_COLOR, "circle"),
+    ("final endpoints", _FINAL_PT_COLOR, "circle"),
+    ("rejected opening", _REJECT_COLOR, "cross"),
 ]
 
 
@@ -97,9 +96,7 @@ def _draw_cross(img: np.ndarray, cx: float, cy: float, color: tuple, size: int =
     cv2.line(img, (x + size, y - size), (x - size, y + size), color, 2)
 
 
-def _draw_legend_symbol(
-    panel: np.ndarray, x: int, y: int, color: tuple, shape: str
-) -> None:
+def _draw_legend_symbol(panel: np.ndarray, x: int, y: int, color: tuple, shape: str) -> None:
     """Draw the small glyph for one legend row."""
     if shape == "line":
         cv2.line(panel, (x - 10, y), (x + 10, y), color, 2)
@@ -117,8 +114,16 @@ def _build_legend_panel(height: int, scale_info: ScaleInfo) -> np.ndarray:
     panel = np.full((height, _LEGEND_W, 3), _LEGEND_BG, dtype=np.uint8)
 
     # --- Title ---
-    cv2.putText(panel, "DEBUG LEGEND", (8, 18),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.45, _LEGEND_TITLE, 1, cv2.LINE_AA)
+    cv2.putText(
+        panel,
+        "DEBUG LEGEND",
+        (8, 18),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.45,
+        _LEGEND_TITLE,
+        1,
+        cv2.LINE_AA,
+    )
     # Thin separator
     cv2.line(panel, (6, 24), (_LEGEND_W - 6, 24), (70, 70, 70), 1)
 
@@ -130,19 +135,36 @@ def _build_legend_panel(height: int, scale_info: ScaleInfo) -> np.ndarray:
     for i, (label, color, shape) in enumerate(_LEGEND_ITEMS):
         y = y0 + i * row_h
         _draw_legend_symbol(panel, sym_x, y, color, shape)
-        cv2.putText(panel, label, (text_x, y + 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.33, _LEGEND_TEXT, 1, cv2.LINE_AA)
+        cv2.putText(
+            panel,
+            label,
+            (text_x, y + 5),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.33,
+            _LEGEND_TEXT,
+            1,
+            cv2.LINE_AA,
+        )
 
     # --- Scale metadata ---
     sep_y = y0 + len(_LEGEND_ITEMS) * row_h + 8
     cv2.line(panel, (6, sep_y), (_LEGEND_W - 6, sep_y), (70, 70, 70), 1)
     scale_y = sep_y + 18
-    cv2.putText(panel, "SCALE", (8, scale_y),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.4, _LEGEND_TITLE, 1, cv2.LINE_AA)
+    cv2.putText(
+        panel, "SCALE", (8, scale_y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, _LEGEND_TITLE, 1, cv2.LINE_AA
+    )
     scale_y += 18
     status_color = (80, 200, 80) if scale_info.scale_status == "resolved" else (200, 180, 80)
-    cv2.putText(panel, f"status: {scale_info.scale_status}", (8, scale_y),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.33, status_color, 1, cv2.LINE_AA)
+    cv2.putText(
+        panel,
+        f"status: {scale_info.scale_status}",
+        (8, scale_y),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.33,
+        status_color,
+        1,
+        cv2.LINE_AA,
+    )
     scale_y += 16
     if scale_info.px_to_mm is not None:
         px_mm_txt = f"px/mm: {scale_info.px_to_mm:.3f}"
@@ -150,16 +172,33 @@ def _build_legend_panel(height: int, scale_info: ScaleInfo) -> np.ndarray:
     else:
         px_mm_txt = "px/mm: unknown"
         mm_px_txt = ""
-    cv2.putText(panel, px_mm_txt, (8, scale_y),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.33, _LEGEND_DIM, 1, cv2.LINE_AA)
+    cv2.putText(
+        panel, px_mm_txt, (8, scale_y), cv2.FONT_HERSHEY_SIMPLEX, 0.33, _LEGEND_DIM, 1, cv2.LINE_AA
+    )
     if mm_px_txt:
         scale_y += 16
-        cv2.putText(panel, mm_px_txt, (8, scale_y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.33, _LEGEND_DIM, 1, cv2.LINE_AA)
+        cv2.putText(
+            panel,
+            mm_px_txt,
+            (8, scale_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.33,
+            _LEGEND_DIM,
+            1,
+            cv2.LINE_AA,
+        )
     scale_y += 16
     src = scale_info.scale_source or "-"
-    cv2.putText(panel, f"source: {src}", (8, scale_y),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.3, _LEGEND_DIM, 1, cv2.LINE_AA)
+    cv2.putText(
+        panel,
+        f"source: {src}",
+        (8, scale_y),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.3,
+        _LEGEND_DIM,
+        1,
+        cv2.LINE_AA,
+    )
 
     return panel
 
@@ -184,8 +223,10 @@ def _draw_interval_on_edge(
         if edge_len > 1e-6:
             nx = -(y2 - y1) / edge_len * offset_px
             ny = (x2 - x1) / edge_len * offset_px
-            ax += nx; ay += ny
-            bx += nx; by_ += ny
+            ax += nx
+            ay += ny
+            bx += nx
+            by_ += ny
     cv2.line(img, (int(ax), int(ay)), (int(bx), int(by_)), color, thickness)
 
 
@@ -199,8 +240,8 @@ def build_debug_overlay(
     rejected_openings: list[RejectedOpening],
     door_arc_components: list[ComponentRecord],
     scale_info: ScaleInfo,
-    trimmed_graph: Optional[TrimmedGraph] = None,
-    door_geometries: Optional[list[DoorGeometry]] = None,
+    trimmed_graph: TrimmedGraph | None = None,
+    door_geometries: list[DoorGeometry] | None = None,
 ) -> Image.Image:
     """Build the debug overlay image with legend (spec_v008 §13 + task33).
 
@@ -231,8 +272,9 @@ def build_debug_overlay(
     # Hosted doors: snapped points + host edge + evidence-based hinge/swing
     for i, hosted in enumerate(hosted_doors):
         edge = hosted.host_edge_raw
-        cv2.line(img, (int(edge[0]), int(edge[1])), (int(edge[2]), int(edge[3])),
-                 _HOST_EDGE_COLOR, 3)
+        cv2.line(
+            img, (int(edge[0]), int(edge[1])), (int(edge[2]), int(edge[3])), _HOST_EDGE_COLOR, 3
+        )
         # Final primitive endpoints (white)
         for pt in hosted.snapped_points:
             _draw_point(img, pt, _FINAL_PT_COLOR, r=4)
@@ -247,14 +289,16 @@ def build_debug_overlay(
             fb_str = "fb" if dg.fallback_used else side_str
             type_tag = "DS" if dg.door_type == "double_swing_shared_origin" else ""
             label = f"{type_tag}{swing_str}|{fb_str}" if type_tag else f"{swing_str}|{fb_str}"
-            cv2.putText(img, label, (lx, ly),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.28, _HINGE_COLOR, 1, cv2.LINE_AA)
+            cv2.putText(
+                img, label, (lx, ly), cv2.FONT_HERSHEY_SIMPLEX, 0.28, _HINGE_COLOR, 1, cv2.LINE_AA
+            )
 
     # Hosted windows: final snapped points + host edge
     for hosted in hosted_windows:
         edge = hosted.host_edge_raw
-        cv2.line(img, (int(edge[0]), int(edge[1])), (int(edge[2]), int(edge[3])),
-                 _HOST_EDGE_COLOR, 3)
+        cv2.line(
+            img, (int(edge[0]), int(edge[1])), (int(edge[2]), int(edge[3])), _HOST_EDGE_COLOR, 3
+        )
         for pt in hosted.snapped_points:
             _draw_point(img, pt, _FINAL_PT_COLOR, r=4)
             _draw_point(img, pt, _SNAP_PT_COLOR, r=6)
@@ -272,12 +316,14 @@ def build_debug_overlay(
             adj = gap.get("adjusted_interval", [])
             if len(orig) == 2:
                 # Draw original interval slightly offset above edge
-                _draw_interval_on_edge(img, edge, orig[0], orig[1],
-                                       _ORIG_INTERVAL_COLOR, thickness=2, offset_px=-6)
+                _draw_interval_on_edge(
+                    img, edge, orig[0], orig[1], _ORIG_INTERVAL_COLOR, thickness=2, offset_px=-6
+                )
             if len(adj) == 2:
                 # Draw adjusted interval slightly offset below edge
-                _draw_interval_on_edge(img, edge, adj[0], adj[1],
-                                       _ADJ_INTERVAL_COLOR, thickness=2, offset_px=6)
+                _draw_interval_on_edge(
+                    img, edge, adj[0], adj[1], _ADJ_INTERVAL_COLOR, thickness=2, offset_px=6
+                )
             # Label the adjustment
             x1, y1, x2, y2 = edge[0], edge[1], edge[2], edge[3]
             if len(adj) == 2:
@@ -289,8 +335,16 @@ def build_debug_overlay(
             lx = int(x1 + mid_t * (x2 - x1)) + 4
             ly = int(y1 + mid_t * (y2 - y1)) - 10
             opening_type = gap.get("opening_type", "?")
-            cv2.putText(img, f"adj:{opening_type}", (lx, ly),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.28, _ADJ_INTERVAL_COLOR, 1, cv2.LINE_AA)
+            cv2.putText(
+                img,
+                f"adj:{opening_type}",
+                (lx, ly),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.28,
+                _ADJ_INTERVAL_COLOR,
+                1,
+                cv2.LINE_AA,
+            )
 
         # Show last-resort rejected from conflict resolution
         for rej in trimmed_graph.last_resort_rejected:
@@ -302,9 +356,16 @@ def build_debug_overlay(
                 cx = x1 + t_mid * (x2 - x1)
                 cy = y1 + t_mid * (y2 - y1)
                 _draw_cross(img, cx, cy, _REJECT_COLOR, size=10)
-                cv2.putText(img, f"no-fit:{rej.get('opening_type', '?')}",
-                            (int(cx) + 8, int(cy)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.28, _REJECT_COLOR, 1, cv2.LINE_AA)
+                cv2.putText(
+                    img,
+                    f"no-fit:{rej.get('opening_type', '?')}",
+                    (int(cx) + 8, int(cy)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.28,
+                    _REJECT_COLOR,
+                    1,
+                    cv2.LINE_AA,
+                )
 
     # Rejected openings from hosting: draw X at centroid of raw points
     for rej in rejected_openings:
@@ -314,8 +375,16 @@ def build_debug_overlay(
             cy = sum(p[1] for p in pts) / len(pts)
             _draw_cross(img, cx, cy, _REJECT_COLOR)
             label = rej.rejection_reason[:28]
-            cv2.putText(img, label, (int(cx) + 10, int(cy)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.3, _REJECT_COLOR, 1, cv2.LINE_AA)
+            cv2.putText(
+                img,
+                label,
+                (int(cx) + 10, int(cy)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.3,
+                _REJECT_COLOR,
+                1,
+                cv2.LINE_AA,
+            )
 
     # Append legend panel
     legend = _build_legend_panel(img.shape[0], scale_info)

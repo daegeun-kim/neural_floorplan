@@ -24,7 +24,7 @@ CLEAN_IMAGE_NAMES = ["F1_scaled.png", "model_clean.png"]
 MASKS_DIR = "masks"
 
 _INPUT_TYPE: dict[str, str] = {
-    "F1_scaled.png":   "original_raster",
+    "F1_scaled.png": "original_raster",
     "model_clean.png": "svg_rendered_clean",
 }
 
@@ -95,10 +95,12 @@ def main() -> None:
     parser.add_argument("--test", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--splits-dir", type=Path, default=Path("splits"))
-    parser.add_argument("--debug-train-n", type=int, default=20,
-                        help="Number of samples for debug_train.json")
-    parser.add_argument("--debug-val-n", type=int, default=5,
-                        help="Number of samples for debug_val.json")
+    parser.add_argument(
+        "--debug-train-n", type=int, default=20, help="Number of samples for debug_train.json"
+    )
+    parser.add_argument(
+        "--debug-val-n", type=int, default=5, help="Number of samples for debug_val.json"
+    )
     args = parser.parse_args()
 
     print(f"Scanning {args.dataset_root} ...")

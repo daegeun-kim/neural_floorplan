@@ -16,19 +16,32 @@ points.
 from __future__ import annotations
 
 import math
-from typing import Optional
 
-from .graph_types import Attachment, ComponentRecord, GraphEdge, GraphPoint, OPPOSITE_DIRECTION, ValidationIssue
+from .graph_types import (
+    OPPOSITE_DIRECTION,
+    Attachment,
+    ComponentRecord,
+    GraphEdge,
+    GraphPoint,
+    ValidationIssue,
+)
 from .point_alignment import _corridor_has_wall_evidence
 from .point_detection import WallSkeletonEdge, _project_point_onto_line
 
 DEFAULT_NODE_MATCH_TOLERANCE_PX = 12.0
 DEFAULT_CORRIDOR_SLACK_PX = 20.0
 OPENING_POINT_TYPES = ("wall_window_point", "wall_door_hinge_point", "wall_door_end_point")
-CONNECTABLE_WALL_TYPES = ("wall_point", "wall_window_point", "wall_door_hinge_point", "wall_door_end_point")
+CONNECTABLE_WALL_TYPES = (
+    "wall_point",
+    "wall_window_point",
+    "wall_door_hinge_point",
+    "wall_door_end_point",
+)
 
 
-def _nearest_point(points: list[GraphPoint], coord: tuple[float, float], tol_px: float) -> Optional[GraphPoint]:
+def _nearest_point(
+    points: list[GraphPoint], coord: tuple[float, float], tol_px: float
+) -> GraphPoint | None:
     """Fallback only - used when a skeleton edge wasn't linked to a point id
     (e.g. in hand-built test fixtures). Prefer point_id_at_start/end, which
     are exact and immune to point_alignment.py having since moved the point
@@ -43,7 +56,7 @@ def _nearest_point(points: list[GraphPoint], coord: tuple[float, float], tol_px:
     return best
 
 
-def _local_pair_direction(left: GraphPoint, right: GraphPoint) -> Optional[str]:
+def _local_pair_direction(left: GraphPoint, right: GraphPoint) -> str | None:
     """Cardinal direction from ``left`` to ``right``, by their actual
     coordinates - used instead of a shared skeleton edge's own overall
     ``dir_from_start``/``dir_from_end`` labels when chaining 3+ stops along
@@ -86,11 +99,17 @@ def _same_opening_pair(a: GraphPoint, b: GraphPoint) -> bool:
     if not set(a.source_component_ids) & set(b.source_component_ids):
         return False
     types = {a.point_type, b.point_type}
-    return types == {"wall_window_point"} or types == {"wall_door_hinge_point", "wall_door_end_point"}
+    return types == {"wall_window_point"} or types == {
+        "wall_door_hinge_point",
+        "wall_door_end_point",
+    }
 
 
 def _geometric_interior_opening_points(
-    se: WallSkeletonEdge, opening_points: list[GraphPoint], exclude_ids: set[str], tol_px: float,
+    se: WallSkeletonEdge,
+    opening_points: list[GraphPoint],
+    exclude_ids: set[str],
+    tol_px: float,
 ) -> list[tuple[float, GraphPoint]]:
     """Legacy fallback for opening points with no recorded
     ``host_wall_edge_id`` (e.g. hand-built test fixtures): window/door
@@ -154,9 +173,13 @@ def build_wall_edges(
         pa = points_by_id.get(se.point_id_at_start) if se.point_id_at_start else None
         pb = points_by_id.get(se.point_id_at_end) if se.point_id_at_end else None
         if pa is None:
-            pa = _nearest_point(points, se.start, tol_px) or _nearest_point(opening_points, se.start, opening_match_tolerance_px)
+            pa = _nearest_point(points, se.start, tol_px) or _nearest_point(
+                opening_points, se.start, opening_match_tolerance_px
+            )
         if pb is None:
-            pb = _nearest_point(points, se.end, tol_px) or _nearest_point(opening_points, se.end, opening_match_tolerance_px)
+            pb = _nearest_point(points, se.end, tol_px) or _nearest_point(
+                opening_points, se.end, opening_match_tolerance_px
+            )
 
         seg_dx, seg_dy = se.end[0] - se.start[0], se.end[1] - se.start[1]
         seg_len = math.hypot(seg_dx, seg_dy)
@@ -187,7 +210,7 @@ def build_wall_edges(
             continue
         stops.sort(key=lambda item: item[0])
 
-        for (left_t, left), (right_t, right) in zip(stops[:-1], stops[1:]):
+        for (left_t, left), (right_t, right) in zip(stops[:-1], stops[1:], strict=False):
             if left.id == right.id:
                 continue
             if 0.0 <= left_t <= seg_len and 0.0 <= right_t <= seg_len:
@@ -208,7 +231,10 @@ def build_wall_edges(
                 if local_dir is None:
                     continue
                 left_dir, right_dir = local_dir, OPPOSITE_DIRECTION[local_dir]
-            if _wall_direction_attachment(left, left_dir) is None or _wall_direction_attachment(right, right_dir) is None:
+            if (
+                _wall_direction_attachment(left, left_dir) is None
+                or _wall_direction_attachment(right, right_dir) is None
+            ):
                 # The point's wall attachment doesn't face this chain - alignment
                 # must have shifted something incompatible; skip rather than
                 # connect a wall edge with no supporting attachment evidence.
@@ -306,7 +332,7 @@ def _connect_axis_aligned_points(
             if len(group) < 2:
                 continue
             ordered = sorted(group, key=lambda p: p.coordinate[other_index])
-            for left, right in zip(ordered[:-1], ordered[1:]):
+            for left, right in zip(ordered[:-1], ordered[1:], strict=False):
                 if left.id == right.id:
                     continue
                 if _same_opening_pair(left, right):
@@ -318,7 +344,9 @@ def _connect_axis_aligned_points(
                     continue
                 if backward in _existing_wall_neighbor_directions(right.id, edges, points_by_id):
                     continue
-                if not _corridor_has_wall_evidence(left, right, axis_name, wall_components, corridor_slack_px):
+                if not _corridor_has_wall_evidence(
+                    left, right, axis_name, wall_components, corridor_slack_px
+                ):
                     continue
 
                 left.attachments.append(Attachment(type="wall", direction=forward, source="wall"))
@@ -331,7 +359,9 @@ def _connect_axis_aligned_points(
                     point_b_id=right.id,
                     start=left.coordinate,
                     end=right.coordinate,
-                    source_component_ids=sorted(set(left.source_component_ids) | set(right.source_component_ids)),
+                    source_component_ids=sorted(
+                        set(left.source_component_ids) | set(right.source_component_ids)
+                    ),
                 )
                 new_edges.append(new_edge)
                 edges.append(new_edge)
@@ -340,7 +370,9 @@ def _connect_axis_aligned_points(
     return new_edges
 
 
-def _opening_edges(points: list[GraphPoint], edge_type: str, point_types: set[str]) -> list[GraphEdge]:
+def _opening_edges(
+    points: list[GraphPoint], edge_type: str, point_types: set[str]
+) -> list[GraphEdge]:
     groups: dict[tuple, list[GraphPoint]] = {}
     for p in points:
         if p.point_type not in point_types:
@@ -379,8 +411,8 @@ def connect_points(
     points: list[GraphPoint],
     wall_skeleton_edges: list[WallSkeletonEdge],
     scale_info=None,
-    config: Optional[dict] = None,
-    wall_components: Optional[list[ComponentRecord]] = None,
+    config: dict | None = None,
+    wall_components: list[ComponentRecord] | None = None,
 ) -> tuple[list[GraphEdge], list[ValidationIssue]]:
     """Build the final wall/window/door-origin graph (spec_v008 SS12 / SS7 step 8)."""
     cfg = config or {}
@@ -389,12 +421,20 @@ def connect_points(
     corridor_slack_px = cfg.get("corridor_slack_px", DEFAULT_CORRIDOR_SLACK_PX)
 
     wall_edges = build_wall_edges(points, wall_skeleton_edges, tol_px, opening_match_tolerance_px)
-    wall_edges = wall_edges + _connect_axis_aligned_points(points, wall_edges, wall_components or [], corridor_slack_px)
+    wall_edges = wall_edges + _connect_axis_aligned_points(
+        points, wall_edges, wall_components or [], corridor_slack_px
+    )
     window_edges = _opening_edges(points, "window", {"wall_window_point"})
-    door_edges = _opening_edges(points, "door_origin", {"wall_door_hinge_point", "wall_door_end_point"})
+    door_edges = _opening_edges(
+        points, "door_origin", {"wall_door_hinge_point", "wall_door_end_point"}
+    )
     edges = wall_edges + window_edges + door_edges
 
-    if scale_info is not None and scale_info.px_to_mm is not None and scale_info.scale_status in ("resolved", "estimated"):
+    if (
+        scale_info is not None
+        and scale_info.px_to_mm is not None
+        and scale_info.scale_status in ("resolved", "estimated")
+    ):
         for e in edges:
             e.length_mm = e.length_px * scale_info.px_to_mm
 
@@ -425,8 +465,12 @@ def validate_graph(points: list[GraphPoint], edges: list[GraphEdge]) -> list[Val
     issues: list[ValidationIssue] = []
     coverage_by_type: dict[tuple[str, str], int] = {}
     for e in edges:
-        coverage_by_type[(e.point_a_id, e.edge_type)] = coverage_by_type.get((e.point_a_id, e.edge_type), 0) + 1
-        coverage_by_type[(e.point_b_id, e.edge_type)] = coverage_by_type.get((e.point_b_id, e.edge_type), 0) + 1
+        coverage_by_type[(e.point_a_id, e.edge_type)] = (
+            coverage_by_type.get((e.point_a_id, e.edge_type), 0) + 1
+        )
+        coverage_by_type[(e.point_b_id, e.edge_type)] = (
+            coverage_by_type.get((e.point_b_id, e.edge_type), 0) + 1
+        )
 
     door_partner: dict[str, str] = {}
     for e in edges:
@@ -451,16 +495,28 @@ def validate_graph(points: list[GraphPoint], edges: list[GraphEdge]) -> list[Val
             edge_label = "window" if opening_type == "window" else "door_origin"
             issues.append(ValidationIssue(rule, f"{p.id} has no {edge_label} edge", [p.id]))
         elif own_count > 1:
-            issues.append(ValidationIssue("opening_point_multiple_edges", f"{p.id} covered by {own_count} {opening_type} edges", [p.id]))
+            issues.append(
+                ValidationIssue(
+                    "opening_point_multiple_edges",
+                    f"{p.id} covered by {own_count} {opening_type} edges",
+                    [p.id],
+                )
+            )
         if own_count > 0 and wall_count == 0:
             if opening_type == "door_origin":
                 partner_id = door_partner.get(p.id)
-                partner_wall_count = coverage_by_type.get((partner_id, "wall"), 0) if partner_id else 0
+                partner_wall_count = (
+                    coverage_by_type.get((partner_id, "wall"), 0) if partner_id else 0
+                )
                 if partner_wall_count > 0:
                     continue
                 rule = "floating_door_point"
             else:
                 rule = "floating_window_point"
-            issues.append(ValidationIssue(rule, f"{p.id} has no wall edge - not hosted on wall topology", [p.id]))
+            issues.append(
+                ValidationIssue(
+                    rule, f"{p.id} has no wall edge - not hosted on wall topology", [p.id]
+                )
+            )
 
     return issues

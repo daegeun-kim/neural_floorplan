@@ -1,0 +1,123 @@
+[build-system]
+# setuptools>=77 is required for the PEP 639 `license`/`license-files` fields below.
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neural-floorplan"
+version = "0.1.0"
+description = "Convert raster floor plans into classified, CAD-like vector geometry using semantic segmentation and graph-based wall extraction."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = "GPL-3.0-only"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Daegeun Kim" }]
+keywords = ["floorplan", "segmentation", "vectorization", "cad", "aec"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+# Runtime dependencies are derived from the imports actually used by src/ and
+# scripts/. Lower bounds reflect the APIs in use; upper bounds are deliberately
+# loose so the project is not pinned to one local CUDA build of PyTorch.
+dependencies = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "transformers>=4.40",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pillow>=10.0",
+    "opencv-python-headless>=4.8",
+    "shapely>=2.0",
+    "scikit-image>=0.22",
+    "networkx>=3.0",
+    "lxml>=5.0",
+    "cairosvg>=2.7",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Test and lint tooling only. Nothing here is needed to run the pipeline.
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+# Only needed to execute the exploratory notebooks under notebooks/.
+notebooks = [
+    "nbclient>=0.10",
+    "nbformat>=5.10",
+]
+
+[project.urls]
+Repository = "https://github.com/daegeun-kim/neural_floorplan"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+# Restrict collection to the project-authored suite. Without this, pytest walks
+# the repository root and tries to scan local scratch directories (tmp/, runs/,
+# outputs/), which is both slow and can fail on locked Windows paths.
+testpaths = ["tests"]
+norecursedirs = [
+    ".git",
+    "external",
+    "notebooks",
+    "outputs",
+    "runs",
+    "tmp",
+    "data",
+    "docs",
+    "dist",
+    "checkpoints*",
+    "code_sample",
+    "features",
+]
+addopts = "-ra"
+markers = [
+    "integration: requires local CubiCasa5K data, a model checkpoint, or a GPU; skipped by default in CI",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+# Vendored upstream code, notebooks, generated runs, local data, and release
+# bundles are not project-authored style surface. src/, scripts/, and tests/ are
+# deliberately NOT excluded.
+extend-exclude = [
+    "external",
+    "notebooks",
+    "outputs",
+    "runs",
+    "tmp",
+    "data",
+    "docs",
+    "dist",
+    "checkpoints_CNN",
+    "checkpoints_Raster2Graph",
+    "code_sample",
+    "features",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # import sorting
+    "UP", # pyupgrade
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E501", # line length is enforced by the formatter, not the linter
+    "B008", # function call in default argument - not a pattern used here
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests deliberately keep long fixture literals and unused loop bindings for
+# readability of the scenario being described.
+"tests/*" = ["B011"]

@@ -1,4 +1,4 @@
-﻿"""Shared data structures for the v008 orthogonal point-graph pipeline.
+"""Shared data structures for the v008 orthogonal point-graph pipeline.
 
 Per spec_v008 SS6, every stage of the pipeline (components -> point search ->
 alignment -> connection -> door geometry -> final geometry) communicates
@@ -9,7 +9,7 @@ artifact so tests can assert on each stage independently.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import numpy as np
 
@@ -67,7 +67,7 @@ class GraphPoint:
     coordinate: tuple[float, float]
     attachments: list[Attachment] = field(default_factory=list)
     source_component_ids: list[int] = field(default_factory=list)
-    host_wall_edge_id: Optional[str] = None
+    host_wall_edge_id: str | None = None
     """The WallSkeletonEdge.id this point was projected onto, when known
     (window/door points). Lets point_connection.py connect the wall edge to
     this exact point unambiguously instead of guessing by coordinate
@@ -79,7 +79,7 @@ class GraphPoint:
     def directions(self) -> set[Direction]:
         return {a.direction for a in self.attachments}
 
-    def attachment_of(self, attachment_type: AttachmentType) -> Optional[Attachment]:
+    def attachment_of(self, attachment_type: AttachmentType) -> Attachment | None:
         for a in self.attachments:
             if a.type == attachment_type:
                 return a
@@ -98,8 +98,8 @@ class GraphEdge:
     start: tuple[float, float]
     end: tuple[float, float]
     source_component_ids: list[int] = field(default_factory=list)
-    length_mm: Optional[float] = None
-    thickness_px: Optional[float] = None
+    length_mm: float | None = None
+    thickness_px: float | None = None
 
     @property
     def length_px(self) -> float:
@@ -124,11 +124,11 @@ class ComponentRecord:
     area_px: float
     bbox: tuple[int, int, int, int]  # x0, y0, x1, y1
     centroid: tuple[float, float]
-    rect_size: Optional[tuple[float, float]] = None
-    rect_angle: Optional[float] = None
+    rect_size: tuple[float, float] | None = None
+    rect_angle: float | None = None
     skeleton_points: list[tuple[int, int]] = field(default_factory=list)
     endpoints: list[tuple[int, int]] = field(default_factory=list)
-    mask: Optional[np.ndarray] = None
+    mask: np.ndarray | None = None
 
 
 @dataclass
@@ -138,10 +138,10 @@ class RejectedEvidence:
 
     kind: str
     reason: str
-    class_name: Optional[str] = None
-    bbox: Optional[tuple[int, int, int, int]] = None
-    centroid: Optional[tuple[float, float]] = None
-    component_id: Optional[int] = None
+    class_name: str | None = None
+    bbox: tuple[int, int, int, int] | None = None
+    centroid: tuple[float, float] | None = None
+    component_id: int | None = None
 
 
 @dataclass
@@ -166,23 +166,23 @@ class DoorCandidateRecord:
     red_bbox: tuple[int, int, int, int]
     red_bbox_long_edge_px: float
     created_door_candidate: bool
-    scale_candidate_px_to_mm: Optional[float] = None
+    scale_candidate_px_to_mm: float | None = None
     hinge_candidate_support_classes: list[str] = field(default_factory=list)
     end_candidate_support_classes: list[str] = field(default_factory=list)
-    hinge_distance_to_red_bbox_mm: Optional[float] = None
-    end_distance_to_red_bbox_mm: Optional[float] = None
+    hinge_distance_to_red_bbox_mm: float | None = None
+    end_distance_to_red_bbox_mm: float | None = None
     door_confidence: float = 0.0
     door_inference_notes: str = ""
     # task17 "Required Metrics": the bbox-vertex selection itself, reported
     # independently of whether a door was ultimately created from it.
     all_four_bbox_vertices: dict[str, tuple[float, float]] = field(default_factory=dict)
-    selected_hinge_vertex: Optional[tuple[float, float]] = None
-    selected_end_vertex: Optional[tuple[float, float]] = None
-    hinge_vertex_score: Optional[int] = None
-    end_vertex_score: Optional[int] = None
-    selected_bbox_edge: Optional[str] = None
-    host_wall_alignment_score: Optional[int] = None
-    door_width_mm: Optional[float] = None
+    selected_hinge_vertex: tuple[float, float] | None = None
+    selected_end_vertex: tuple[float, float] | None = None
+    hinge_vertex_score: int | None = None
+    end_vertex_score: int | None = None
+    selected_bbox_edge: str | None = None
+    host_wall_alignment_score: int | None = None
+    door_width_mm: float | None = None
 
 
 @dataclass
@@ -205,7 +205,7 @@ class MaskToVectorResult:
     door_leaves: list[Any] = field(default_factory=list)
     door_arcs: list[Any] = field(default_factory=list)
     door_candidates: list[DoorCandidateRecord] = field(default_factory=list)
-    svg: Optional[str] = None
+    svg: str | None = None
 
     @property
     def validation_issues(self) -> list[ValidationIssue]:

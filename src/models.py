@@ -141,10 +141,9 @@ class FloorplanDecoder(nn.Module):
         self.output_size = output_size
 
         # --- Projection: one 1×1 conv per encoder stage ---
-        self.proj_layers = nn.ModuleList([
-            nn.Conv2d(c, self.PROJ_DIM, kernel_size=1, bias=False)
-            for c in encoder_hidden_sizes
-        ])
+        self.proj_layers = nn.ModuleList(
+            [nn.Conv2d(c, self.PROJ_DIM, kernel_size=1, bias=False) for c in encoder_hidden_sizes]
+        )
 
         # --- Hidden Layer 1: Conv 3×3, 256ch, BN, GELU, Dropout2d ---
         self.hidden1 = nn.Sequential(
@@ -181,7 +180,7 @@ class FloorplanDecoder(nn.Module):
         target_h: int | None = None
         target_w: int | None = None
 
-        for i, (hs, proj) in enumerate(zip(hidden_states, self.proj_layers)):
+        for i, (hs, proj) in enumerate(zip(hidden_states, self.proj_layers, strict=False)):
             # --- Normalise to spatial format [B, C, H, W] ---
             if hs.dim() == 3:
                 # Flat format [B, N, C] from SegFormer encoder hidden_states
@@ -215,9 +214,9 @@ class FloorplanDecoder(nn.Module):
             fused = fused + feat  # [B, PROJ_DIM, H/4, W/4]
 
         # --- Apply hidden layers ---
-        x = self.hidden1(fused)    # [B, 256, H/4, W/4]
-        x = self.hidden2(x)        # [B, 128, H/4, W/4]
-        x = self.classifier(x)    # [B, num_classes, H/4, W/4]
+        x = self.hidden1(fused)  # [B, 256, H/4, W/4]
+        x = self.hidden2(x)  # [B, 128, H/4, W/4]
+        x = self.classifier(x)  # [B, num_classes, H/4, W/4]
 
         # --- Upsample to output resolution ---
         x = F.interpolate(

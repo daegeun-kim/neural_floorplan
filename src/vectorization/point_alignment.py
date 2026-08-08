@@ -20,7 +20,7 @@ anchors always win, never the other way around.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from .graph_types import ComponentRecord, GraphPoint, ValidationIssue
 
@@ -56,7 +56,11 @@ def _opening_pair_groups(points: list[GraphPoint]) -> list[list[GraphPoint]]:
     """
     groups: dict[tuple, list[GraphPoint]] = {}
     for p in points:
-        if p.point_type not in ("wall_window_point", "wall_door_hinge_point", "wall_door_end_point"):
+        if p.point_type not in (
+            "wall_window_point",
+            "wall_door_hinge_point",
+            "wall_door_end_point",
+        ):
             continue
         category = "window" if p.point_type == "wall_window_point" else "door"
         key = (category, tuple(sorted(p.source_component_ids)))
@@ -92,10 +96,15 @@ def _same_opening_pair(a: GraphPoint, b: GraphPoint) -> bool:
     if not set(a.source_component_ids) & set(b.source_component_ids):
         return False
     types = {a.point_type, b.point_type}
-    return types == {"wall_window_point"} or types == {"wall_door_hinge_point", "wall_door_end_point"}
+    return types == {"wall_window_point"} or types == {
+        "wall_door_hinge_point",
+        "wall_door_end_point",
+    }
 
 
-def _assert_wall_edge_axes(points: list[GraphPoint], wall_skeleton_edges: list["WallSkeletonEdge"]) -> None:
+def _assert_wall_edge_axes(
+    points: list[GraphPoint], wall_skeleton_edges: list[WallSkeletonEdge]
+) -> None:
     """Snap every wall-skeleton-edge-connected pair of points onto a shared
     axis from the edge's own direction (SS11.1) - the highest-confidence
     alignment evidence there is, since the two points are connected by one
@@ -208,8 +217,8 @@ def align_points(
     points: list[GraphPoint],
     wall_components: list[ComponentRecord],
     scale_info=None,
-    config: Optional[dict] = None,
-    wall_skeleton_edges: Optional[list["WallSkeletonEdge"]] = None,
+    config: dict | None = None,
+    wall_skeleton_edges: list[WallSkeletonEdge] | None = None,
 ) -> tuple[list[GraphPoint], list[ValidationIssue]]:
     """Align points onto shared orthogonal axes (spec_v008 SS11 / SS7 step 7).
 

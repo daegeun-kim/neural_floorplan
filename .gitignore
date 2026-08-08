@@ -1,24 +1,75 @@
-# Python caches
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
 __pycache__/
+*.py[cod]
+*.egg-info/
+build/
 .pytest_cache/
 .ruff_cache/
-*.py[cod]
+.ipynb_checkpoints/
 
-# Local generated caches
-features/
-tmp/
-runs/
-*.log
+# ---------------------------------------------------------------------------
+# Credentials - never commit, never document
+# ---------------------------------------------------------------------------
+.env
+.env.*
+*.pem
+*.key
 
-# Large/local datasets
+# ---------------------------------------------------------------------------
+# Datasets (obtained separately, never redistributed from this repository)
+# ---------------------------------------------------------------------------
+# CubiCasa5K high_quality_architectural subset and anything derived from it.
 docs/high_quality_architectural/
+data/
 
-# Training outputs and local checkpoints
+# ---------------------------------------------------------------------------
+# Model checkpoints (published via GitHub Releases, not via Git)
+# ---------------------------------------------------------------------------
 checkpoints/
 checkpoints_CNN/
-checkpoints_Raster2Graph/*
-!checkpoints_Raster2Graph/
-!checkpoints_Raster2Graph/README.md
+checkpoints_Raster2Graph/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
 
-# Local scratch/reference material
+# ---------------------------------------------------------------------------
+# Generated experiment runs, caches, and scratch space
+# ---------------------------------------------------------------------------
+features/
+runs/
+tmp/
+outputs/
+*.log
+# Written at runtime by src/train_segmentation.py --overfit
+splits/_overfit_temp.json
+
+# ---------------------------------------------------------------------------
+# Local release bundle prepared for manual GitHub Release upload
+# ---------------------------------------------------------------------------
+dist/
+
+# ---------------------------------------------------------------------------
+# Local scratch / reference material and editor state
+# ---------------------------------------------------------------------------
 code_sample/
+.vscode/
+.idea/
+.agents/
+.claude/settings.local.json
+.DS_Store
+Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Intentionally versioned (not matched by any rule above - listed so the policy
+# is explicit rather than accidental)
+# ---------------------------------------------------------------------------
+#   docs/images/         curated README evidence: small, web-optimized, real
+#                        pipeline output only
+#   evaluation/results/  compact standardized metrics (JSON/CSV summaries only -
+#                        never raw predictions, dataset copies, or checkpoints)
+#   splits/              canonical train/validation/test manifests required for
+#                        evaluation provenance
+#   tests/               intentional lightweight test fixtures

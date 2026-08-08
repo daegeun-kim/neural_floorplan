@@ -1,4 +1,4 @@
-﻿# Spec v007: Metric Component Primitives for Neural Floorplan
+# Spec v007: Metric Component Primitives for Neural Floorplan
 
 ## 0. Purpose
 
@@ -44,7 +44,7 @@ Grasshopper integration
 
 Candidate extraction and reconstruction order belong to `spec_v008_phase3_mask_to_vector.md`.
 
-JSON export belongs to `spec_v009_phase4_cad_json.md` or a later v009 update after SVG vectorization is reliable.
+Classified JSON export is implemented in Phase 4; see `spec_v008_phase4_vectorization.md` and the final-output rules in `vectorization_must_rules.md`.
 
 ## 2. Active CNN Classes
 

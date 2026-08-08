@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from .base import BasePrimitive, ScaleInfo
 
 
@@ -19,7 +17,7 @@ class FloorPrimitive(BasePrimitive):
         primitive_id: str,
         polygon: list[tuple[float, float]],
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
+        scale_info: ScaleInfo | None = None,
         **base_kwargs,
     ) -> None:
         super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
@@ -31,10 +29,15 @@ class FloorPrimitive(BasePrimitive):
         n = len(pts)
         if n < 3:
             return 0.0
-        return abs(
-            sum(pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1]
-                for i in range(n))
-        ) / 2.0
+        return (
+            abs(
+                sum(
+                    pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1]
+                    for i in range(n)
+                )
+            )
+            / 2.0
+        )
 
     def to_svg(self) -> str:
         pts_str = " ".join(f"{x:.1f},{y:.1f}" for x, y in self.polygon)

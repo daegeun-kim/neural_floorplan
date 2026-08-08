@@ -24,15 +24,12 @@ from src.metrics import (
     compute_vector_ready_score,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 
-def _make_sample(
-    root: Path, name: str = "s1", size: int = 32, num_classes: int = 5
-) -> dict:
+def _make_sample(root: Path, name: str = "s1", size: int = 32, num_classes: int = 5) -> dict:
     """Write a minimal (image, mask) pair and return a dataset-index entry."""
     sample_dir = root / name
     sample_dir.mkdir(parents=True, exist_ok=True)
@@ -113,7 +110,9 @@ def test_dataset_image_is_normalized(tmp_path):
     index = _make_index(tmp_path, n=1)
     ds = FloorplanDataset(index, tmp_path, image_size=32)
     img = ds[0]["image"]
-    assert img.max().item() <= 5.0, "Image should be normalized — raw pixel values indicate missing normalization"
+    assert img.max().item() <= 5.0, (
+        "Image should be normalized — raw pixel values indicate missing normalization"
+    )
 
 
 def test_dataset_sample_id_present(tmp_path):
@@ -140,7 +139,9 @@ def test_dataset_augment_preserves_mask_values(tmp_path):
     for _ in range(10):
         item = ds[0]
         unique = set(torch.unique(item["mask"]).tolist())
-        assert unique.issubset(set(range(5))), f"Augmentation produced invalid mask values: {unique}"
+        assert unique.issubset(set(range(5))), (
+            f"Augmentation produced invalid mask values: {unique}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -157,8 +158,8 @@ def test_perfect_prediction_iou_is_one():
 
 
 def test_no_overlap_iou_is_zero():
-    preds = torch.zeros(10, dtype=torch.long)   # all predicted class 0
-    targets = torch.ones(10, dtype=torch.long)   # all true class 1
+    preds = torch.zeros(10, dtype=torch.long)  # all predicted class 0
+    targets = torch.ones(10, dtype=torch.long)  # all true class 1
     ious = compute_iou_per_class(preds, targets, num_classes=2)
     assert ious[0] == 0.0, f"Expected IoU=0 for class 0, got {ious[0]}"
     assert ious[1] == 0.0, f"Expected IoU=0 for class 1, got {ious[1]}"
@@ -174,13 +175,22 @@ def test_absent_class_iou_is_nan():
 
 
 def test_miou_excludes_nan():
-    ious_raw = [0.5, float("nan"), 1.0]
-    expected = (0.5 + 1.0) / 2
+    # Class 0 and class 1 are present; class 2 is absent from both preds and
+    # targets, so its IoU is NaN and must be dropped from the mean rather than
+    # counted as 0.0.
+    preds = torch.tensor([0, 0, 1, 0], dtype=torch.long)
+    targets = torch.tensor([0, 0, 1, 1], dtype=torch.long)
 
-    preds = torch.tensor([0, 0], dtype=torch.long)
-    targets = torch.tensor([0, 0], dtype=torch.long)
+    ious = compute_iou_per_class(preds, targets, num_classes=3)
+    assert math.isnan(ious[2])
+
+    expected = (ious[0] + ious[1]) / 2
     miou = compute_miou(preds, targets, num_classes=3)
-    assert miou == 1.0  # only class 0 is present, IoU=1.0
+    assert abs(miou - expected) < 1e-6
+
+    # Guard against the NaN class silently being averaged in as zero.
+    counted_as_zero = (ious[0] + ious[1]) / 3
+    assert abs(miou - counted_as_zero) > 1e-6
 
 
 def test_pixel_accuracy_perfect():
@@ -226,8 +236,11 @@ def test_save_and_load_checkpoint(tmp_path):
 
     save_checkpoint(
         tmp_path / "ckpt.pt",
-        model, optimizer, None,
-        epoch=3, global_step=100,
+        model,
+        optimizer,
+        None,
+        epoch=3,
+        global_step=100,
         best_metric_value=0.55,
         best_metric_name="val_mIoU",
         config={"image_size": 512},
@@ -255,8 +268,11 @@ def test_checkpoint_restores_weights(tmp_path):
 
     save_checkpoint(
         tmp_path / "w.pt",
-        model, optimizer, None,
-        epoch=0, global_step=0,
+        model,
+        optimizer,
+        None,
+        epoch=0,
+        global_step=0,
         best_metric_value=0.0,
         best_metric_name="val_loss",
         config={},
@@ -301,7 +317,8 @@ def test_resolve_resume_path_explicit(tmp_path):
 
 
 try:
-    from src.models import FloorplanDecoder, build_model as _build_model, BACKBONE_HIDDEN_SIZES
+    from src.models import BACKBONE_HIDDEN_SIZES, FloorplanDecoder
+    from src.models import build_model as _build_model
 
     _HAS_TRANSFORMERS = True
 except ImportError:
@@ -360,19 +377,21 @@ def test_dice_loss_perfect_prediction():
     """Dice loss should be near 0 for perfect predictions."""
     B, C, H, W = 2, 5, 16, 16
     targets = torch.randint(0, C, (B, H, W))
-    logits  = torch.zeros(B, C, H, W)
+    logits = torch.zeros(B, C, H, W)
     for b in range(B):
         for h in range(H):
             for w in range(W):
                 logits[b, targets[b, h, w], h, w] = 100.0  # very confident
     loss_fn = MulticlassDiceLoss(num_classes=C, exclude_background=True)
     loss = loss_fn(logits, targets)
-    assert loss.item() < 0.05, f"Dice loss for perfect prediction should be near 0, got {loss.item()}"
+    assert loss.item() < 0.05, (
+        f"Dice loss for perfect prediction should be near 0, got {loss.item()}"
+    )
 
 
 def test_dice_loss_shape():
     """MulticlassDiceLoss should return a scalar."""
-    logits  = torch.randn(2, 5, 16, 16)
+    logits = torch.randn(2, 5, 16, 16)
     targets = torch.randint(0, 5, (2, 16, 16))
     loss_fn = MulticlassDiceLoss(num_classes=5)
     loss = loss_fn(logits, targets)
@@ -381,7 +400,7 @@ def test_dice_loss_shape():
 
 def test_weighted_ce_plus_dice_shape():
     """WeightedCEPlusDice should return a scalar."""
-    logits  = torch.randn(2, 5, 16, 16)
+    logits = torch.randn(2, 5, 16, 16)
     targets = torch.randint(0, 5, (2, 16, 16))
     loss_fn = WeightedCEPlusDice(num_classes=5, dice_weight=0.5)
     loss = loss_fn(logits, targets)
@@ -390,7 +409,7 @@ def test_weighted_ce_plus_dice_shape():
 
 def test_weighted_ce_plus_dice_with_class_weights():
     weights = torch.tensor([0.5, 0.8, 1.8, 1.0, 1.0])
-    logits  = torch.randn(2, 5, 16, 16)
+    logits = torch.randn(2, 5, 16, 16)
     targets = torch.randint(0, 5, (2, 16, 16))
     loss_fn = WeightedCEPlusDice(num_classes=5, class_weights=weights)
     loss = loss_fn(logits, targets)
@@ -405,7 +424,7 @@ def test_weighted_ce_plus_dice_with_class_weights():
 def test_foreground_miou_excludes_background():
     """foreground_mIoU should give 1.0 when only background predictions are perfect."""
     # All pixels are background (class 0), predicted correctly
-    preds   = torch.zeros(100, dtype=torch.long)
+    preds = torch.zeros(100, dtype=torch.long)
     targets = torch.zeros(100, dtype=torch.long)
     fg_miou = compute_foreground_miou(preds, targets, num_classes=5)
     # All foreground classes are absent (NaN) → result is NaN
@@ -413,7 +432,7 @@ def test_foreground_miou_excludes_background():
 
 
 def test_foreground_pixel_accuracy_ignores_background():
-    preds   = torch.tensor([0, 0, 1, 2, 3], dtype=torch.long)
+    preds = torch.tensor([0, 0, 1, 2, 3], dtype=torch.long)
     targets = torch.tensor([0, 0, 1, 2, 3], dtype=torch.long)
     acc = compute_foreground_pixel_accuracy(preds, targets, background_class=0)
     assert abs(acc - 1.0) < 1e-6, "Perfect fg accuracy should be 1.0"
@@ -421,7 +440,7 @@ def test_foreground_pixel_accuracy_ignores_background():
 
 def test_foreground_pixel_accuracy_only_fg_pixels():
     # Background correct, one foreground wrong
-    preds   = torch.tensor([0, 0, 1, 9], dtype=torch.long)
+    preds = torch.tensor([0, 0, 1, 9], dtype=torch.long)
     targets = torch.tensor([0, 0, 1, 2], dtype=torch.long)
     acc = compute_foreground_pixel_accuracy(preds, targets)
     assert abs(acc - 0.5) < 1e-6, f"Expected 0.5 fg accuracy, got {acc}"
@@ -438,8 +457,13 @@ def test_vector_ready_score_basic():
         "icon_IoU": 0.5,
     }
     weights = {
-        "pixel_accuracy": 0.25, "opening_IoU": 0.25, "opening_boundary_F1": 0.15,
-        "foreground_mIoU": 0.15, "room_IoU": 0.10, "wall_IoU": 0.05, "icon_IoU": 0.05,
+        "pixel_accuracy": 0.25,
+        "opening_IoU": 0.25,
+        "opening_boundary_F1": 0.15,
+        "foreground_mIoU": 0.15,
+        "room_IoU": 0.10,
+        "wall_IoU": 0.05,
+        "icon_IoU": 0.05,
     }
     score = compute_vector_ready_score(metrics, weights)
     expected = sum(metrics[k] * weights[k] for k in weights)
@@ -489,15 +513,13 @@ def test_decoder_standalone_forward_pass():
     # Simulate flat hidden states matching 64×64 input with B0 strides [4, 8, 16, 32]
     # spatial dims: [16, 8, 4, 2], channels: [32, 64, 160, 256]
     hidden_states = (
-        torch.rand(B, 16 * 16, 32),    # stage 1: 64/4=16 → N=256
-        torch.rand(B,  8 *  8, 64),    # stage 2: 64/8= 8 → N= 64
-        torch.rand(B,  4 *  4, 160),   # stage 3: 64/16=4 → N= 16
-        torch.rand(B,  2 *  2, 256),   # stage 4: 64/32=2 → N=  4
+        torch.rand(B, 16 * 16, 32),  # stage 1: 64/4=16 → N=256
+        torch.rand(B, 8 * 8, 64),  # stage 2: 64/8= 8 → N= 64
+        torch.rand(B, 4 * 4, 160),  # stage 3: 64/16=4 → N= 16
+        torch.rand(B, 2 * 2, 256),  # stage 4: 64/32=2 → N=  4
     )
 
     with torch.no_grad():
         logits = decoder(hidden_states)
 
-    assert logits.shape == (B, 5, 64, 64), (
-        f"Expected (2, 5, 64, 64) but got {logits.shape}"
-    )
+    assert logits.shape == (B, 5, 64, 64), f"Expected (2, 5, 64, 64) but got {logits.shape}"

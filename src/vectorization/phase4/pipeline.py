@@ -25,13 +25,16 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from PIL import Image
 
+from ..components import extract_all_components
+from ..masks import split_class_masks
+from ..primitives.scale import ScaleInfo
 from .debug_overlay import build_debug_overlay, write_debug_overlay
-from .door_classification import ClassificationResult, classify_door_openings
+from .door_classification import classify_door_openings
 from .door_geometry import DoorGeometry, compute_door_geometry, compute_door_geometry_double_swing
 from .export_json import build_final_vector_json, write_final_vector_json
 from .export_svg import build_final_svg, write_final_svg
@@ -46,9 +49,6 @@ from .wall_interval_editing import (
     apply_adjusted_intervals_to_hosted_openings,
     trim_wall_intervals,
 )
-from ..components import extract_all_components
-from ..masks import split_class_masks
-from ..primitives.scale import ScaleInfo
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 _EXTERNAL_DIR = _PROJECT_ROOT / "external" / "raster_to_graph"
@@ -59,22 +59,23 @@ _DEFAULT_R2G_CKPT = _PROJECT_ROOT / "checkpoints_Raster2Graph" / "checkpoint0299
 @dataclass
 class Phase4Result:
     """All intermediate artifacts from one Phase 4 pipeline run."""
+
     # Inputs
     source_image_path: str = ""
     output_dir: str = ""
     # Preprocessing
     preprocessing_manifest: dict = field(default_factory=dict)
-    input_pil: Optional[Any] = None          # PIL.Image 512x512
+    input_pil: Any | None = None  # PIL.Image 512x512
     # R2G graph (raw)
     raw_graph: dict = field(default_factory=dict)
     # Aligned graph
     aligned_graph: dict = field(default_factory=dict)
     # Segmentation
-    seg_class_map: Optional[np.ndarray] = None
+    seg_class_map: np.ndarray | None = None
     seg_masks: dict = field(default_factory=dict)
     components: dict = field(default_factory=dict)
     # Scale
-    scale_info: Optional[ScaleInfo] = None
+    scale_info: ScaleInfo | None = None
     # Opening candidates
     door_candidates_accepted: list = field(default_factory=list)
     door_candidates_rejected: list = field(default_factory=list)
@@ -85,12 +86,12 @@ class Phase4Result:
     hosted_windows: list = field(default_factory=list)
     rejected_openings: list = field(default_factory=list)
     # Trimmed wall graph
-    trimmed_graph: Optional[TrimmedGraph] = None
+    trimmed_graph: TrimmedGraph | None = None
     # Final geometry
-    wall_geometry: Optional[WallGeometry] = None
+    wall_geometry: WallGeometry | None = None
     door_geometries: list = field(default_factory=list)
     # task36 classification
-    door_classification_result: Optional[Any] = None  # ClassificationResult
+    door_classification_result: Any | None = None  # ClassificationResult
     double_swing_count: int = 0
     ignored_duplicate_count: int = 0
     # Outputs
@@ -114,22 +115,24 @@ def _run_r2g_inference(
 ) -> dict:
     """Run Raster-to-Graph inference and return the predicted graph dict."""
     import gc
+
     import torch
 
     _ensure_r2g_importable()
     from args import get_args_parser  # type: ignore[import]
     from models.build import build_model, build_postprocessor  # type: ignore[import]
-    from util.random_utils import set_random_seed  # type: ignore[import]
     from run_inference_generous_phase4 import (  # type: ignore[import]
-        GENEROUS, MASK_RERUN, MERGE, FILTERS, SCORING,
-        run_generous_multistart,
-        merge_components,
+        FILTERS,
+        GENEROUS,
+        MASK_RERUN,
+        MERGE,
         apply_light_post_merge_filter,
-        compute_soft_scores,
-        make_svg_merged,
         make_overlay_normal,
-        _find_components,
+        make_svg_merged,
+        merge_components,
+        run_generous_multistart,
     )
+    from util.random_utils import set_random_seed  # type: ignore[import]
 
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA not available — R2G inference requires a GPU.")
@@ -157,9 +160,9 @@ def _run_r2g_inference(
 
     merged_pts_raw, merged_edges_raw = merge_components(
         accepted,
-        snap_tol  = MERGE["node_snap_tolerance_px"],
-        inter_tol = MERGE["edge_intersection_tolerance_px"],
-        col_tol   = MERGE["collinear_overlap_tolerance_px"],
+        snap_tol=MERGE["node_snap_tolerance_px"],
+        inter_tol=MERGE["edge_intersection_tolerance_px"],
+        col_tol=MERGE["collinear_overlap_tolerance_px"],
     )
 
     merged_pts, merged_edges, _ = apply_light_post_merge_filter(
@@ -172,9 +175,7 @@ def _run_r2g_inference(
     }
 
     # Save R2G outputs
-    (output_dir / "graph_pred.json").write_text(
-        json.dumps(graph_json, indent=2), encoding="utf-8"
-    )
+    (output_dir / "graph_pred.json").write_text(json.dumps(graph_json, indent=2), encoding="utf-8")
     (output_dir / "graph_pred.svg").write_text(
         make_svg_merged(merged_pts, merged_edges), encoding="utf-8"
     )
@@ -197,6 +198,7 @@ def _draw_graph_overlay(
 ) -> None:
     """Draw the orthogonally aligned graph on the input image."""
     import cv2
+
     img = np.array(input_pil.convert("RGB")).copy()
     for e in aligned_graph.get("aligned_edges", aligned_graph.get("edges", [])):
         x1, y1, x2, y2 = int(e[0]), int(e[1]), int(e[2]), int(e[3])
@@ -209,12 +211,12 @@ def _draw_graph_overlay(
 def run_phase4_pipeline(
     image_path: str | Path,
     output_dir: str | Path,
-    seg_checkpoint: Optional[str | Path] = None,
-    r2g_checkpoint: Optional[str | Path] = None,
-    explicit_px_to_mm: Optional[float] = None,
+    seg_checkpoint: str | Path | None = None,
+    r2g_checkpoint: str | Path | None = None,
+    explicit_px_to_mm: float | None = None,
     max_perp_dist_px: float = 20.0,
     run_r2g: bool = True,
-    existing_graph_json: Optional[str | Path] = None,
+    existing_graph_json: str | Path | None = None,
     preview_half_width_px: float = 8.0,
 ) -> Phase4Result:
     """Run the full Phase 4 graph-to-vector pipeline.
@@ -266,6 +268,7 @@ def run_phase4_pipeline(
             src = src_dir / fname
             if src.exists() and src.resolve() != (output_dir / fname).resolve():
                 import shutil
+
                 shutil.copy2(str(src), str(output_dir / fname))
     else:
         raise ValueError("Either run_r2g=True or existing_graph_json must be provided.")
@@ -282,6 +285,7 @@ def run_phase4_pipeline(
     # --- 4. Segmentation inference ---
     print("[phase4] 4/13 segmentation inference...")
     from .segmentation_inference import run_segmentation, seg_mask_to_color_preview
+
     seg_class_map = run_segmentation(input_pil, seg_ckpt)
     result.seg_class_map = seg_class_map
 
@@ -336,20 +340,30 @@ def run_phase4_pipeline(
     hosted_windows = [h for h in hosted if h.opening_type == "window"]
 
     all_rejected = (
-        [RejectedOpening(
-            opening_type="door", source_component_id=d.component_id,
-            raw_points=d.raw_points, rejection_reason=d.rejection_reason,
-            debug_confidence=d.confidence,
-        ) for d in door_rej] +
-        [RejectedOpening(
-            opening_type="window", source_component_id=w.component_id,
-            raw_points=w.raw_points, rejection_reason=w.rejection_reason,
-            debug_confidence=w.confidence,
-        ) for w in win_rej] +
-        rejected_hosting
+        [
+            RejectedOpening(
+                opening_type="door",
+                source_component_id=d.component_id,
+                raw_points=d.raw_points,
+                rejection_reason=d.rejection_reason,
+                debug_confidence=d.confidence,
+            )
+            for d in door_rej
+        ]
+        + [
+            RejectedOpening(
+                opening_type="window",
+                source_component_id=w.component_id,
+                raw_points=w.raw_points,
+                rejection_reason=w.rejection_reason,
+                debug_confidence=w.confidence,
+            )
+            for w in win_rej
+        ]
+        + rejected_hosting
     )
 
-    result.hosted_doors = hosted_doors    # pre-adjustment (for debug reference)
+    result.hosted_doors = hosted_doors  # pre-adjustment (for debug reference)
     result.hosted_windows = hosted_windows
     result.rejected_openings = all_rejected
     print(f"  hosted: {len(hosted_doors)} doors, {len(hosted_windows)} windows")
@@ -378,8 +392,10 @@ def run_phase4_pipeline(
     result.double_swing_count = classification_result.double_swing_count
     result.ignored_duplicate_count = classification_result.ignored_duplicate_count
     if classification_result.double_swing_count or classification_result.ignored_duplicate_count:
-        print(f"  door classification: {classification_result.double_swing_count} double-swing, "
-              f"{classification_result.ignored_duplicate_count} ignored duplicates")
+        print(
+            f"  door classification: {classification_result.double_swing_count} double-swing, "
+            f"{classification_result.ignored_duplicate_count} ignored duplicates"
+        )
 
     # --- 9-10. Wall interval trimming ---
     print("[phase4] 9/13 wall interval trimming...")
@@ -394,7 +410,7 @@ def run_phase4_pipeline(
     print(f"  wall edges after trimming: {len(trimmed.wall_edges)}")
 
     # --- Part A: propagate adjusted intervals to final opening objects ---
-    final_doors   = apply_adjusted_intervals_to_hosted_openings(trimmed, classified_doors)
+    final_doors = apply_adjusted_intervals_to_hosted_openings(trimmed, classified_doors)
     final_windows = apply_adjusted_intervals_to_hosted_openings(trimmed, hosted_windows)
 
     # --- 11. Wall chain buffering (Part C: topology-snap pre-processing) ---
@@ -405,8 +421,10 @@ def run_phase4_pipeline(
         preview_half_width_px=preview_half_width_px,
     )
     result.wall_geometry = wall_geom
-    print(f"  wall chains: {wall_geom.chain_count}, thickness_mm={wall_geom.wall_thickness_mm}, "
-          f"disconnected_endpoints={wall_geom.disconnected_endpoint_count}")
+    print(
+        f"  wall chains: {wall_geom.chain_count}, thickness_mm={wall_geom.wall_thickness_mm}, "
+        f"disconnected_endpoints={wall_geom.disconnected_endpoint_count}"
+    )
 
     # --- Part B: evidence-based door geometry ---
     door_arc_mask = seg_masks.get("door_arc")
@@ -438,6 +456,7 @@ def run_phase4_pipeline(
         cls = door_classifications[door_idx] if door_idx < len(door_classifications) else None
         if cls is not None:
             from dataclasses import replace as _dc_replace
+
             geom = _dc_replace(
                 geom,
                 classification_reason=cls.decision_reason,
@@ -451,8 +470,10 @@ def run_phase4_pipeline(
 
     evidence_count = sum(1 for g in door_geometries if "evidence" in g.hinge_source)
     fallback_count = len(door_geometries) - evidence_count
-    print(f"  door direction: {evidence_count}/{len(door_geometries)} from evidence, "
-          f"{fallback_count} fallback")
+    print(
+        f"  door direction: {evidence_count}/{len(door_geometries)} from evidence, "
+        f"{fallback_count} fallback"
+    )
     result.door_geometries = door_geometries
 
     # --- 12. Export final SVG ---

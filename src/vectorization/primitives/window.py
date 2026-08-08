@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 from ..wall_geometry import buffer_segment_polygon_svg
 from .base import BasePrimitive, ScaleInfo
@@ -30,10 +29,10 @@ class WindowPrimitive(BasePrimitive):
         width: float,
         orientation_angle: float = 0.0,
         thickness: float = 8.0,
-        width_mm: Optional[float] = None,
-        host_wall_id: Optional[str] = None,
+        width_mm: float | None = None,
+        host_wall_id: str | None = None,
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
+        scale_info: ScaleInfo | None = None,
         **base_kwargs,
     ) -> None:
         super().__init__(primitive_id, confidence, scale_info, **base_kwargs)
@@ -56,7 +55,10 @@ class WindowPrimitive(BasePrimitive):
     def to_svg(self) -> str:
         s, e = self._endpoints()
         return buffer_segment_polygon_svg(
-            s, e, self.thickness / 2.0, self.COLOR,
+            s,
+            e,
+            self.thickness / 2.0,
+            self.COLOR,
             extra_attrs=f'id="{self.primitive_id}" data-type="window"',
         )
 

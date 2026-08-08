@@ -35,7 +35,6 @@ from src.checkpointing import load_checkpoint, resolve_resume_path, save_checkpo
 from src.dataset import FloorplanDataset
 from src.feature_cache import (
     CachedFloorplanDataset,
-    compute_config_hash,
     extract_features_for_split,
 )
 from src.losses import WeightedCEPlusDice
@@ -88,18 +87,22 @@ def _normalize_config(cfg: dict) -> dict:
     Existing flat keys are never overwritten so old configs keep working.
     """
     paths_cfg = cfg.get("paths", {})
-    image_cfg  = cfg.get("image", {})
+    image_cfg = cfg.get("image", {})
     flat = dict(cfg)
 
     if paths_cfg:
-        flat.setdefault("dataset_root",      paths_cfg.get("dataset_root", ""))
-        flat.setdefault("train_index",       paths_cfg.get("train_index",  "splits/train.json"))
-        flat.setdefault("val_index",         paths_cfg.get("val_index",    "splits/val.json"))
-        flat.setdefault("debug_train_index", paths_cfg.get("debug_train_index", "splits/debug_train.json"))
-        flat.setdefault("debug_val_index",   paths_cfg.get("debug_val_index",   "splits/debug_val.json"))
+        flat.setdefault("dataset_root", paths_cfg.get("dataset_root", ""))
+        flat.setdefault("train_index", paths_cfg.get("train_index", "splits/train.json"))
+        flat.setdefault("val_index", paths_cfg.get("val_index", "splits/val.json"))
+        flat.setdefault(
+            "debug_train_index", paths_cfg.get("debug_train_index", "splits/debug_train.json")
+        )
+        flat.setdefault(
+            "debug_val_index", paths_cfg.get("debug_val_index", "splits/debug_val.json")
+        )
 
     if image_cfg:
-        flat.setdefault("image_size",  image_cfg.get("image_size",  512))
+        flat.setdefault("image_size", image_cfg.get("image_size", 512))
         flat.setdefault("num_classes", image_cfg.get("num_classes", 5))
 
     return flat
@@ -119,17 +122,19 @@ def set_seed(seed: int) -> None:
 
 
 def _setup_device(cfg: dict) -> torch.device:
-    device_cfg    = cfg.get("device", {})
-    require_cuda  = device_cfg.get("require_cuda", False)
+    device_cfg = cfg.get("device", {})
+    require_cuda = device_cfg.get("require_cuda", False)
     allow_cpu_dbg = device_cfg.get("allow_cpu_debug", True)
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
-        name   = torch.cuda.get_device_name(0)
+        name = torch.cuda.get_device_name(0)
         mem_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
         logger.info(
             "Device: %s | CUDA %s | %.1f GB VRAM | AMP=%s",
-            name, torch.version.cuda, mem_gb,
+            name,
+            torch.version.cuda,
+            mem_gb,
             cfg.get("training", {}).get("mixed_precision", False),
         )
     else:
@@ -152,7 +157,7 @@ def _setup_device(cfg: dict) -> torch.device:
 
 def _build_class_weights(cfg: dict, ckpt_dir: Path) -> torch.Tensor | None:
     cw_cfg = cfg.get("class_weights", {})
-    mode   = cw_cfg.get("mode", "none")
+    mode = cw_cfg.get("mode", "none")
 
     if mode == "manual":
         vals = cw_cfg.get("values")
@@ -174,17 +179,17 @@ def _build_class_weights(cfg: dict, ckpt_dir: Path) -> torch.Tensor | None:
         return weights
 
     num_classes = cfg["num_classes"]
-    mults_cfg   = cw_cfg.get("priority_multipliers", {})
+    mults_cfg = cw_cfg.get("priority_multipliers", {})
     class_order = [DEFAULT_CLASS_MAPPING[i] for i in range(num_classes)]
     multipliers = [float(mults_cfg.get(name, 1.0)) for name in class_order]
 
     weights = compute_class_weights_auto(
-        train_index  = cfg["train_index"],
-        dataset_root = cfg["dataset_root"],
-        num_classes  = num_classes,
-        priority_multipliers = multipliers,
-        min_weight   = float(cw_cfg.get("min_weight", 0.1)),
-        max_weight   = float(cw_cfg.get("max_weight", 5.0)),
+        train_index=cfg["train_index"],
+        dataset_root=cfg["dataset_root"],
+        num_classes=num_classes,
+        priority_multipliers=multipliers,
+        min_weight=float(cw_cfg.get("min_weight", 0.1)),
+        max_weight=float(cw_cfg.get("max_weight", 5.0)),
     )
 
     ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -213,12 +218,12 @@ def build_cached_loaders(
     debug: bool = False,
     overfit_n: int = 0,
 ) -> tuple[DataLoader, DataLoader]:
-    cache_cfg    = cfg.get("feature_cache", {})
-    cache_dir    = Path(cache_cfg.get("cache_dir", "features/segformer_b0"))
+    cache_cfg = cfg.get("feature_cache", {})
+    cache_dir = Path(cache_cfg.get("cache_dir", "features/segformer_b0"))
     force_rebuild = cache_cfg.get("force_rebuild", False)
     dataset_root = cfg["dataset_root"]
-    image_size   = cfg["image_size"]
-    bs           = cfg["training"]["batch_size"]
+    image_size = cfg["image_size"]
+    bs = cfg["training"]["batch_size"]
 
     if overfit_n > 0:
         with open(cfg["train_index"]) as f:
@@ -227,8 +232,13 @@ def build_cached_loaders(
         temp_index = Path("splits/_overfit_temp.json")
         _write_temp_index(overfit_entries, temp_index)
         extract_features_for_split(
-            backbone, temp_index, dataset_root, cache_dir,
-            cfg, force_rebuild=force_rebuild, device=device,
+            backbone,
+            temp_index,
+            dataset_root,
+            cache_dir,
+            cfg,
+            force_rebuild=force_rebuild,
+            device=device,
         )
         ds = CachedFloorplanDataset(temp_index, dataset_root, cache_dir, image_size)
         bs_actual = min(bs, overfit_n)
@@ -239,25 +249,37 @@ def build_cached_loaders(
 
     if debug:
         train_index = cfg.get("debug_train_index", cfg["train_index"])
-        val_index   = cfg.get("debug_val_index",   cfg["val_index"])
+        val_index = cfg.get("debug_val_index", cfg["val_index"])
     else:
         train_index = cfg["train_index"]
-        val_index   = cfg["val_index"]
+        val_index = cfg["val_index"]
 
     extract_features_for_split(
-        backbone, train_index, dataset_root, cache_dir,
-        cfg, force_rebuild=force_rebuild, device=device,
+        backbone,
+        train_index,
+        dataset_root,
+        cache_dir,
+        cfg,
+        force_rebuild=force_rebuild,
+        device=device,
     )
     extract_features_for_split(
-        backbone, val_index, dataset_root, cache_dir,
-        cfg, force_rebuild=force_rebuild, device=device,
+        backbone,
+        val_index,
+        dataset_root,
+        cache_dir,
+        cfg,
+        force_rebuild=force_rebuild,
+        device=device,
     )
 
     train_ds = CachedFloorplanDataset(train_index, dataset_root, cache_dir, image_size)
-    val_ds   = CachedFloorplanDataset(val_index,   dataset_root, cache_dir, image_size)
+    val_ds = CachedFloorplanDataset(val_index, dataset_root, cache_dir, image_size)
 
-    train_loader = DataLoader(train_ds, batch_size=bs, shuffle=True,  num_workers=0, pin_memory=False)
-    val_loader   = DataLoader(val_ds,   batch_size=bs, shuffle=False, num_workers=0, pin_memory=False)
+    train_loader = DataLoader(
+        train_ds, batch_size=bs, shuffle=True, num_workers=0, pin_memory=False
+    )
+    val_loader = DataLoader(val_ds, batch_size=bs, shuffle=False, num_workers=0, pin_memory=False)
     return train_loader, val_loader
 
 
@@ -268,7 +290,7 @@ def build_preview_loader(
     n_samples: int = 4,
 ) -> DataLoader:
     dataset_root = cfg["dataset_root"]
-    image_size   = cfg["image_size"]
+    image_size = cfg["image_size"]
 
     if overfit_n > 0:
         index = cfg["train_index"]
@@ -294,7 +316,7 @@ def make_preview_loader(
 
 @torch.no_grad()
 def save_sample_artifacts(
-    full_model: "FloorplanSegModel",
+    full_model: FloorplanSegModel,
     loader: DataLoader,
     device: torch.device,
     output_dir: Path,
@@ -314,7 +336,7 @@ def save_sample_artifacts(
             break
         images = batch["image"].to(device)
         logits = full_model(images)
-        preds  = logits.argmax(dim=1).cpu().numpy()
+        preds = logits.argmax(dim=1).cpu().numpy()
 
         for i in range(len(images)):
             if saved >= n_samples:
@@ -352,29 +374,29 @@ def train_one_epoch(
 ) -> tuple[float, int]:
     decoder.train()
     total_loss = 0.0
-    n_batches  = 0
+    n_batches = 0
 
     for batch in loader:
         hidden_states = tuple(hs.to(device, non_blocking=True) for hs in batch["hidden_states"])
-        masks         = batch["mask"].to(device, non_blocking=True)
+        masks = batch["mask"].to(device, non_blocking=True)
 
         optimizer.zero_grad()
 
         if scaler is not None:
             with torch.amp.autocast("cuda"):
                 logits = decoder(hidden_states)
-                loss   = criterion(logits, masks)
+                loss = criterion(logits, masks)
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
         else:
             logits = decoder(hidden_states)
-            loss   = criterion(logits, masks)
+            loss = criterion(logits, masks)
             loss.backward()
             optimizer.step()
 
         total_loss += loss.item()
-        n_batches  += 1
+        n_batches += 1
         global_step += 1
 
     return total_loss / max(n_batches, 1), global_step
@@ -399,27 +421,27 @@ def validate(
 ) -> dict[str, float]:
     """Validate decoder; compute IoU, boundary F1, vector_ready_score, grouped metrics."""
     decoder.eval()
-    total_loss   = 0.0
-    all_preds:   list[torch.Tensor] = []
+    total_loss = 0.0
+    all_preds: list[torch.Tensor] = []
     all_targets: list[torch.Tensor] = []
-    all_input_types: list[str]      = []
+    all_input_types: list[str] = []
 
     wall_bf1_acc = BoundaryF1Accumulator(class_id=2, tolerance_px=boundary_tol)
 
     # Per-input-type accumulators
-    group_preds:   dict[str, list[torch.Tensor]] = {}
+    group_preds: dict[str, list[torch.Tensor]] = {}
     group_targets: dict[str, list[torch.Tensor]] = {}
     group_wall_bf1: dict[str, BoundaryF1Accumulator] = {}
 
     for batch in loader:
         hidden_states = tuple(hs.to(device, non_blocking=True) for hs in batch["hidden_states"])
-        masks         = batch["mask"].to(device, non_blocking=True)
+        masks = batch["mask"].to(device, non_blocking=True)
 
         logits = decoder(hidden_states)
-        loss   = criterion(logits, masks)
+        loss = criterion(logits, masks)
         total_loss += loss.item()
 
-        preds   = logits.argmax(dim=1).cpu()
+        preds = logits.argmax(dim=1).cpu()
         masks_c = masks.cpu()
 
         all_preds.append(preds)
@@ -447,22 +469,22 @@ def validate(
                 group_preds.setdefault(itype, []).append(preds[i])
                 group_targets.setdefault(itype, []).append(masks_c[i])
 
-    preds_cat   = torch.cat([p.view(-1) for p in all_preds])
+    preds_cat = torch.cat([p.view(-1) for p in all_preds])
     targets_cat = torch.cat([t.view(-1) for t in all_targets])
 
     per_class_iou = compute_iou_per_class(preds_cat, targets_cat, num_classes)
-    miou          = compute_miou(preds_cat, targets_cat, num_classes)
-    fg_miou       = compute_foreground_miou(preds_cat, targets_cat, num_classes)
-    pixel_acc     = compute_pixel_accuracy(preds_cat, targets_cat)
-    fg_pixel_acc  = compute_foreground_pixel_accuracy(preds_cat, targets_cat)
+    miou = compute_miou(preds_cat, targets_cat, num_classes)
+    fg_miou = compute_foreground_miou(preds_cat, targets_cat, num_classes)
+    pixel_acc = compute_pixel_accuracy(preds_cat, targets_cat)
+    fg_pixel_acc = compute_foreground_pixel_accuracy(preds_cat, targets_cat)
 
     metrics: dict[str, float] = {
-        "val_loss":                total_loss / max(len(loader), 1),
-        "val_mIoU":                miou,
-        "foreground_mIoU":         fg_miou,
-        "pixel_accuracy":          pixel_acc,
+        "val_loss": total_loss / max(len(loader), 1),
+        "val_mIoU": miou,
+        "foreground_mIoU": fg_miou,
+        "pixel_accuracy": pixel_acc,
         "foreground_pixel_accuracy": fg_pixel_acc,
-        "wall_boundary_F1":        wall_bf1_acc.compute() if compute_boundary else float("nan"),
+        "wall_boundary_F1": wall_bf1_acc.compute() if compute_boundary else float("nan"),
     }
     for cls_id, iou in enumerate(per_class_iou):
         name = DEFAULT_CLASS_MAPPING.get(cls_id, f"class_{cls_id}")
@@ -477,8 +499,8 @@ def validate(
             gp = torch.cat([p.view(-1) for p in g_preds])
             gt = torch.cat([t.view(-1) for t in group_targets[itype]])
             g_ious = compute_iou_per_class(gp, gt, num_classes)
-            metrics[f"{prefix}_pixel_accuracy"]    = compute_pixel_accuracy(gp, gt)
-            metrics[f"{prefix}_foreground_mIoU"]   = compute_foreground_miou(gp, gt, num_classes)
+            metrics[f"{prefix}_pixel_accuracy"] = compute_pixel_accuracy(gp, gt)
+            metrics[f"{prefix}_foreground_mIoU"] = compute_foreground_miou(gp, gt, num_classes)
             for cls_id, iou in enumerate(g_ious):
                 name = DEFAULT_CLASS_MAPPING.get(cls_id, f"class_{cls_id}")
                 metrics[f"{prefix}_{name}_IoU"] = iou
@@ -496,17 +518,17 @@ def validate(
 _CLASS_COLORS: dict[int, tuple[int, int, int]] = {
     0: (200, 200, 200),
     1: (245, 240, 232),
-    2: (30,  30,  30),
-    3: (60,  120, 220),
-    4: (220, 90,  90),
+    2: (30, 30, 30),
+    3: (60, 120, 220),
+    4: (220, 90, 90),
     5: (235, 140, 80),
-    6: (160, 70,  180),
+    6: (160, 70, 180),
 }
 
 
 def _mask_to_rgb(mask: np.ndarray) -> np.ndarray:
     h, w = mask.shape
-    rgb  = np.zeros((h, w, 3), dtype=np.uint8)
+    rgb = np.zeros((h, w, 3), dtype=np.uint8)
     for cls_id, color in _CLASS_COLORS.items():
         rgb[mask == cls_id] = color
     return rgb
@@ -528,27 +550,27 @@ def save_previews(
         if saved >= n_samples:
             break
         images = batch["image"].to(device)
-        masks  = batch["mask"]
+        masks = batch["mask"]
 
         logits = full_model(images)
-        preds  = logits.argmax(dim=1).cpu()
+        preds = logits.argmax(dim=1).cpu()
 
         for i in range(images.size(0)):
             if saved >= n_samples:
                 break
-            img_t    = images[i].cpu()
-            mean     = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
-            std      = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
+            img_t = images[i].cpu()
+            mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
+            std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
             img_disp = ((img_t * std + mean).clamp(0, 1) * 255).byte().permute(1, 2, 0).numpy()
 
             target_rgb = _mask_to_rgb(masks[i].numpy())
-            pred_rgb   = _mask_to_rgb(preds[i].numpy())
-            overlay    = (img_disp * 0.5 + pred_rgb * 0.5).astype(np.uint8)
+            pred_rgb = _mask_to_rgb(preds[i].numpy())
+            overlay = (img_disp * 0.5 + pred_rgb * 0.5).astype(np.uint8)
 
-            Image.fromarray(img_disp).save(   preview_dir / f"sample_{saved:03d}_input.png")
-            Image.fromarray(target_rgb).save( preview_dir / f"sample_{saved:03d}_target.png")
-            Image.fromarray(pred_rgb).save(   preview_dir / f"sample_{saved:03d}_prediction.png")
-            Image.fromarray(overlay).save(    preview_dir / f"sample_{saved:03d}_overlay.png")
+            Image.fromarray(img_disp).save(preview_dir / f"sample_{saved:03d}_input.png")
+            Image.fromarray(target_rgb).save(preview_dir / f"sample_{saved:03d}_target.png")
+            Image.fromarray(pred_rgb).save(preview_dir / f"sample_{saved:03d}_prediction.png")
+            Image.fromarray(overlay).save(preview_dir / f"sample_{saved:03d}_overlay.png")
             saved += 1
 
 
@@ -591,34 +613,42 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
     device = _setup_device(cfg)
 
     num_classes = cfg["num_classes"]
-    image_size  = cfg["image_size"]
-    variant     = cfg["model"]["name"]
-    pretrained  = cfg["model"].get("pretrained", True)
+    image_size = cfg["image_size"]
+    variant = cfg["model"]["name"]
+    pretrained = cfg["model"].get("pretrained", True)
 
     # Checkpoint paths
-    ckpt_dir     = Path(cfg["checkpoint"]["output_dir"])
+    ckpt_dir = Path(cfg["checkpoint"]["output_dir"])
     ckpt_dir.mkdir(parents=True, exist_ok=True)
-    latest_path  = ckpt_dir / "latest.pt"
-    best_path    = ckpt_dir / "best.pt"
-    history_csv  = ckpt_dir / "training_history.csv"
+    latest_path = ckpt_dir / "latest.pt"
+    best_path = ckpt_dir / "best.pt"
+    history_csv = ckpt_dir / "training_history.csv"
     summary_path = ckpt_dir / "training_summary.json"
 
-    log_dir       = Path(cfg["logging"]["log_dir"])
+    log_dir = Path(cfg["logging"]["log_dir"])
     preview_every = cfg["logging"].get("save_preview_every_n_epochs", 5)
-    n_preview     = cfg["logging"].get("preview_sample_count", 4)
+    n_preview = cfg["logging"].get("preview_sample_count", 4)
 
-    metrics_cfg      = cfg.get("metrics", {})
+    metrics_cfg = cfg.get("metrics", {})
     compute_boundary = metrics_cfg.get("compute_boundary_f1", True)
-    boundary_tol     = metrics_cfg.get("boundary_tolerance_px", 2)
-    compute_grouped  = metrics_cfg.get("compute_grouped_by_input_type", True)
-    vrs_weights      = metrics_cfg.get("vector_ready_score", {
-        "pixel_accuracy": 0.15, "foreground_mIoU": 0.15, "wall_IoU": 0.10,
-        "window_IoU": 0.15, "door_arc_IoU": 0.15, "door_leaf_IoU": 0.10,
-        "door_origin_IoU": 0.10, "floor_IoU": 0.10,
-    })
+    boundary_tol = metrics_cfg.get("boundary_tolerance_px", 2)
+    compute_grouped = metrics_cfg.get("compute_grouped_by_input_type", True)
+    vrs_weights = metrics_cfg.get(
+        "vector_ready_score",
+        {
+            "pixel_accuracy": 0.15,
+            "foreground_mIoU": 0.15,
+            "wall_IoU": 0.10,
+            "window_IoU": 0.15,
+            "door_arc_IoU": 0.15,
+            "door_leaf_IoU": 0.10,
+            "door_origin_IoU": 0.10,
+            "floor_IoU": 0.10,
+        },
+    )
 
-    run_cfg   = cfg.get("run", {})
-    run_name  = run_cfg.get("run_name", "segformer_b0_v005")
+    run_cfg = cfg.get("run", {})
+    run_name = run_cfg.get("run_name", "segformer_b0_v005")
     model_ver = run_cfg.get("version", "v005")
 
     # Build backbone (frozen)
@@ -637,33 +667,39 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
     # Build decoder
     decoder = build_decoder(variant=variant, num_classes=num_classes, output_size=image_size)
     decoder.to(device)
-    logger.info("Decoder parameters: %d", sum(p.numel() for p in decoder.parameters() if p.requires_grad))
+    logger.info(
+        "Decoder parameters: %d", sum(p.numel() for p in decoder.parameters() if p.requires_grad)
+    )
 
     # Optimizer
     lr = cfg["training"]["learning_rate"]
     wd = cfg["training"].get("weight_decay", 0.01)
     optimizer = torch.optim.AdamW(decoder.parameters(), lr=lr, weight_decay=wd)
 
-    epochs    = cfg["training"]["epochs"]
+    epochs = cfg["training"]["epochs"]
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     # Class weights
     class_weights_tensor = _build_class_weights(cfg, ckpt_dir)
-    class_weights_list   = class_weights_tensor.tolist() if class_weights_tensor is not None else None
+    class_weights_list = class_weights_tensor.tolist() if class_weights_tensor is not None else None
 
     # Loss function
-    loss_cfg   = cfg.get("loss", {})
-    loss_name  = loss_cfg.get("name", "cross_entropy")
+    loss_cfg = cfg.get("loss", {})
+    loss_name = loss_cfg.get("name", "cross_entropy")
     if loss_name == "weighted_ce_plus_dice" or loss_cfg.get("use_dice", False):
         cw = class_weights_tensor.to(device) if class_weights_tensor is not None else None
         criterion: nn.Module = WeightedCEPlusDice(
-            num_classes          = num_classes,
-            class_weights        = cw,
-            ce_weight            = float(loss_cfg.get("ce_weight", 1.0)),
-            dice_weight          = float(loss_cfg.get("dice_weight", 0.5)),
-            dice_exclude_background = bool(loss_cfg.get("dice_exclude_background", True)),
+            num_classes=num_classes,
+            class_weights=cw,
+            ce_weight=float(loss_cfg.get("ce_weight", 1.0)),
+            dice_weight=float(loss_cfg.get("dice_weight", 0.5)),
+            dice_exclude_background=bool(loss_cfg.get("dice_exclude_background", True)),
         )
-        logger.info("Loss: WeightedCE(%.1f) + Dice(%.1f)", loss_cfg.get("ce_weight", 1.0), loss_cfg.get("dice_weight", 0.5))
+        logger.info(
+            "Loss: WeightedCE(%.1f) + Dice(%.1f)",
+            loss_cfg.get("ce_weight", 1.0),
+            loss_cfg.get("dice_weight", 0.5),
+        )
     else:
         cw = class_weights_tensor.to(device) if class_weights_tensor is not None else None
         criterion = nn.CrossEntropyLoss(weight=cw)
@@ -671,17 +707,17 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
 
     # Mixed precision
     use_amp = cfg["training"].get("mixed_precision", False) and torch.cuda.is_available()
-    scaler  = torch.amp.GradScaler("cuda") if use_amp else None
+    scaler = torch.amp.GradScaler("cuda") if use_amp else None
 
-    best_metric_name  = cfg["checkpoint"].get("monitor", "val_vector_ready_score")
+    best_metric_name = cfg["checkpoint"].get("monitor", "val_vector_ready_score")
     best_metric_value = float("-inf")
-    start_epoch       = 0
-    global_step       = 0
+    start_epoch = 0
+    global_step = 0
     history: list[dict] = []
-    class_mapping     = DEFAULT_CLASS_MAPPING
+    class_mapping = DEFAULT_CLASS_MAPPING
 
     # Resume
-    resume_arg  = args.resume or cfg["checkpoint"].get("resume_from", "auto")
+    resume_arg = args.resume or cfg["checkpoint"].get("resume_from", "auto")
     resume_path = resolve_resume_path(ckpt_dir, resume_arg) if resume_arg else None
     if resume_path:
         try:
@@ -690,24 +726,26 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
                 raise RuntimeError(
                     f"Checkpoint arch_version={payload.get('arch_version')!r} != {ARCH_VERSION!r}"
                 )
-            start_epoch       = payload.get("epoch", 0) + 1
-            global_step       = payload.get("global_step", 0)
+            start_epoch = payload.get("epoch", 0) + 1
+            global_step = payload.get("global_step", 0)
             best_metric_value = payload.get("best_metric_value", float("-inf"))
-            history           = payload.get("history", [])
+            history = payload.get("history", [])
             logger.info("Resumed from %s at epoch %d", resume_path, start_epoch)
         except Exception as exc:
             logger.warning("Could not resume from %s (%s). Starting fresh.", resume_path, exc)
-            start_epoch       = 0
-            global_step       = 0
+            start_epoch = 0
+            global_step = 0
             best_metric_value = float("-inf")
-            history           = []
+            history = []
             if history_csv.exists():
                 archived = history_csv.with_suffix(".prev.csv")
                 history_csv.rename(archived)
                 logger.info("Old training_history.csv archived as %s", archived.name)
 
     # Preview loader
-    preview_loader = build_preview_loader(cfg, debug=args.debug, overfit_n=overfit_n, n_samples=n_preview)
+    preview_loader = build_preview_loader(
+        cfg, debug=args.debug, overfit_n=overfit_n, n_samples=n_preview
+    )
 
     # Full model (backbone + decoder) for preview generation only
     backbone.to(device)
@@ -715,7 +753,11 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
 
     logger.info(
         "Training: %d epochs | device=%s | amp=%s | train_batches=%d | val_batches=%d",
-        epochs, device, use_amp, len(train_loader), len(val_loader),
+        epochs,
+        device,
+        use_amp,
+        len(train_loader),
+        len(val_loader),
     )
 
     for epoch in range(start_epoch, epochs):
@@ -726,11 +768,15 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
         )
 
         val_metrics = validate(
-            decoder, val_loader, criterion, device, num_classes,
-            vrs_weights     = vrs_weights,
-            compute_boundary = compute_boundary,
-            boundary_tol    = boundary_tol,
-            compute_grouped = compute_grouped,
+            decoder,
+            val_loader,
+            criterion,
+            device,
+            num_classes,
+            vrs_weights=vrs_weights,
+            compute_boundary=compute_boundary,
+            boundary_tol=boundary_tol,
+            compute_grouped=compute_grouped,
         )
 
         scheduler.step()
@@ -738,14 +784,22 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
 
         # Best-model checkpoint
         monitor_value = val_metrics.get(best_metric_name, val_metrics.get("val_mIoU", float("nan")))
-        best_updated  = False
+        best_updated = False
         if monitor_value == monitor_value and monitor_value > best_metric_value:
             best_metric_value = monitor_value
-            best_updated      = True
+            best_updated = True
             save_checkpoint(
-                best_path, decoder, optimizer, scheduler,
-                epoch, global_step, best_metric_value, best_metric_name,
-                cfg, class_mapping, history,
+                best_path,
+                decoder,
+                optimizer,
+                scheduler,
+                epoch,
+                global_step,
+                best_metric_value,
+                best_metric_name,
+                cfg,
+                class_mapping,
+                history,
                 arch_version=ARCH_VERSION,
                 class_weights=class_weights_list,
                 model_version=model_ver,
@@ -754,9 +808,17 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
 
         # Latest checkpoint (every epoch)
         save_checkpoint(
-            latest_path, decoder, optimizer, scheduler,
-            epoch, global_step, best_metric_value, best_metric_name,
-            cfg, class_mapping, history,
+            latest_path,
+            decoder,
+            optimizer,
+            scheduler,
+            epoch,
+            global_step,
+            best_metric_value,
+            best_metric_name,
+            cfg,
+            class_mapping,
+            history,
             arch_version=ARCH_VERSION,
             class_weights=class_weights_list,
             model_version=model_ver,
@@ -765,27 +827,37 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
 
         # History row
         row: dict[str, Any] = {
-            "epoch":                     epoch,
-            "train_loss":                _fmt(train_loss),
-            "val_loss":                  _fmt(val_metrics.get("val_loss", float("nan"))),
-            "val_vector_ready_score":    _fmt(val_metrics.get("val_vector_ready_score", float("nan"))),
-            "val_mIoU":                  _fmt(val_metrics.get("val_mIoU", float("nan"))),
-            "foreground_mIoU":           _fmt(val_metrics.get("foreground_mIoU", float("nan"))),
-            "pixel_accuracy":            _fmt(val_metrics.get("pixel_accuracy", float("nan"))),
-            "foreground_pixel_accuracy": _fmt(val_metrics.get("foreground_pixel_accuracy", float("nan"))),
-            "wall_boundary_F1":          _fmt(val_metrics.get("wall_boundary_F1", float("nan"))),
+            "epoch": epoch,
+            "train_loss": _fmt(train_loss),
+            "val_loss": _fmt(val_metrics.get("val_loss", float("nan"))),
+            "val_vector_ready_score": _fmt(val_metrics.get("val_vector_ready_score", float("nan"))),
+            "val_mIoU": _fmt(val_metrics.get("val_mIoU", float("nan"))),
+            "foreground_mIoU": _fmt(val_metrics.get("foreground_mIoU", float("nan"))),
+            "pixel_accuracy": _fmt(val_metrics.get("pixel_accuracy", float("nan"))),
+            "foreground_pixel_accuracy": _fmt(
+                val_metrics.get("foreground_pixel_accuracy", float("nan"))
+            ),
+            "wall_boundary_F1": _fmt(val_metrics.get("wall_boundary_F1", float("nan"))),
         }
         for cls_name in class_mapping.values():
             row[f"{cls_name}_IoU"] = _fmt(val_metrics.get(f"{cls_name}_IoU", float("nan")))
         for prefix in ("clean", "original"):
-            row[f"{prefix}_pixel_accuracy"]  = _fmt(val_metrics.get(f"{prefix}_pixel_accuracy", float("nan")))
-            row[f"{prefix}_foreground_mIoU"] = _fmt(val_metrics.get(f"{prefix}_foreground_mIoU", float("nan")))
-            row[f"{prefix}_wall_boundary_F1"] = _fmt(val_metrics.get(f"{prefix}_wall_boundary_F1", float("nan")))
+            row[f"{prefix}_pixel_accuracy"] = _fmt(
+                val_metrics.get(f"{prefix}_pixel_accuracy", float("nan"))
+            )
+            row[f"{prefix}_foreground_mIoU"] = _fmt(
+                val_metrics.get(f"{prefix}_foreground_mIoU", float("nan"))
+            )
+            row[f"{prefix}_wall_boundary_F1"] = _fmt(
+                val_metrics.get(f"{prefix}_wall_boundary_F1", float("nan"))
+            )
             for cls_name in class_mapping.values():
-                row[f"{prefix}_{cls_name}_IoU"] = _fmt(val_metrics.get(f"{prefix}_{cls_name}_IoU", float("nan")))
-        row["learning_rate"]    = round(current_lr, 8)
+                row[f"{prefix}_{cls_name}_IoU"] = _fmt(
+                    val_metrics.get(f"{prefix}_{cls_name}_IoU", float("nan"))
+                )
+        row["learning_rate"] = round(current_lr, 8)
         row["checkpoint_saved"] = True
-        row["best_updated"]     = best_updated
+        row["best_updated"] = best_updated
 
         _write_history_row(history_csv, row)
         history.append(row)
@@ -797,7 +869,8 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
         logger.info(
             "Epoch %02d/%02d | train_loss=%.4f | val_loss=%.4f | vrs=%s | "
             "door_arc_IoU=%s | door_leaf_IoU=%s | lr=%.2e%s",
-            epoch + 1, epochs,
+            epoch + 1,
+            epochs,
             train_loss,
             val_metrics.get("val_loss", float("nan")),
             f"{vrs:.4f}" if vrs == vrs else "nan",
@@ -815,22 +888,25 @@ def train(cfg: dict, args: argparse.Namespace) -> None:
             full_model.backbone.to("cpu")
 
         # Summary JSON
-        _save_summary(summary_path, {
-            "last_epoch":        epoch,
-            "global_step":       global_step,
-            "best_metric_name":  best_metric_name,
-            "best_metric_value": best_metric_value,
-            "val_loss":          val_metrics.get("val_loss"),
-            "val_vector_ready_score": vrs if vrs == vrs else None,
-            "val_mIoU":          val_metrics.get("val_mIoU"),
-            "door_arc_IoU":      val_metrics.get("door_arc_IoU"),
-            "door_leaf_IoU":     val_metrics.get("door_leaf_IoU"),
-            "door_origin_IoU":   val_metrics.get("door_origin_IoU"),
-            "wall_boundary_F1":  val_metrics.get("wall_boundary_F1"),
-            "arch_version":      ARCH_VERSION,
-            "run_name":          run_name,
-            "class_weights":     class_weights_list,
-        })
+        _save_summary(
+            summary_path,
+            {
+                "last_epoch": epoch,
+                "global_step": global_step,
+                "best_metric_name": best_metric_name,
+                "best_metric_value": best_metric_value,
+                "val_loss": val_metrics.get("val_loss"),
+                "val_vector_ready_score": vrs if vrs == vrs else None,
+                "val_mIoU": val_metrics.get("val_mIoU"),
+                "door_arc_IoU": val_metrics.get("door_arc_IoU"),
+                "door_leaf_IoU": val_metrics.get("door_leaf_IoU"),
+                "door_origin_IoU": val_metrics.get("door_origin_IoU"),
+                "wall_boundary_F1": val_metrics.get("wall_boundary_F1"),
+                "arch_version": ARCH_VERSION,
+                "run_name": run_name,
+                "class_weights": class_weights_list,
+            },
+        )
 
     logger.info("Training complete.  Best %s = %.4f", best_metric_name, best_metric_value)
 
@@ -844,10 +920,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Train FloorplanDecoder with frozen SegFormer backbone (Phase 1, spec_v005)."
     )
-    parser.add_argument("--config",  required=True, type=Path)
-    parser.add_argument("--debug",   action="store_true")
+    parser.add_argument("--config", required=True, type=Path)
+    parser.add_argument("--debug", action="store_true")
     parser.add_argument("--overfit", type=int, default=0, metavar="N")
-    parser.add_argument("--resume",  type=str, default=None)
+    parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 

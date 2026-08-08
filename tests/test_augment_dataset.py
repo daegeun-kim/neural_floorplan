@@ -6,13 +6,11 @@ import json
 from pathlib import Path
 
 import numpy as np
-import pytest
 from PIL import Image
 
 from src.augment_dataset import (
     AUGMENTED_DIR,
     MASKS_DIR,
-    SPATIAL_MASK_NAMES,
     _apply_blur,
     _apply_brightness,
     _apply_flip,
@@ -23,7 +21,6 @@ from src.augment_dataset import (
     process_dataset,
     save_preview,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -66,10 +63,10 @@ def _make_sample(tmp_path: Path, name: str = "s1", image_size: tuple[int, int] =
 
     # Semantic class map (combined): background=0 floor=1 wall=2 window=3 door_origin=6
     class_map = np.zeros((h, w), dtype=np.uint8)
-    class_map[10:, :] = 1        # floor
+    class_map[10:, :] = 1  # floor
     class_map[15:20, 10:15] = 6  # door_origin
-    class_map[1:4, 20:30] = 3    # window
-    class_map[:5, :] = 2         # wall
+    class_map[1:4, 20:30] = 3  # window
+    class_map[:5, :] = 2  # wall
     Image.fromarray(class_map, "L").save(masks_dir / "semantic_class_map.png")
 
     return sample_dir
@@ -91,7 +88,6 @@ def _img_and_mask(size=(40, 40)):
 
 def test_flip_horizontal_changes_image():
     img, mask = _img_and_mask()
-    orig_arr = np.array(img)
     aug_img, [aug_mask] = _apply_flip(img, [mask], "horizontal")
     assert aug_img.size == img.size
     assert aug_mask.size == mask.size
@@ -146,7 +142,6 @@ def test_translation_fills_with_zero_for_mask():
 
 def test_blur_changes_image():
     img = Image.new("RGB", (40, 40), (100, 100, 100))
-    arr_before = np.array(img)
     blurred = _apply_blur(img, radius=1.5)
     # A solid-color image won't visually change but the function should run without error
     assert blurred.size == img.size
@@ -227,7 +222,9 @@ def test_augment_sample_image_and_mask_same_size(tmp_path):
             img_size = img.size
         with Image.open(aug_dir / "semantic_class_map.png") as m:
             mask_size = m.size
-        assert img_size == mask_size, f"Mismatch in {aug_dir.name}: img={img_size}  mask={mask_size}"
+        assert img_size == mask_size, (
+            f"Mismatch in {aug_dir.name}: img={img_size}  mask={mask_size}"
+        )
 
 
 def test_augment_sample_original_not_overwritten(tmp_path):

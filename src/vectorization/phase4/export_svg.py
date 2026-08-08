@@ -22,15 +22,13 @@ Debug geometry belongs exclusively in image_debug_overlay.png.
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
-from typing import Optional
 
+from ..primitives.door import DoorArcPrimitive, DoorLeafPrimitive, DoorOriginPrimitive
+from ..primitives.scale import ScaleInfo
 from .door_geometry import DoorGeometry, compute_door_geometry
 from .opening_hosting import HostedOpening
 from .wall_buffering import WallGeometry, wall_polygon_to_svg_paths
-from ..primitives.door import DoorArcPrimitive, DoorLeafPrimitive, DoorOriginPrimitive
-from ..primitives.scale import ScaleInfo
 
 WALL_FILL = "#1a1a1a"
 WINDOW_STROKE = "#3a78dc"
@@ -61,7 +59,7 @@ def _window_to_svg(win: HostedOpening) -> str:
     )
 
 
-def _door_to_svg(door: HostedOpening, idx: int, geom: Optional[DoorGeometry] = None) -> str:
+def _door_to_svg(door: HostedOpening, idx: int, geom: DoorGeometry | None = None) -> str:
     """Generate door_origin + door_leaf + door_arc SVG elements.
 
     Correct primitive contract (task32):
@@ -145,10 +143,10 @@ def _door_to_svg(door: HostedOpening, idx: int, geom: Optional[DoorGeometry] = N
 
 def build_final_svg(
     scale_info: ScaleInfo,
-    wall_geometry: Optional[WallGeometry],
+    wall_geometry: WallGeometry | None,
     hosted_doors: list[HostedOpening],
     hosted_windows: list[HostedOpening],
-    door_geometries: Optional[list[DoorGeometry]] = None,
+    door_geometries: list[DoorGeometry] | None = None,
 ) -> str:
     """Build the final SVG string (spec_v008 §12).
 

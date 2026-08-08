@@ -1,68 +1,125 @@
-# Safety Constraints (Strict)
+# Agent Instructions — Neural Floorplan
 
-Scope:
-- Only operate within the current project root directory.
-- Do NOT read, modify, or access parent directories or external folders.
+This is the single source of agent instructions for this repository. There is no
+other agent-instruction file.
 
-File Operations:
-- Only edit files inside this repository (neural_floorplan)
+## Project
 
-Environment:
-- You anaconda virtual environment 'floorplan-cad' for all workflow.
-- Only install libraries necessary for the current spec.
+Convert raster floor plans and SVG-derived rasters into classified, CAD-like
+vector geometry.
 
-Execution:
-- Before running any shell command:
-  1. Show the command
-  2. Explain why it is needed
-  3. Wait for approval
+```txt
+primary    : spatial logic - wall topology, circulation, doors and windows
+secondary  : semantic segmentation quality, including per-class mIoU
+not a goal : pixel-perfect tracing of the source raster
+```
 
-General:
-- Do NOT go beyond the current spec.
-- Do NOT introduce additional tools, frameworks, or datasets unless requested.
+A result that is a few pixels off but architecturally correct beats one that
+matches the raster closely while leaving a room unreachable or a door unhosted.
 
-# Project Instructions
+## Pipeline
 
-Project:
-Neural Floor Plan to Classified CAD
+```txt
+model_clean.png
+  -> preprocessing (crop to content, 20% white pad, 512x512 canvas)
+  -> SegFormer-B0 seven-class segmentation      (semantic evidence)
+  -> pretrained Raster-to-Graph inference       (wall topology)
+  -> Phase 4: graph alignment, opening hosting,
+     wall interval trimming, wall chain buffering
+  -> final_vector.svg / final_vector.json
+```
 
-Goal:
-Convert controlled raster floor plans or color-coded sketches into semantic masks, then into clean classified CAD-like vector geometry.
+## Safety and scope
 
-Pipeline:
-1. Dataset loading
-2. SVG/raster preprocessing
-3. Semantic mask generation
-4. Sketch-style augmentation
-5. Segmentation model training
-6. Evaluation
-7. Mask-to-vector post-processing
-8. Classified JSON export
+- Work only inside this repository. Do not read, modify, or access parent
+  directories or unrelated folders.
+- **Never** open, read, print, or modify `.env` or any credential-bearing file.
+  This project needs no credentials for its offline workflow.
+- **Never** run Git commands or perform any GitHub-side action — no branches,
+  commits, pushes, history rewrites, releases, or API calls. The repository
+  owner handles all Git and GitHub operations manually, including uploading
+  release assets.
+- Before running a shell command: show it, explain why it is needed, and wait
+  for approval.
+- Do not add a framework, tool, or dataset that the current work does not
+  require.
+
+## Environment
+
+```bash
+conda activate floorplan-cad          # Python 3.11
+python -m pip install -e ".[dev]"
+```
+
+All project configuration lives in one `pyproject.toml`. Do not add a second,
+overlapping configuration system.
+
+## Quality gates
+
+Run all three after any code change. They are exactly what CI runs:
+
+```bash
+python -m ruff check .
+python -m ruff format --check .
+python -m pytest
+```
+
+The default test suite must stay asset-independent — no dataset, no checkpoint,
+no GPU, no network. Tests that genuinely need local assets must skip with an
+explicit reason or use the registered `integration` marker. Never convert a real
+failure into a skip, and never weaken a test to get a green result.
+
+## Working method
+
+- Plan before implementing. Read the relevant spec first.
+- Validate directly. Never declare success from file inspection alone; run the
+  thing and report the actual output.
+- Report honestly. If tests fail, say so with the output. If something is
+  blocked, say what and why rather than quietly narrowing scope.
+- Evaluate feasibility and alignment with project intent. Push back with
+  reasoning when a request looks wrong, then proceed if the owner confirms.
+- Ask when a decision is genuinely ambiguous and the answer changes the work.
+
+## Data, checkpoints, and outputs
+
+Never commit, package, or redistribute:
+
+```txt
+CubiCasa5K data and anything derived from it   docs/high_quality_architectural/
+generated datasets, caches, feature caches     features/, data/
+training checkpoints                           checkpoints_CNN/, checkpoints_Raster2Graph/
+experiment outputs and scratch runs            outputs/, runs/, tmp/
+the local model release bundle                 dist/
+```
+
+Deliberately versioned: `docs/images/` (curated README evidence),
+`evaluation/results/` (compact metrics), `splits/` (canonical manifests),
+`tests/` fixtures.
+
+Preserve whole checkpoint folders locally so previous models remain usable.
+
+## Documentation
+
+Keep durable information in its canonical location and nowhere else:
+
+```txt
+README.md                                public overview, real evidence, results,
+                                         setup, usage, license
+CLAUDE.md                                this file - agent instructions
+specs/spec_v006_evaluation.md            the evaluation contract
+specs/vectorization_must_rules.md        current architectural invariants
+specs/vectorization_phase_history.md     durable lessons from superseded phases
+specs/spec_v0NN_*.md                     current implementation specs
+```
 
 Rules:
-- Follow specs in /specs.
-- Work one spec version at a time.
-- Do not implement beyond the active spec.
-- Before coding, create a plan.
-- After coding, run tests.
-- Use feature branches.
-- All github actions should be done manually my the user. You do not have access
-- Keep experiment outputs out of Git unless explicitly approved.
-- /specs are blueprint of the project, /tasks are smaller updates, fix, and minor changes.
-- after each task is performed inside /tasks, merge the content of task md into appropriate spec md file, and convert the name of task md file by adding "done". eg: (task01.md to task01_done.md)
 
-Environment:
-- Python
-- PyTorch
-- Hugging Face Transformers
-- OpenCV
-- Shapely
-- pytest                                                                                                    
-
-Commands:
-- Create env: conda create -n floorplan-cad python=3.11
-- Activate env: conda activate floorplan-cad
-- Install package: pip install -e or conda install depending on reliability
-- Test: pytest
-- Format: ruff format .
-- Lint: ruff check .
+- One source of truth per fact. If two documents would state it, pick the
+  canonical one and link from the other.
+- README numbers are generated from `evaluation/results/` by
+  `scripts/sync_readme_metrics.py`. Never hand-edit them; a test enforces this.
+- Update the relevant spec when behavior changes, in the same change.
+- New specs follow `specs/spec_vNNN_short_name.md`.
+- No placeholders, invented metrics, guessed URLs, or claims that have not been
+  directly validated.
+- Never describe output as pixel-perfect or production-ready.

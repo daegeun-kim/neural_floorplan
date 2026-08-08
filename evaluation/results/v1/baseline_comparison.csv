@@ -1,0 +1,121 @@
+metric,baseline_raw_r2g,current_phase4,delta,note
+macro_adjacency_f1,unavailable,0.816474,,raw Raster-to-Graph produces no openings or circulation
+macro_adjacency_precision,unavailable,0.877083,,raw Raster-to-Graph produces no openings or circulation
+macro_adjacency_recall,unavailable,0.795249,,raw Raster-to-Graph produces no openings or circulation
+macro_component_count_abs_error,5.083333,1.166667,-3.916667,
+macro_component_count_error,5.027778,0.888889,-4.138889,
+macro_component_count_exact,0.000000,0.361111,0.361111,
+macro_diag_node_distance_mean_px,2.427675,2.432403,0.004728,
+macro_diag_node_distance_median_px,2.220413,2.191425,-0.028987,
+macro_door_f1,unavailable,0.696938,,raw Raster-to-Graph produces no openings or circulation
+macro_door_precision,unavailable,0.739045,,raw Raster-to-Graph produces no openings or circulation
+macro_door_recall,unavailable,0.676696,,raw Raster-to-Graph produces no openings or circulation
+macro_edge_f1,0.188468,0.478464,0.289996,
+macro_edge_overlap_f1,0.545270,0.720649,0.175379,
+macro_edge_overlap_precision,0.907453,0.883948,-0.023505,
+macro_edge_overlap_recall,0.395819,0.629146,0.233327,
+macro_edge_precision,0.307019,0.567212,0.260192,
+macro_edge_recall,0.137679,0.424314,0.286635,
+macro_gap_accuracy,unavailable,0.938856,,raw Raster-to-Graph produces no openings or circulation
+macro_host_accuracy,unavailable,0.479200,,raw Raster-to-Graph produces no openings or circulation
+macro_junction_degree_exact_f1,0.239148,0.427273,0.188125,
+macro_junction_degree_exact_precision,0.300782,0.496699,0.195917,
+macro_junction_degree_exact_recall,0.206337,0.385885,0.179548,
+macro_junction_degree_within_1_f1,0.438585,0.627652,0.189067,
+macro_junction_degree_within_1_precision,0.549423,0.732307,0.182884,
+macro_junction_degree_within_1_recall,0.377323,0.564563,0.187240,
+macro_node_f1,0.724003,0.714708,-0.009296,
+macro_node_f1_relaxed,0.751180,0.748476,-0.002704,
+macro_node_precision,0.886196,0.832113,-0.054083,
+macro_node_precision_relaxed,0.920648,0.872836,-0.047812,
+macro_node_recall,0.630174,0.643147,0.012973,
+macro_node_recall_relaxed,0.653346,0.673167,0.019821,
+macro_predicted_dangling_node_ratio,0.574707,0.289795,-0.284913,
+macro_predicted_duplicate_edge_count,0.000000,0.000000,0.000000,
+macro_predicted_isolated_node_ratio,0.000000,0.005600,0.005600,
+macro_predicted_non_orthogonal_ratio,0.000000,0.000000,0.000000,
+macro_predicted_zero_length_edge_count,0.000000,0.000000,0.000000,
+macro_reachability_agreement,unavailable,0.746599,,raw Raster-to-Graph produces no openings or circulation
+macro_reference_dangling_node_ratio,0.173419,0.173419,0.000000,
+macro_reference_duplicate_edge_count,0.000000,0.000000,0.000000,
+macro_reference_isolated_node_ratio,0.000000,0.000000,0.000000,
+macro_reference_non_orthogonal_ratio,0.000000,0.000000,0.000000,
+macro_reference_zero_length_edge_count,0.000000,0.000000,0.000000,
+macro_space_count_error,unavailable,-3.444444,,raw Raster-to-Graph produces no openings or circulation
+macro_window_f1,unavailable,0.880985,,raw Raster-to-Graph produces no openings or circulation
+macro_window_precision,unavailable,0.973555,,raw Raster-to-Graph produces no openings or circulation
+macro_window_recall,unavailable,0.833799,,raw Raster-to-Graph produces no openings or circulation
+micro_adjacency_f1,unavailable,0.822430,,raw Raster-to-Graph produces no openings or circulation
+micro_adjacency_precision,unavailable,0.907216,,raw Raster-to-Graph produces no openings or circulation
+micro_adjacency_recall,unavailable,0.752137,,raw Raster-to-Graph produces no openings or circulation
+micro_door_f1,unavailable,0.667630,,raw Raster-to-Graph produces no openings or circulation
+micro_door_precision,unavailable,0.708589,,raw Raster-to-Graph produces no openings or circulation
+micro_door_recall,unavailable,0.631148,,raw Raster-to-Graph produces no openings or circulation
+micro_edge_f1,0.178478,0.429722,0.251245,
+micro_edge_precision,0.311927,0.549199,0.237272,
+micro_edge_recall,0.125000,0.352941,0.227941,
+micro_gap_accuracy,unavailable,0.942105,,raw Raster-to-Graph produces no openings or circulation
+micro_host_accuracy,unavailable,0.423163,,raw Raster-to-Graph produces no openings or circulation
+micro_node_f1,0.687629,0.681503,-0.006125,
+micro_node_precision,0.869622,0.811543,-0.058079,
+micro_node_recall,0.568627,0.587383,0.018755,
+micro_window_f1,unavailable,0.846602,,raw Raster-to-Graph produces no openings or circulation
+micro_window_precision,unavailable,0.973214,,raw Raster-to-Graph produces no openings or circulation
+micro_window_recall,unavailable,0.749141,,raw Raster-to-Graph produces no openings or circulation
+n_adjacency_f1,unavailable,36.000000,,raw Raster-to-Graph produces no openings or circulation
+n_adjacency_precision,unavailable,36.000000,,raw Raster-to-Graph produces no openings or circulation
+n_adjacency_recall,unavailable,36.000000,,raw Raster-to-Graph produces no openings or circulation
+n_component_count_abs_error,36.000000,36.000000,0.000000,
+n_component_count_error,36.000000,36.000000,0.000000,
+n_component_count_exact,36.000000,36.000000,0.000000,
+n_diag_node_distance_mean_px,36.000000,36.000000,0.000000,
+n_diag_node_distance_median_px,36.000000,36.000000,0.000000,
+n_door_f1,36.000000,36.000000,0.000000,
+n_door_precision,36.000000,36.000000,0.000000,
+n_door_recall,36.000000,36.000000,0.000000,
+n_edge_f1,36.000000,36.000000,0.000000,
+n_edge_overlap_f1,36.000000,36.000000,0.000000,
+n_edge_overlap_precision,36.000000,36.000000,0.000000,
+n_edge_overlap_recall,36.000000,36.000000,0.000000,
+n_edge_precision,36.000000,36.000000,0.000000,
+n_edge_recall,36.000000,36.000000,0.000000,
+n_gap_accuracy,0.000000,36.000000,36.000000,
+n_host_accuracy,0.000000,36.000000,36.000000,
+n_junction_degree_exact_f1,36.000000,36.000000,0.000000,
+n_junction_degree_exact_precision,36.000000,36.000000,0.000000,
+n_junction_degree_exact_recall,36.000000,36.000000,0.000000,
+n_junction_degree_within_1_f1,36.000000,36.000000,0.000000,
+n_junction_degree_within_1_precision,36.000000,36.000000,0.000000,
+n_junction_degree_within_1_recall,36.000000,36.000000,0.000000,
+n_node_f1,36.000000,36.000000,0.000000,
+n_node_f1_relaxed,36.000000,36.000000,0.000000,
+n_node_precision,36.000000,36.000000,0.000000,
+n_node_precision_relaxed,36.000000,36.000000,0.000000,
+n_node_recall,36.000000,36.000000,0.000000,
+n_node_recall_relaxed,36.000000,36.000000,0.000000,
+n_predicted_dangling_node_ratio,36.000000,36.000000,0.000000,
+n_predicted_duplicate_edge_count,36.000000,36.000000,0.000000,
+n_predicted_isolated_node_ratio,36.000000,36.000000,0.000000,
+n_predicted_non_orthogonal_ratio,36.000000,36.000000,0.000000,
+n_predicted_zero_length_edge_count,36.000000,36.000000,0.000000,
+n_reachability_agreement,unavailable,35.000000,,raw Raster-to-Graph produces no openings or circulation
+n_reference_dangling_node_ratio,36.000000,36.000000,0.000000,
+n_reference_duplicate_edge_count,36.000000,36.000000,0.000000,
+n_reference_isolated_node_ratio,36.000000,36.000000,0.000000,
+n_reference_non_orthogonal_ratio,36.000000,36.000000,0.000000,
+n_reference_zero_length_edge_count,36.000000,36.000000,0.000000,
+n_space_count_error,unavailable,36.000000,,raw Raster-to-Graph produces no openings or circulation
+n_window_f1,36.000000,36.000000,0.000000,
+n_window_precision,36.000000,36.000000,0.000000,
+n_window_recall,36.000000,36.000000,0.000000,
+total_broken_junctions,456.000000,305.000000,-151.000000,
+total_disconnected_circulation,0.000000,59.000000,59.000000,
+total_duplicate_gaps,0.000000,0.000000,0.000000,
+total_false_connections,0.000000,17.000000,17.000000,
+total_false_separations,0.000000,59.000000,59.000000,
+total_missing_doors,366.000000,135.000000,-231.000000,
+total_missing_windows,291.000000,73.000000,-218.000000,
+total_mistyped_openings,0.000000,0.000000,0.000000,
+total_spurious_doors,0.000000,95.000000,95.000000,
+total_spurious_windows,0.000000,6.000000,6.000000,
+total_unhosted_openings,0.000000,84.000000,84.000000,

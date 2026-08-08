@@ -12,7 +12,6 @@ evidence density - ported unchanged from the retired door_extraction.py.
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import numpy as np
 
@@ -39,7 +38,7 @@ def _pick_swing_side(
     hinge: tuple[float, float],
     orientation_angle: float,
     width: float,
-    evidence_mask: Optional[np.ndarray],
+    evidence_mask: np.ndarray | None,
     n_probes: int = 6,
     probe_radius: float = 10.0,
 ) -> SwingSide:
@@ -66,8 +65,8 @@ def _pick_swing_side(
 def generate_door_geometry(
     points: list[GraphPoint],
     door_origin_edges: list[GraphEdge],
-    door_leaf_mask: Optional[np.ndarray] = None,
-    door_arc_mask: Optional[np.ndarray] = None,
+    door_leaf_mask: np.ndarray | None = None,
+    door_arc_mask: np.ndarray | None = None,
     scale_info=None,
 ) -> tuple[list[DoorOriginPrimitive], list[DoorLeafPrimitive], list[DoorArcPrimitive]]:
     """Build origin/leaf/arc primitives for every accepted door-origin edge
@@ -103,7 +102,9 @@ def generate_door_geometry(
         width_px = math.hypot(far_point[0] - hinge_point[0], far_point[1] - hinge_point[1])
         if width_px < 1e-6:
             continue
-        orientation_angle = math.degrees(math.atan2(far_point[1] - hinge_point[1], far_point[0] - hinge_point[0]))
+        orientation_angle = math.degrees(
+            math.atan2(far_point[1] - hinge_point[1], far_point[0] - hinge_point[0])
+        )
         center = ((hinge_point[0] + far_point[0]) / 2.0, (hinge_point[1] + far_point[1]) / 2.0)
 
         counter += 1

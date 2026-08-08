@@ -1,0 +1,8 @@
+class,macro_iou,micro_iou,boundary_f1,contributing_samples
+background,0.762758,0.756831,,74
+floor,0.781033,0.774605,,74
+wall,0.552535,0.502834,0.621614,74
+window,0.547836,0.442362,0.552271,74
+door_arc,0.533445,0.370996,0.445244,74
+door_leaf,0.258150,0.281986,0.598611,74
+door_origin,0.236260,0.241630,0.559242,74

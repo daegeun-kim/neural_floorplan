@@ -60,7 +60,9 @@ def segments_to_polygon(
     chains = merge_connected_chains(segments, tol=merge_tolerance_px)
     if not chains:
         return None
-    buffers = [chain.buffer(half_width_px, cap_style="flat", join_style="mitre") for chain in chains]
+    buffers = [
+        chain.buffer(half_width_px, cap_style="flat", join_style="mitre") for chain in chains
+    ]
     return shapely.union_all(buffers)
 
 
@@ -109,7 +111,7 @@ def buffer_segment_polygon_svg(
 # ---------------------------------------------------------------------------
 
 
-def wall_edges_to_primitives(wall_edges: list["GraphEdge"], scale_info=None) -> list[WallPrimitive]:
+def wall_edges_to_primitives(wall_edges: list[GraphEdge], scale_info=None) -> list[WallPrimitive]:
     """Final wall GraphEdges -> WallPrimitives, thickness normalized to the
     100mm/200mm modules when scale is known (spec_v008 SS14)."""
     from .primitives import WallPrimitive  # local import: primitives/window.py imports this module
@@ -118,7 +120,11 @@ def wall_edges_to_primitives(wall_edges: list["GraphEdge"], scale_info=None) -> 
     for edge in wall_edges:
         thickness = edge.thickness_px if edge.thickness_px else DEFAULT_WALL_THICKNESS_PX
         thickness_mm = None
-        if scale_info is not None and scale_info.px_to_mm is not None and scale_info.scale_status in ("resolved", "estimated"):
+        if (
+            scale_info is not None
+            and scale_info.px_to_mm is not None
+            and scale_info.scale_status in ("resolved", "estimated")
+        ):
             thickness_mm, _ = snap_to_module_mm(thickness, scale_info, WALL_MODULES_MM)
         walls.append(
             WallPrimitive(
@@ -134,7 +140,9 @@ def wall_edges_to_primitives(wall_edges: list["GraphEdge"], scale_info=None) -> 
     return walls
 
 
-def window_edges_to_primitives(window_edges: list["GraphEdge"], scale_info=None) -> list[WindowPrimitive]:
+def window_edges_to_primitives(
+    window_edges: list[GraphEdge], scale_info=None
+) -> list[WindowPrimitive]:
     """Final window GraphEdges -> WindowPrimitives. Window total thickness is
     a fixed 100mm (rule 15) once scale is known, independent of the host
     wall's own thickness module (100mm or 200mm, rule 13) - falls back to
@@ -143,8 +151,14 @@ def window_edges_to_primitives(window_edges: list["GraphEdge"], scale_info=None)
 
     windows = []
     for edge in window_edges:
-        host_thickness = edge.thickness_px if edge.thickness_px else DEFAULT_WINDOW_HOST_THICKNESS_PX
-        if scale_info is not None and scale_info.px_to_mm is not None and scale_info.scale_status in ("resolved", "estimated"):
+        host_thickness = (
+            edge.thickness_px if edge.thickness_px else DEFAULT_WINDOW_HOST_THICKNESS_PX
+        )
+        if (
+            scale_info is not None
+            and scale_info.px_to_mm is not None
+            and scale_info.scale_status in ("resolved", "estimated")
+        ):
             thickness = WINDOW_THICKNESS_MM / scale_info.px_to_mm
         else:
             thickness = host_thickness / 2.0

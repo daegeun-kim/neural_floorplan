@@ -1,4 +1,4 @@
-﻿# Spec v003-1: SVG To Orthogonal Wall Graph Generation
+# Spec v003-1: SVG To Orthogonal Wall Graph Generation
 
 ## 0. Purpose
 
@@ -31,7 +31,7 @@ Do not attempt to encode room categories, furniture, fixtures, symbols, or wall 
 Use the original vector SVG files under:
 
 ```txt
-C:\Users\kdgki\Desktop\MSCDP\Projects\neural_floorplan\docs\high_quality_architectural
+docs/high_quality_architectural
 ```
 
 Each sample folder contains:
@@ -350,7 +350,7 @@ directly:
   `_link_skeleton_edges_to_points` for the skeleton walk, corner-splitting, and
   junction/free-end classification.
 
-`point_connection.build_wall_edges` was **not** reused â€” it deliberately splits a wall chain at
+`point_connection.build_wall_edges` was **not** reused — it deliberately splits a wall chain at
 hosted window/door points, which this spec explicitly forbids (SS9: opening-center nodes must
 never be edge endpoints). A dedicated, simpler edge builder connects each skeleton chain's two
 endpoints directly instead.
@@ -366,7 +366,7 @@ skeleton passes straight through every opening as one continuous chain.
 ### Door swing-arc contamination (judgment call)
 
 The original SVG's `Door > Panel > path` (the swing-arc/leaf visual) has no fill/stroke of its
-own â€” it inherits `stroke="#000000"` from the `Wall`/`Door` ancestor groups â€” so
+own — it inherits `stroke="#000000"` from the `Wall`/`Door` ancestor groups — so
 `generate_semantic_masks`'s "wall" category render (which keeps the whole `Wall` subtree as-is)
 picks up that curved stroke as wall evidence. Left in, the skeleton walk orthogonalizes the
 curve into spurious stair-step loops next to every door. Fixed by `strip_door_swing_evidence`,
@@ -377,7 +377,7 @@ copies of that same geometry, spec_v005 run3) from the wall mask before bridging
 
 Skeletonize commonly leaves a handful of separate junction/free-end pixels within a couple of
 pixels of each other at an ordinary corner (most often where two wall bands of equal thickness
-meet, e.g. a partition meeting an exterior wall) â€” left alone these become spurious
+meet, e.g. a partition meeting an exterior wall) — left alone these become spurious
 near-duplicate nodes joined only by short, non-cardinal "spur" chains that get rejected as
 diagonal, fragmenting the graph. `merge_near_duplicate_points` collapses these via a simple
 distance-based union-find before edges are built.
@@ -393,16 +393,19 @@ shared x.
 
 `wall_graph_metrics.json`'s `too_many_diagonal_chains` check budgets the harmless per-corner
 "spur" noise above (`diagonal_chains_per_node_budget` x node_count + `diagonal_chains_absolute_floor`)
-rather than a flat ratio of rejected-to-accepted chains â€” that noise scales with junction count,
+rather than a flat ratio of rejected-to-accepted chains — that noise scales with junction count,
 not with how clean the wall evidence actually is, so a flat ratio over-flagged small/simple floor
 plans in testing.
 
 ### Environment
 
-Same Cairo DLL path note as spec_v003 applies (this stage calls
-`generate_semantic_masks.generate_masks` when a sample's `wall_mask.png`/`window_mask.png` are
-missing):
+This stage calls `generate_semantic_masks.generate_masks` when a sample's
+`wall_mask.png` or `window_mask.png` is missing. On Windows, install Cairo into
+the active Conda environment:
 
 ```powershell
-$env:PATH = "C:\Users\kdgki\anaconda3\envs\floorplan-cad\Library\bin;" + $env:PATH
+conda install -c conda-forge cairo
 ```
+
+`src/cairo_runtime.py` resolves Conda-forge's `Library/bin/cairo.dll`
+automatically; no machine-specific `PATH` entry is required.

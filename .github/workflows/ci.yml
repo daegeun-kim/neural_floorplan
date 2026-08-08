@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# The gate is deliberately offline after dependency installation: no dataset
+# download, no checkpoint download, no external API calls, no GPU, no secrets.
+env:
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+
+jobs:
+  quality:
+    name: Ruff + pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install native cairo
+        # cairosvg is a pure-Python wrapper; it needs the system cairo library,
+        # which pip cannot provide.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcairo2
+
+      - name: Install CPU-only PyTorch
+        # The default PyPI wheels pull in multi-gigabyte CUDA payloads that this
+        # CPU-only gate never uses. Installing the CPU build first means the
+        # editable install below sees torch/torchvision as already satisfied.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch torchvision \
+            --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+
+      - name: Ruff check
+        run: python -m ruff check .
+
+      - name: Ruff format check
+        run: python -m ruff format --check .
+
+      - name: Pytest
+        run: python -m pytest

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from .scale import ScaleInfo
 
@@ -25,11 +24,11 @@ class BasePrimitive(ABC):
         self,
         primitive_id: str,
         confidence: float = 1.0,
-        scale_info: Optional[ScaleInfo] = None,
-        kind: Optional[str] = None,
-        source_class_ids: Optional[list[int]] = None,
-        source_evidence_bbox_px: Optional[tuple[float, float, float, float]] = None,
-        source_evidence_area_px: Optional[float] = None,
+        scale_info: ScaleInfo | None = None,
+        kind: str | None = None,
+        source_class_ids: list[int] | None = None,
+        source_evidence_bbox_px: tuple[float, float, float, float] | None = None,
+        source_evidence_area_px: float | None = None,
     ) -> None:
         self.primitive_id = primitive_id
         self.confidence = confidence
@@ -56,9 +55,7 @@ class BasePrimitive(ABC):
         sy: float = 1.0,
     ) -> None:
         """Apply translate/rotate/scale in-place. Subclasses override as needed."""
-        raise NotImplementedError(
-            f"{self.__class__.__name__} does not implement transform()"
-        )
+        raise NotImplementedError(f"{self.__class__.__name__} does not implement transform()")
 
     @staticmethod
     def _rotate_point(
