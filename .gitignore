@@ -73,3 +73,4 @@ Thumbs.db
 #   splits/              canonical train/validation/test manifests required for
 #                        evaluation provenance
 #   tests/               intentional lightweight test fixtures
+/neural_floorplan_support
