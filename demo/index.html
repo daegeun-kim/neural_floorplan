@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neural Floorplan — raster plans to classified CAD geometry</title>
+<meta name="description" content="Step through a neural pipeline that turns raster floor plans into classified vector geometry: segmentation, wall-graph inference, opening hosting, and the final CAD-like drawing.">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead__top">
+    <p class="eyebrow">Interactive demo</p>
+    <a class="masthead__back" href="https://daegeunkim.com/neural-floorplan/">&larr;&nbsp;Back to project</a>
+  </div>
+  <h1 class="masthead__title">Step the pipeline</h1>
+  <p class="masthead__thesis">
+    A floor plan raster carries no structure &mdash; it is pixels. Architectural software needs
+    <em>objects</em>: walls that meet at junctions, doors hosted in those walls, rooms you can
+    actually walk between. Pick a plan and step through the six stages that recover it.
+  </p>
+</header>
+
+<main class="instrument">
+
+  <aside class="rail">
+    <section class="rail__block">
+      <h2 class="rail__title">Plan</h2>
+      <div class="samples" id="samples" role="radiogroup" aria-label="Sample floor plan"></div>
+    </section>
+
+    <section class="rail__block rail__block--grow">
+      <h2 class="rail__title">Pipeline</h2>
+      <ol class="ledger" id="ledger"></ol>
+    </section>
+
+    <div class="rail__foot">
+      <button class="run" id="run" type="button">
+        <span class="run__label" id="runLabel">Run pipeline</span>
+        <span class="run__bar" id="runBar" aria-hidden="true"></span>
+      </button>
+      <p class="rail__hint">Or click any stage to jump to it.</p>
+    </div>
+  </aside>
+
+  <div class="stack">
+
+    <figure class="sheet">
+      <div class="sheet__head">
+        <span class="sheet__index" id="sheetIndex">Stage 1 / 6</span>
+        <h3 class="sheet__name" id="sheetName">Input</h3>
+        <a class="sheet__full" id="sheetFull" href="#" rel="noopener">Full size&nbsp;&#8599;</a>
+      </div>
+
+      <div class="sheet__field" id="sheetField" aria-live="polite">
+        <img class="sheet__img" id="sheetImg" alt="">
+        <div class="sheet__vector" id="sheetVector" hidden></div>
+      </div>
+
+    </figure>
+
+    <div class="layers" id="layers" hidden>
+      <span class="layers__title">Layers</span>
+      <div class="layers__set" id="layerSet"></div>
+      <div class="layers__downloads" id="downloads"></div>
+    </div>
+
+  </div>
+
+  <aside class="readout">
+    <p class="sheet__note" id="sheetNote"></p>
+
+    <section class="titleblock" aria-label="Drawing title block">
+      <div class="titleblock__cells" id="titleCells"></div>
+      <div class="titleblock__strip">
+        <span class="titleblock__provenance" id="provenance"></span>
+        <span class="titleblock__stamp">Precomputed run &middot; not live inference</span>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<footer class="colophon">
+  <div class="colophon__col">
+    <h4 class="colophon__title">What you are looking at</h4>
+    <p>
+      Stage images and the final vector are real artifacts written by the pipeline, replayed here as
+      static files. Nothing runs in your browser: the wall-graph model is a 397&nbsp;MB
+      Deformable-DETR-style decoder and the geometry stage is several thousand lines of Python.
+      The three plans shown are <strong>training-split</strong> samples, so treat them as a
+      walkthrough of the method rather than as held-out performance.
+    </p>
+  </div>
+  <div class="colophon__col">
+    <h4 class="colophon__title">Attribution</h4>
+    <p>
+      Source floor plans come from <strong>CubiCasa5K</strong> (<code>high_quality_architectural</code>
+      subset) &mdash; Kalervo, Ylioinas, H&auml;iki&ouml;, Karhu and Kannala, &ldquo;CubiCasa5K: A Dataset and an
+      Improved Multi-Task Model for Floorplan Image Analysis,&rdquo; SCIA 2019.
+      <a href="https://github.com/CubiCasa/CubiCasa5k" rel="noopener">github.com/CubiCasa/CubiCasa5k</a>
+    </p>
+    <p>
+      CubiCasa5K is licensed
+      <a href="https://creativecommons.org/licenses/by-nc/4.0/" rel="noopener">CC&nbsp;BY-NC&nbsp;4.0</a>.
+      The inputs on this page and the pipeline output derived from them are adaptations of
+      CubiCasa5K and remain CC&nbsp;BY-NC&nbsp;4.0 &mdash; shareable with attribution, not for
+      commercial use. They are <em>not</em> covered by the source repository&rsquo;s GPL grant.
+    </p>
+  </div>
+  <div class="colophon__col">
+    <h4 class="colophon__title">Code</h4>
+    <p>
+      Pipeline and this page:
+      <a href="https://github.com/daegeun-kim/neural_floorplan" rel="noopener">daegeun-kim/neural_floorplan</a>,
+      licensed <strong>GPL-3.0-only</strong>. Built on Raster-to-Graph (GPL-3.0) and
+      <code>nvidia/mit-b0</code>, each under its own terms &mdash; see <code>NOTICE</code> in the
+      repository.
+    </p>
+  </div>
+</footer>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

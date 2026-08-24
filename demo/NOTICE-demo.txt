@@ -1,0 +1,95 @@
+Neural Floorplan — demo asset notice
+====================================
+
+This file covers only `demo/`. It does not replace or amend the repository
+root `NOTICE`; it extends the same reasoning to the demo bundle.
+
+
+1. What is in demo/assets/
+--------------------------
+
+`demo/build_demo_assets.py` generates `demo/assets/samples/<id>/`, holding,
+for each of three floor plans:
+
+    01-input.png            preprocessed 512x512 input raster
+    02-segmentation.png     seven-class segmentation map
+    03-wall-graph.png       Raster-to-Graph nodes and edges, overlaid
+    04-aligned.png          the same graph after orthogonal alignment
+    05-hosting.png          opening-hosting debug overlay
+    final_vector.svg        exported classified vector geometry
+    final_vector.json       the same geometry plus stage metrics
+
+These are copies of artifacts produced by the pipeline and stored under
+`outputs/vectorization/phase4_vectorization/`; nothing is hand-edited,
+retouched, or regenerated for presentation. They are gitignored here and
+exist only after the builder is run - see section 2.
+
+
+2. Dataset licensing
+--------------------
+
+The three source floor plans are CubiCasa5K renderings from the
+`high_quality_architectural` subset:
+
+  Kalervo, A., Ylioinas, J., Häikiö, M., Karhu, A., and Kannala, J.
+  "CubiCasa5K: A Dataset and an Improved Multi-Task Model for Floorplan Image
+  Analysis." Scandinavian Conference on Image Analysis (SCIA), 2019.
+  https://github.com/CubiCasa/CubiCasa5k
+
+CubiCasa5K is licensed under Creative Commons Attribution-NonCommercial 4.0
+International (CC BY-NC 4.0):
+https://creativecommons.org/licenses/by-nc/4.0/
+
+Therefore:
+
+  * Every file under `demo/assets/samples/`, and `demo/assets/data.js` which
+    inlines some of them, is a rendering of, or pipeline output derived from,
+    CubiCasa5K. All of it is **CC BY-NC 4.0, not GPL-3.0**, and is expressly
+    excluded from this repository's GPL grant. It may be redistributed with
+    attribution to CubiCasa5K, but not used commercially.
+
+  * Those generated files are **not committed to this repository**. They are
+    gitignored, and `demo/build_demo_assets.py` regenerates them locally from
+    a pipeline run. This repository therefore redistributes no CubiCasa5K
+    material through the demo at all.
+
+  * The published copy of the demo lives in the `DaegeunKim_website`
+    repository at `neural-floorplan/demo/` and is served from
+    https://daegeunkim.com/neural-floorplan/demo/. That copy does carry the
+    generated artifacts, under the same carve-out root `NOTICE` section 5
+    grants `docs/images/`, and states the attribution in its page footer.
+
+  * No CubiCasa5K source file, mask, or split manifest is redistributed by
+    either repository. Only the small curated artifact set listed in
+    section 1 is derived from it.
+
+  * `demo/index.html` carries this attribution visibly in its page footer, so
+    the credit travels with the published page and not only with the
+    repository.
+
+
+3. Code licensing
+-----------------
+
+`demo/index.html`, `demo/assets/styles.css`, `demo/assets/app.js` and
+`demo/build_demo_assets.py` are part of this repository and are therefore
+**GPL-3.0-only**, like every other source file here.
+
+Serving this page from another domain is a distribution of that GPL code. The
+obligation is met by the source link in the page footer, which must be kept
+intact:
+
+  https://github.com/daegeun-kim/neural_floorplan
+
+`demo/assets/data.js` is generated. Its JavaScript wrapper is GPL-3.0-only;
+the sample data it carries is CC BY-NC 4.0 per section 2.
+
+
+4. Non-commercial use
+---------------------
+
+CC BY-NC 4.0 prohibits use "primarily intended for or directed toward
+commercial advantage or private monetary compensation". Publishing this demo
+as a project writeup is ordinarily non-commercial use. Presenting it as part
+of a page that sells services is a different question, and is the publisher's
+call to make, not this file's.

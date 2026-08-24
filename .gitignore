@@ -52,6 +52,18 @@ splits/_overfit_temp.json
 dist/
 
 # ---------------------------------------------------------------------------
+# Demo assets generated from a pipeline run
+# ---------------------------------------------------------------------------
+# demo/ holds the static demo's source: the page, its stylesheet and script,
+# and demo/build_demo_assets.py which regenerates everything below from
+# outputs/vectorization/. The generated files are renderings of, and pipeline
+# output derived from, CubiCasa5K, so they are not committed here - same rule
+# as outputs/ and docs/high_quality_architectural/. Rebuild them with:
+#     python demo/build_demo_assets.py
+demo/assets/samples/
+demo/assets/data.js
+
+# ---------------------------------------------------------------------------
 # Local scratch / reference material and editor state
 # ---------------------------------------------------------------------------
 code_sample/
