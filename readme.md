@@ -29,7 +29,8 @@ the target is architectural geometry, not a redrawing of the source image.*
 - [Model release](#model-release)
 - [Repository layout](#repository-layout)
 - [License and attribution](#license-and-attribution)
-- [Citations](#citations)
+- [Citing this work](#citing-this-work)
+- [Third-party citations](#third-party-citations)
 
 ---
 
@@ -439,6 +440,20 @@ training data, and **not** the upstream Raster-to-Graph checkpoint.
 The frozen `nvidia/mit-b0` backbone is not included — it is downloaded from
 Hugging Face at load time under NVIDIA's own terms.
 
+To use a published bundle, download it from the Releases page, verify it, and
+follow the loading snippet in its `MODEL_CARD.md`:
+
+```bash
+sha256sum -c SHA256SUMS
+```
+
+### Weights licensing
+
+The released weights are **not** covered by this repository's GPL-3.0 grant.
+They are derived from CubiCasa5K, which is licensed CC BY-NC 4.0, so the bundle
+is for **research and non-commercial use with attribution**. See `NOTICE`
+section 4 and [Citing this work](#citing-this-work).
+
 ---
 
 ## Repository layout
@@ -495,7 +510,28 @@ backbone, the upstream Raster-to-Graph checkpoint, and the CubiCasa5K dataset.
 
 ---
 
-## Citations
+## Citing this work
+
+Machine-readable metadata lives in [`CITATION.cff`](CITATION.cff), which GitHub
+renders as a "Cite this repository" button. BibTeX:
+
+```bibtex
+@software{kim2026neuralfloorplan,
+  author  = {Kim, Daegeun},
+  title   = {Neural Floorplan: Raster Floor Plans to Classified CAD Geometry},
+  version = {1.0.0},
+  year    = {2026},
+  url     = {https://github.com/daegeun-kim/neural_floorplan}
+}
+```
+
+The same reference covers the released model weights. Cite the upstream works
+below as well — wall topology comes from Raster-to-Graph, the backbone from
+SegFormer, and all training data from CubiCasa5K.
+
+---
+
+## Third-party citations
 
 **Raster-to-Graph** — vendored implementation and pretrained wall-graph checkpoint:
 

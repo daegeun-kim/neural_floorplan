@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software or its released model weights, please cite it using
+  the metadata below. The released weights are not covered by this repository's
+  GPL-3.0 grant; see NOTICE section 4.
+title: "Neural Floorplan: Raster Floor Plans to Classified CAD Geometry"
+abstract: >-
+  Combines seven-class semantic segmentation with graph-based wall extraction to
+  turn raster floor plans into classified, CAD-like vector geometry, prioritising
+  wall topology, circulation, and opening logic over pixel-perfect tracing.
+type: software
+authors:
+  - family-names: Kim
+    given-names: Daegeun
+version: 1.0.0
+date-released: "2026-09-16"
+license: GPL-3.0-only
+repository-code: "https://github.com/daegeun-kim/neural_floorplan"
+keywords:
+  - floor plan vectorization
+  - semantic segmentation
+  - wall topology
+  - architectural drawing
+  - computer vision
