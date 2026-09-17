@@ -103,6 +103,14 @@ extend-exclude = [
     "features",
 ]
 
+[tool.ruff.format]
+# Ruff gained stable Markdown formatting, which reaches into the fenced Python
+# blocks inside specs/ and rewrites them. Those blocks are authored documentation
+# illustrating real and deliberately-broken code, not project style surface, so
+# the formatter is limited to Python sources. This also keeps the gate
+# deterministic: a new ruff release cannot change which files it formats.
+exclude = ["*.md"]
+
 [tool.ruff.lint]
 select = [
     "E",  # pycodestyle errors
